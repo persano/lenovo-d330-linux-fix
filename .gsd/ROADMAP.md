@@ -33,9 +33,10 @@
 - [x] Commit and push Phase 3
 
 ## Phase 4: Differential Analysis & Reverse Engineering (Ghidra + REA)
-- [ ] Analyze `igdkmd64.sys` power transition callbacks
-- [ ] Extract panel power sequence timing tables and GPIO definitions
-- [ ] Document discrepancies in `docs/windows_analysis/RESUME_SEQUENCE.md`
+- [x] Analyze `igdkmd64.sys` power transition callbacks
+- [x] Extract panel power sequence timing tables and GPIO definitions
+- [x] Document discrepancies in `docs/windows_analysis/RESUME_SEQUENCE.md`
+- [x] Commit and push Phase 4
 
 ## Phase 5: Patch Generation & DKMS Delivery
 - [ ] Formulate DMI quirk table patch for `82H0`

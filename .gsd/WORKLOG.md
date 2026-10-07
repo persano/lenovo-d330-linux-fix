@@ -45,3 +45,16 @@
   * System power sleep profiles (`/sys/power/mem_sleep`, `wakeup_count`).
 - Created `docs/dumps/README.md` documenting prerequisite packages, invocation syntax, archive hierarchy, and reverse engineering checkpoints.
 - Validated script syntax with `bash -n` and verified `--help` output.
+- Committed and pushed Phase 3 (`d09d0c3`).
+
+## [Phase 4] Differential Analysis & Reverse Engineering
+- Developed `tools/analyze_igdkmd64.py` for PE/COFF header analysis, WDDM DDI callback scanning (`DxgkDdiSetPowerState`, `DxgkDdiResetDevice`), INF registry parsing, and ACPI method tracking.
+- Developed `tools/ghidra_export_power_callbacks.py` for Ghidra headless decompilation and JSON export of driver power routines.
+- Developed `tools/compare_pps_timings.py` modeling the panel power sequencing state machine and timing deltas between Windows OEM baseline and Linux upstream i915.
+- Discovered and confirmed root cause:
+  * Windows OEM INF programs `PanelPowerCycleDelay = 500 ms` to allow panel TCON charge dissipation.
+  * Linux `intel_pps.c` falls back to 200 ms default, causing electrical TCON latch-up (black screen) during rapid suspend/resume.
+  * Gemini Lake Refresh UHD 600 PSR state machine lockups during DC6 sleep exits.
+  * Missing DMI matching for Machine Type `82H0` (`D330-10IGL`) in upstream `drm_panel_orientation_quirks.c`.
+- Published comprehensive findings in `docs/windows_analysis/RESUME_SEQUENCE.md`.
+
