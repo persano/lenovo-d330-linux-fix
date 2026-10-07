@@ -129,3 +129,14 @@
 - Authored testing and documentation deliverables:
   * `scripts/test_dock_switching.sh` with automated multi-cycle dock/undock toggle validation.
   * `docs/research/DETACHABLE_DOCK_TABLET_MODE.md` and `patches/dock/README.md`.
+
+## [Phase 8] Audio & Microphone UCM Profiles
+- Analyzed Intel Smart Sound Technology (SST) / Sound Open Firmware (SOF) DSP architecture and codec topology on Gemini Lake (PCI `8086:3198`).
+- Authored ALSA Use Case Manager (UCM2) profile package for Lenovo D330:
+  * `patches/audio/ucm2/sof-essx8336/sof-essx8336.conf`: Master syntax version 4 UCM card profile.
+  * `patches/audio/ucm2/sof-essx8336/HiFi.conf`: Endpoints definition for internal stereo speakers, headphone jack with `JackHWMute` auto-mute, internal DMIC dual-channel microphone, and 3.5mm TRRS headset mic.
+- Configured kernel audio driver parameters:
+  * `patches/audio/etc/modprobe.d/lenovo-d330-audio.conf`: Enforces Intel SOF DSP driver (`dsp_driver=3`), sets `dmic_num=2`, and configures ES8316 jack quirks (`quirk=0x0013`).
+- Developed diagnostic and verification harness:
+  * `scripts/test_audio_profiles.sh` supporting `--probe`, `--test-speakers`, `--test-mic`, and `--monitor-jack`.
+  * Authored documentation in `docs/research/AUDIO_UCM_TOPOLOGY.md` and `patches/audio/README.md`.

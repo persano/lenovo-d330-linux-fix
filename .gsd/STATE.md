@@ -1,15 +1,15 @@
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 2: Peripheral Parity & Tablet Usability (v2.0)
-- **Active Phase**: Phase 8 (Audio & Microphone UCM Profiles) - [ACTIVE]
-- **Status**: Phase 7 completed with INT33D5/USB dock daemon, systemd service, udev hotplug rules, and automated test harness. Advancing to Phase 8.
+- **Active Phase**: Phase 9 (Battery Life & Power Governors) - [ACTIVE]
+- **Status**: Phase 8 completed with ALSA UCM2 profile (Speaker, Headphones, Mic, Headset), SOF DSP driver configs, and audio test harness. Advancing to Phase 9.
 - **Blockers**: None.
-- **Next Immediate Action**: Execute Phase 8 (Audio & Microphone UCM Profiles - ALC269/ES8316 + Intel SST/SOF, ALSA UCM2 topology, headphone auto-mute).
+- **Next Immediate Action**: Execute Phase 9 (Battery Life & Power Governors - Intel P-State/EPP tuning for Celeron 6W, TLP/power-profiles-daemon, eMMC/USB runtime PM).
 
 ## Milestone 2 Phase Progress
 - [x] Phase 6: Touchscreen & Active Pen Calibration
 - [x] Phase 7: Detachable Dock & Tablet Mode Daemon
-- [ ] Phase 8: Audio & Microphone UCM Profiles
+- [x] Phase 8: Audio & Microphone UCM Profiles
 - [ ] Phase 9: Battery Life & Power Governors
 
 ## Archived Milestones

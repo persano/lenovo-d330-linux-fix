@@ -29,11 +29,11 @@
 - [x] Verify hotplug detach and re-attach cycles
 
 ### Phase 8: Audio & Microphone UCM Profiles
-- [ ] Identify audio codec and routing topology (Intel SST / SOF + ALC269/ES8316)
-- [ ] Author ALSA Use Case Manager (UCM2) profile for Lenovo D330
-- [ ] Fix headphone jack auto-mute and internal microphone input gain
-- [ ] Package UCM2 files into installation harness
-- [ ] Verify audio playback, headphone switching, and mic capture
+- [x] Identify audio codec and routing topology (Intel SST / SOF + ALC269/ES8316)
+- [x] Author ALSA Use Case Manager (UCM2) profile for Lenovo D330
+- [x] Fix headphone jack auto-mute and internal microphone input gain
+- [x] Package UCM2 files into installation harness
+- [x] Verify audio playback, headphone switching, and mic capture
 
 ### Phase 9: Battery Life & Power Governors
 - [ ] Configure Intel P-State / EPP energy performance preference profiles for 6W Celeron
