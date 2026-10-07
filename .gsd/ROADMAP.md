@@ -22,11 +22,11 @@
 - [x] Verify touch accuracy, multi-touch gestures, and wake recovery
 
 ### Phase 7: Detachable Dock & Tablet Mode Daemon
-- [ ] Analyze ACPI Hall effect hinge sensor / keyboard dock events (`INT33D5`)
-- [ ] Build lightweight tablet mode event handler daemon (`d330-tablet-daemon`)
-- [ ] Implement dock auto-switching: force landscape & enable touchpad on dock; auto-rotate & enable on-screen keyboard on undock
-- [ ] Package systemd service and installer integration
-- [ ] Verify hotplug detach and re-attach cycles
+- [x] Analyze ACPI Hall effect hinge sensor / keyboard dock events (`INT33D5`)
+- [x] Build lightweight tablet mode event handler daemon (`d330-tablet-daemon`)
+- [x] Implement dock auto-switching: force landscape & enable touchpad on dock; auto-rotate & enable on-screen keyboard on undock
+- [x] Package systemd service and installer integration
+- [x] Verify hotplug detach and re-attach cycles
 
 ### Phase 8: Audio & Microphone UCM Profiles
 - [ ] Identify audio codec and routing topology (Intel SST / SOF + ALC269/ES8316)

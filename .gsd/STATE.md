@@ -1,14 +1,14 @@
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 2: Peripheral Parity & Tablet Usability (v2.0)
-- **Active Phase**: Phase 7 (Detachable Dock & Tablet Mode Daemon) - [ACTIVE]
-- **Status**: Phase 6 completed with kernel DMI quirks, udev calibration, sleep unbind/bind recovery hook, and Active Pen pressure profiles. Advancing to Phase 7.
+- **Active Phase**: Phase 8 (Audio & Microphone UCM Profiles) - [ACTIVE]
+- **Status**: Phase 7 completed with INT33D5/USB dock daemon, systemd service, udev hotplug rules, and automated test harness. Advancing to Phase 8.
 - **Blockers**: None.
-- **Next Immediate Action**: Execute Phase 7 (Detachable Dock & Tablet Mode Daemon - INT33D5 ACPI sensor, mode switching daemon, systemd unit).
+- **Next Immediate Action**: Execute Phase 8 (Audio & Microphone UCM Profiles - ALC269/ES8316 + Intel SST/SOF, ALSA UCM2 topology, headphone auto-mute).
 
 ## Milestone 2 Phase Progress
 - [x] Phase 6: Touchscreen & Active Pen Calibration
-- [ ] Phase 7: Detachable Dock & Tablet Mode Daemon
+- [x] Phase 7: Detachable Dock & Tablet Mode Daemon
 - [ ] Phase 8: Audio & Microphone UCM Profiles
 - [ ] Phase 9: Battery Life & Power Governors
 

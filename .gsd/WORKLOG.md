@@ -115,3 +115,17 @@
 - Authored diagnostic and verification suite:
   * `scripts/test_touch_calibration.sh` supporting `--dry-run`, `--test-unbind`, and `--monitor`.
   * Documented design, mathematical transformation, and hardware behavior in `docs/research/TOUCHSCREEN_ACTIVE_PEN.md` and `patches/touchscreen/README.md`.
+
+## [Phase 7] Detachable Dock & Tablet Mode Daemon
+- Analyzed ACPI Intel HID Event Filter (`INT33D5`), `intel-hid` / `intel_vbtn` switch events (`SW_TABLET_MODE`), and USB hotplug (`17ef` Lenovo dock).
+- Engineered standalone daemon `tools/d330-tablet-daemon.py`:
+  * Direct asynchronous `select()` event loop polling `/dev/input/event*` devices with `SW_TABLET_MODE`.
+  * Fallback heartbeat probe checking physical USB dock presence.
+  * Automates landscape display locking and physical touchpad enablement when docked.
+  * Automates accelerometer auto-rotation unlocking and on-screen keyboard (OSK) enablement when detached.
+- Authored system integration components:
+  * `patches/dock/etc/systemd/system/d330-tablet-daemon.service`: Dedicated systemd service unit.
+  * `patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules`: Dynamic dock USB hotplug events and Intel HID switch bindings.
+- Authored testing and documentation deliverables:
+  * `scripts/test_dock_switching.sh` with automated multi-cycle dock/undock toggle validation.
+  * `docs/research/DETACHABLE_DOCK_TABLET_MODE.md` and `patches/dock/README.md`.
