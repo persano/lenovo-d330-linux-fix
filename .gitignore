@@ -1,0 +1,9 @@
+.gsd/work/
+docs/dumps/raw/
+drivers_base/*.exe
+drivers_base/*.zip
+*.o
+*.ko
+*.so
+.DS_Store
+Thumbs.db
