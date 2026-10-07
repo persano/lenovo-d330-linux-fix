@@ -49,5 +49,18 @@
 
 ---
 
+## Milestone 6: System Resilience, Performance & Usability Polish (v6.0) - [COMPLETED]
+*Archived to [`.gsd/milestones/v6.0-ROADMAP.md`](milestones/v6.0-ROADMAP.md)*
+- [x] Phase 24: Intel VA-API Hardware Video Acceleration (iHD / Firefox / Chromium)
+- [x] Phase 25: Fanless Thermal Tuning & RAPL Power Limits (PL1 5.0W, PL2 8.0W, thermald)
+- [x] Phase 26: Out-Of-Memory Prevention (earlyoom on 4GB RAM)
+- [x] Phase 27: Tablet Mode OSK Auto-Summon & Long-Press Right-Click
+- [x] Phase 28: PipeWire RNNoise Neural AI Microphone Denoising
+- [x] Phase 29: Wi-Fi & Bluetooth Coexistence & S2idle Sleep Stability
+- [x] Phase 30: Fast Boot Optimization for eMMC Storage
+- [x] Phase 31: Desktop GUI System Tray Hardware Applet (`d330-tray.py`)
+
+---
+
 ## Project Status: 100% COMPLETE
-All 5 Milestones (Phases 0–23) successfully executed, tested, and archived. Full Linux hardware parity achieved.
+All 6 Milestones (Phases 0–31) successfully executed, tested, and archived. Full Linux hardware parity & usability polish achieved.

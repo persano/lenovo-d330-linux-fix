@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lenovo D330 Hardware Tray
+Comment=One-click battery conservation and rotation controls for Lenovo D330
+Exec=/usr/local/bin/d330-tray.py
+Icon=preferences-system
+Terminal=false
+Categories=Utility;Settings;
+X-GNOME-Autostart-enabled=true

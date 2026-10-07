@@ -111,6 +111,8 @@ do_install() {
             cp "${REPO_ROOT}/patches/display_ergonomics/etc/modprobe.d/lenovo-d330-display-pwm.conf" /etc/modprobe.d/
         [ -f "${REPO_ROOT}/patches/cellular_storage/etc/modprobe.d/lenovo-d330-cellular.conf" ] && \
             cp "${REPO_ROOT}/patches/cellular_storage/etc/modprobe.d/lenovo-d330-cellular.conf" /etc/modprobe.d/
+        [ -f "${REPO_ROOT}/patches/wireless/etc/modprobe.d/lenovo-d330-wireless.conf" ] && \
+            cp "${REPO_ROOT}/patches/wireless/etc/modprobe.d/lenovo-d330-wireless.conf" /etc/modprobe.d/
     fi
 
     # 4. Deploy udev rules and hardware databases
@@ -169,6 +171,9 @@ do_install() {
         [ -f "${REPO_ROOT}/patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh" ] && \
             cp "${REPO_ROOT}/patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh" /usr/lib/systemd/system-sleep/ && \
             chmod +x /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh
+        [ -f "${REPO_ROOT}/patches/wireless/etc/systemd/system-sleep/lenovo-d330-wifi-resume.sh" ] && \
+            cp "${REPO_ROOT}/patches/wireless/etc/systemd/system-sleep/lenovo-d330-wifi-resume.sh" /usr/lib/systemd/system-sleep/ && \
+            chmod +x /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh
 
         # Deploy sysctl and zram generator configs
         mkdir -p /etc/sysctl.d /etc/systemd
@@ -178,21 +183,39 @@ do_install() {
             cp "${REPO_ROOT}/patches/storage_memory/etc/systemd/zram-generator.conf" /etc/systemd/
         sysctl --system >/dev/null 2>&1 || true
 
-        # Deploy GRUB and Initramfs boot orientation hooks
+        # Deploy GRUB and Initramfs boot orientation and fastboot hooks
         if [ -d "/etc/default/grub.d" ]; then
             [ -f "${REPO_ROOT}/patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg" ] && \
                 cp "${REPO_ROOT}/patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg" /etc/default/grub.d/
             [ -f "${REPO_ROOT}/patches/acpi_override/etc/default/grub.d/51-lenovo-d330-acpi-override.cfg" ] && \
                 cp "${REPO_ROOT}/patches/acpi_override/etc/default/grub.d/51-lenovo-d330-acpi-override.cfg" /etc/default/grub.d/
+            [ -f "${REPO_ROOT}/patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg" ] && \
+                cp "${REPO_ROOT}/patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg" /etc/default/grub.d/
         fi
         if [ -d "/usr/share/initramfs-tools/hooks" ]; then
             [ -f "${REPO_ROOT}/patches/boot_orientation/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth" ] && \
                 cp "${REPO_ROOT}/patches/boot_orientation/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth" /usr/share/initramfs-tools/hooks/ && \
                 chmod +x /usr/share/initramfs-tools/hooks/lenovo-d330-plymouth
         fi
+
+        # Deploy VA-API environment and earlyoom presets
+        mkdir -p /etc/environment.d /etc/default
+        [ -f "${REPO_ROOT}/patches/media_vaapi/etc/environment.d/50-lenovo-d330-vaapi.conf" ] && \
+            cp "${REPO_ROOT}/patches/media_vaapi/etc/environment.d/50-lenovo-d330-vaapi.conf" /etc/environment.d/
+        [ -f "${REPO_ROOT}/patches/oom_protection/etc/default/earlyoom" ] && \
+            cp "${REPO_ROOT}/patches/oom_protection/etc/default/earlyoom" /etc/default/
+        if [ -d "/etc/systemd/system" ] && [ -d "${REPO_ROOT}/patches/oom_protection/etc/systemd/system/earlyoom.service.d" ]; then
+            mkdir -p /etc/systemd/system/earlyoom.service.d
+            cp -r "${REPO_ROOT}/patches/oom_protection/etc/systemd/system/earlyoom.service.d"/* /etc/systemd/system/earlyoom.service.d/
+        fi
+
+        # Deploy thermald config
+        if [ -d "/etc/thermald" ] && [ -f "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" ]; then
+            cp "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" /etc/thermald/
+        fi
     fi
 
-    # 6. Deploy CLI tools and systemd background daemons
+    # 6. Deploy CLI tools, tray applet, and systemd background daemons
     log_info "Deploying system utilities and systemd background units..."
     if [ "$DRY_RUN" = false ]; then
         mkdir -p /usr/local/bin
@@ -223,6 +246,23 @@ do_install() {
         [ -f "${REPO_ROOT}/tools/d330-microsd-setup.sh" ] && \
             cp "${REPO_ROOT}/tools/d330-microsd-setup.sh" /usr/local/bin/d330-microsd-setup && \
             chmod +x /usr/local/bin/d330-microsd-setup
+        [ -f "${REPO_ROOT}/tools/d330-thermal-tune.sh" ] && \
+            cp "${REPO_ROOT}/tools/d330-thermal-tune.sh" /usr/local/bin/d330-thermal-tune && \
+            chmod +x /usr/local/bin/d330-thermal-tune
+        [ -f "${REPO_ROOT}/tools/d330-fastboot-tune.sh" ] && \
+            cp "${REPO_ROOT}/tools/d330-fastboot-tune.sh" /usr/local/bin/d330-fastboot-tune && \
+            chmod +x /usr/local/bin/d330-fastboot-tune
+        [ -f "${REPO_ROOT}/tools/d330-vaapi-check.sh" ] && \
+            cp "${REPO_ROOT}/tools/d330-vaapi-check.sh" /usr/local/bin/d330-vaapi-check && \
+            chmod +x /usr/local/bin/d330-vaapi-check
+        [ -f "${REPO_ROOT}/tools/d330-tray.py" ] && \
+            cp "${REPO_ROOT}/tools/d330-tray.py" /usr/local/bin/d330-tray && \
+            chmod +x /usr/local/bin/d330-tray
+
+        # Deploy autostart desktop entry for tray applet
+        if [ -d "/etc/xdg/autostart" ] && [ -f "${REPO_ROOT}/patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop" ]; then
+            cp "${REPO_ROOT}/patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop" /etc/xdg/autostart/
+        fi
 
         # Deploy systemd services
         cp "${REPO_ROOT}/patches/dkms/etc/systemd/system/lenovo-d330-resume.service" /etc/systemd/system/
@@ -240,6 +280,8 @@ do_install() {
             cp "${REPO_ROOT}/patches/sensors/etc/systemd/system/d330-sensor-filter.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service" ] && \
             cp "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service" /etc/systemd/system/
+        [ -f "${REPO_ROOT}/patches/thermal/etc/systemd/system/d330-thermal.service" ] && \
+            cp "${REPO_ROOT}/patches/thermal/etc/systemd/system/d330-thermal.service" /etc/systemd/system/
 
         systemctl daemon-reload || true
         systemctl enable lenovo-d330-resume.service || true
@@ -248,6 +290,7 @@ do_install() {
         systemctl enable d330-hardware-state.service 2>/dev/null || true
         systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
         systemctl enable d330-sensor-filter.service 2>/dev/null || true
+        systemctl enable d330-thermal.service 2>/dev/null || true
         log_ok "Enabled systemd background units."
     fi
 
@@ -260,10 +303,13 @@ do_install() {
             cp -r "${REPO_ROOT}/patches/audio/ucm2/sof-essx8336"/* "${UCM_DIR}/sof-essx8336/"
             log_ok "Installed UCM2 audio profiles to ${UCM_DIR}/sof-essx8336."
         fi
-        if [ -d "/etc/pipewire" ] && [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" ]; then
+        if [ -d "/etc/pipewire" ]; then
             mkdir -p /etc/pipewire/filter-chain.conf.d
-            cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" /etc/pipewire/filter-chain.conf.d/
-            log_ok "Installed PipeWire speaker DSP filter preset."
+            [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" ] && \
+                cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" /etc/pipewire/filter-chain.conf.d/
+            [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf" ] && \
+                cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf" /etc/pipewire/filter-chain.conf.d/
+            log_ok "Installed PipeWire speaker DSP and RNNoise AI mic filters."
         fi
     fi
 
@@ -323,6 +369,7 @@ do_uninstall() {
         rm -f /etc/modprobe.d/lenovo-d330-audio-antipop.conf
         rm -f /etc/modprobe.d/lenovo-d330-display-pwm.conf
         rm -f /etc/modprobe.d/lenovo-d330-cellular.conf
+        rm -f /etc/modprobe.d/lenovo-d330-wireless.conf
         rm -f /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb
         rm -f /etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb
         rm -f /etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb
@@ -340,11 +387,18 @@ do_uninstall() {
         rm -f /etc/X11/xorg.conf.d/50-touchscreen-d330.conf
         rm -f /etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf
         rm -f /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh
+        rm -f /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh
         rm -f /etc/sysctl.d/99-lenovo-d330-zram.conf
         rm -f /etc/systemd/zram-generator.conf
         rm -f /etc/default/grub.d/50-lenovo-d330-boot.cfg
         rm -f /etc/default/grub.d/51-lenovo-d330-acpi-override.cfg
+        rm -f /etc/default/grub.d/52-lenovo-d330-fastboot.cfg
         rm -f /usr/share/initramfs-tools/hooks/lenovo-d330-plymouth
+        rm -f /etc/environment.d/50-lenovo-d330-vaapi.conf
+        rm -f /etc/default/earlyoom
+        rm -rf /etc/systemd/system/earlyoom.service.d
+        rm -f /etc/thermald/thermal-conf.xml
+        rm -f /etc/xdg/autostart/d330-tray.desktop
         rm -f /usr/local/bin/d330-tablet-daemon
         rm -f /usr/local/bin/lenovo-d330-power-tune
         rm -f /usr/local/bin/d330-ctl
@@ -354,8 +408,13 @@ do_uninstall() {
         rm -f /usr/local/bin/d330-sensor-filter
         rm -f /usr/local/bin/d330-auto-hibernate
         rm -f /usr/local/bin/d330-microsd-setup
+        rm -f /usr/local/bin/d330-thermal-tune
+        rm -f /usr/local/bin/d330-fastboot-tune
+        rm -f /usr/local/bin/d330-vaapi-check
+        rm -f /usr/local/bin/d330-tray
         rm -rf /usr/share/alsa/ucm2/sof-essx8336
         rm -f /etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf
+        rm -f /etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf
         rm -f /etc/tlp.d/50-lenovo-d330.conf
         rm -f /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc
 
@@ -367,6 +426,7 @@ do_uninstall() {
         systemctl disable --now lenovo-d330-backlight-pwm.service >/dev/null 2>&1 || true
         systemctl disable --now d330-sensor-filter.service >/dev/null 2>&1 || true
         systemctl disable --now d330-auto-hibernate.service >/dev/null 2>&1 || true
+        systemctl disable --now d330-thermal.service >/dev/null 2>&1 || true
         rm -f /etc/systemd/system/lenovo-d330-resume.service
         rm -f /etc/systemd/system/d330-tablet-daemon.service
         rm -f /etc/systemd/system/lenovo-d330-power.service
@@ -375,6 +435,7 @@ do_uninstall() {
         rm -f /etc/systemd/system/lenovo-d330-backlight-pwm.service
         rm -f /etc/systemd/system/d330-sensor-filter.service
         rm -f /etc/systemd/system/d330-auto-hibernate.service
+        rm -f /etc/systemd/system/d330-thermal.service
         systemctl daemon-reload >/dev/null 2>&1 || true
 
         # Refresh

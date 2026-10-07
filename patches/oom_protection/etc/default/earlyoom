@@ -1,0 +1,7 @@
+# earlyoom configuration for Lenovo IdeaPad D330-10IGL
+# Prevents complete system lockup when 4GB RAM is exhausted by browser tabs
+
+# Trigger memory kill when free RAM < 4% and free Swap < 10%
+# Avoid killing critical desktop and system daemons
+# Prefer killing runaway web browser renderer processes
+EARLYOOM_ARGS="-m 4 -s 10 --avoid '^(systemd|Xorg|Xwayland|gnome-shell|kwin|pipewire|d330-.*)$' --prefer '^(Web Content|chrome|firefox|brave|electron|slack|teams)$' -r 60 -n"

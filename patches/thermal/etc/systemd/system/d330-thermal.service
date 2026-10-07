@@ -1,0 +1,12 @@
+[Unit]
+Description=Lenovo IdeaPad D330 RAPL Thermal Power Configuration
+After=systemd-modules-load.service
+ConditionPathExists=/sys/class/powercap/intel-rapl
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/d330-thermal-tune.sh --apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -128,6 +128,7 @@ class D330TabletDaemon:
         # 3. Disable On-Screen Keyboard (OSK)
         run_command("gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false")
         run_command("gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled false")
+        run_command("qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled false 2>/dev/null || true")
         run_command("killall onboard 2>/dev/null || true")
 
         logger.info("Laptop mode settings applied successfully.")
@@ -146,9 +147,12 @@ class D330TabletDaemon:
         # 1. Enable automatic accelerometer orientation via iio-sensor-proxy
         run_command("gsettings set org.gnome.settings-daemon.plugins.orientation active true")
 
-        # 2. Enable On-Screen Keyboard (OSK)
+        # 2. Enable On-Screen Keyboard (OSK across GNOME, Cinnamon, KDE, X11)
         run_command("gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true")
         run_command("gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled true")
+        run_command("qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled true 2>/dev/null || true")
+        # In non-composited X11 desktops, launch onboard in background if installed
+        run_command("which onboard >/dev/null 2>&1 && (pgrep onboard >/dev/null || onboard &) || true")
 
         # 3. Ignore or suppress residual dock touchpad inputs
         run_command("xinput disable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true")
