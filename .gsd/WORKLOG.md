@@ -89,6 +89,19 @@
   * `patches/android/README.md` (Android bootloader and HAL documentation).
 - Authored distro kernel replacement & installer customization guide:
   * `docs/DISTRO_INSTALL_GUIDE.md` (step-by-step procedures for live system kernel overwrite via DKMS, Debian/Ubuntu `.deb` kernel compilation, Fedora RPM build, Arch PKGBUILD, and ISO squashfs remastering).
+- Committed and pushed cross-platform deliverables (`9d0620e`).
+
+## [Milestone Transition] Milestone 1 Archived & Milestone 2 Initialized
+- Archived Milestone 1 (v1.0 Display & Power Parity) to `.gsd/milestones/v1.0-ROADMAP.md`.
+- Created Git release tag `v1.0`.
+- Initialized Milestone 2: Peripheral Parity & Tablet Usability (v2.0) covering Phases 6 through 9:
+  * Phase 6: Touchscreen & Active Pen Calibration
+  * Phase 7: Detachable Dock & Tablet Mode Daemon
+  * Phase 8: Audio & Microphone UCM Profiles
+  * Phase 9: Battery Life & Power Governors
+- Updated `PROJECT.md`, `STATE.md`, and `ROADMAP.md`.
+- Stood by for user invocation of `/gsd-autonomous` for Phase 6.
+
 
 
 

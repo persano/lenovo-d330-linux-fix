@@ -1,23 +1,23 @@
-# PROJECT: Lenovo IdeaPad D330-10IGL Linux Display & Power Parity
+# PROJECT: Lenovo IdeaPad D330-10IGL Linux Parity Project
 
 ## Target Platform
-- **Device**: Lenovo IdeaPad D330-10IGL (Type 82H0)
+- **Device**: Lenovo IdeaPad D330-10IGL (Type 82H0) & D330-10IGM (81H3, 81MD)
 - **SoC**: Intel Gemini Lake Refresh (Celeron N4020 / N4120)
-- **GPU**: Intel UHD Graphics 600 (Genoa / GLK 12 EU)
+- **GPU**: Intel UHD Graphics 600 (GLK 12 EU)
 - **Panel**: 10.1" 1280x800 / 1920x1200 MIPI-DSI / eDP tablet panel (portrait native orientation)
-- **Sensors**: BOSC0200 accelerometer / IIO sensor subsystem
-- **Target OS**: Linux (Kernel 6.x+, standard DRM/i915 stack)
+- **Digitizer**: Goodix I2C Touchscreen (`GDIX1001`) with Lenovo Active Pen support
+- **Sensors**: BOSC0200 accelerometer / IIO sensor subsystem, Hall effect dock sensor (`INT33D5`)
+- **Target OS**: Linux (Kernel 5.15 – 6.x+, ChromeOS, Android-x86)
 
-## Mission & Architecture Goals
-Resolve display resume failure and orientation/power parity issues on Lenovo IdeaPad D330-10IGL under Linux:
-1. Identify root cause of screen blanking / resume failure after suspend / S3 / S0ix sleep.
-2. Ingest community workarounds (e.g. `lucasgabmoreno/linuxmint_lenovod330`) and extract hardware quirks.
-3. Compare Windows graphics driver (`igdkmd64.sys`) power sequences (PPS, panel delays, GPIOs, DSI VBT timing) with Linux `i915` implementation.
-4. Produce reproducible hardware telemetry extraction scripts for target device.
-5. Deliver a production-grade DRM / kernel patch or DKMS module with DMI quirks (`82H0`).
+## Current State: Milestone 1 Shipped (v1.0)
+- Root cause identified: TCON 500ms discharge requirement ($t_{11}\text{-}t_{12}$).
+- Shipped unified DRM kernel patch with DMI quirk match for Type `82H0` and $\ge 600\text{ ms}$ PPS clamp.
+- Shipped standalone DKMS package (`lenovo_d330_fix.ko`) for zero-recompile deployment.
+- Shipped ChromeOS (`5.15`, `6.6`) and Android-x86 / Bliss OS patches and HAL configs.
+- Shipped automated installation and stress-test harnesses.
 
-## Definition of Done
-- Panel initializes with correct orientation from boot (EFIFB/DRM) through desktop compositor.
-- Suspend-to-RAM / S0ix resume restores panel backlight, DSI/eDP link, and display pipeline without freeze or blank screen.
-- Accelerometer (`BOSC0200`) correctly mapped via udev hwdb.
-- Clean kernel patch and DKMS packaging ready for deployment.
+## Next Milestone: Milestone 2 (v2.0) - Peripheral Parity & Tablet Usability
+1. **Phase 6: Touchscreen & Active Pen Calibration**: Fix coordinate mismatch via udev libinput matrix, eliminate post-wake I2C touch freeze via unbind/rebind hook, configure palm rejection.
+2. **Phase 7: Detachable Dock & Tablet Mode Daemon**: Hall effect sensor integration, automatic laptop/tablet mode switching (orientation lock, on-screen keyboard toggle, touchpad gate).
+3. **Phase 8: Audio & Microphone UCM Profiles**: ALSA UCM2 profiles for Intel SST/SOF, fixing headphone jack auto-mute and internal digital mic.
+4. **Phase 9: Battery Life & Power Governors**: Intel P-State / EPP power profiles, eMMC/USB autosuspend tuning for 6W Celeron.
