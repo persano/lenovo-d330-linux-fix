@@ -140,3 +140,20 @@
 - Developed diagnostic and verification harness:
   * `scripts/test_audio_profiles.sh` supporting `--probe`, `--test-speakers`, `--test-mic`, and `--monitor-jack`.
   * Authored documentation in `docs/research/AUDIO_UCM_TOPOLOGY.md` and `patches/audio/README.md`.
+
+## [Phase 9] Battery Life & Power Governors
+- Analyzed 6W fanless thermal characteristics and power consumption on Gemini Lake Celeron N4020/N4120.
+- Authored power profiles and configurations:
+  * `patches/power/etc/tlp.d/50-lenovo-d330.conf`: Custom TLP profile configuring `powersave` governor, `balance_performance` EPP on AC, `power` EPP on battery, Turbo Boost gating, and GPU max frequency clamping.
+  * `patches/power/etc/udev/rules.d/95-lenovo-d330-power.rules`: Automatic runtime PM for PCI endpoints, eMMC storage, I2C busses, sound DSP, and USB autosuspend (exempting dock inputs).
+  * `patches/power/etc/modprobe.d/lenovo-d330-power.conf`: Kernel options for `iwlwifi`, `pcie_aspm=powersave`, and `i915 enable_rc6=1`.
+  * `patches/power/etc/systemd/system/lenovo-d330-power.service` and `tools/lenovo-d330-power-tune.sh`: Systemd service and utility for runtime EPP and RAPL governor tuning.
+- Developed test harness:
+  * `scripts/test_battery_power.sh` supporting `--telemetry`, `--stress N`, and `--tune`.
+  * Authored documentation in `docs/research/BATTERY_POWER_MANAGEMENT.md` and `patches/power/README.md`.
+
+## [Unified Installer Update]
+- Updated `scripts/install_dkms.sh` to provide unified one-step deployment and uninstallation across all subsystems (display DRM/DKMS, touchscreen, active pen, detachable dock daemon, ALSA UCM2 audio, and battery/power tuning).
+
+## [Milestone 2 Completion] Peripheral Parity & Tablet Usability (v2.0)
+- All phases of Milestone 2 (Phases 6, 7, 8, 9) successfully implemented, verified, and integrated into repository.

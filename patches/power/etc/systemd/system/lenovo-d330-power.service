@@ -1,0 +1,11 @@
+[Unit]
+Description=Lenovo IdeaPad D330 Energy Performance & Power Governors
+After=sysinit.target basic.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/lenovo-d330-power-tune
+
+[Install]
+WantedBy=multi-user.target

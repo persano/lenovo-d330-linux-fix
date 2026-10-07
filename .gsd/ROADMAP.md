@@ -36,7 +36,7 @@
 - [x] Verify audio playback, headphone switching, and mic capture
 
 ### Phase 9: Battery Life & Power Governors
-- [ ] Configure Intel P-State / EPP energy performance preference profiles for 6W Celeron
-- [ ] Author TLP / power-profiles-daemon configuration template
-- [ ] Optimize eMMC and USB autosuspend runtime power management
-- [ ] Verify battery runtime and thermal headroom under stress
+- [x] Configure Intel P-State / EPP energy performance preference profiles for 6W Celeron
+- [x] Author TLP / power-profiles-daemon configuration template
+- [x] Optimize eMMC and USB autosuspend runtime power management
+- [x] Verify battery runtime and thermal headroom under stress

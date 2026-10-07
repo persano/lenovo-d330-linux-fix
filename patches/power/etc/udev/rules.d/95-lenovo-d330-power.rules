@@ -1,0 +1,16 @@
+# Lenovo IdeaPad D330 Runtime Power Management Udev Rules
+
+# Enable Runtime PM on all PCI host devices and Gemini Lake root bridges
+ACTION=="add", SUBSYSTEM=="pci", ATTR{power/control}="auto"
+
+# Enable Runtime PM on eMMC storage controllers
+ACTION=="add", SUBSYSTEM=="mmc", ATTR{power/control}="auto"
+
+# USB Autosuspend with 2000ms delay, excluding dock input hardware
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}!="17ef", ATTR{power/control}="auto", ATTR{power/autosuspend_delay_ms}="2000"
+
+# I2C Serial IO bus runtime PM
+ACTION=="add", SUBSYSTEM=="i2c", ATTR{power/control}="auto"
+
+# Audio DSP runtime PM
+ACTION=="add", SUBSYSTEM=="sound", ATTR{power/control}="auto"
