@@ -1,0 +1,41 @@
+name: Build Remastered Live ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_iso_url:
+        description: 'Direct URL to base Live ISO (Ubuntu / Mint / LMDE)'
+        required: true
+        default: 'https://releases.ubuntu.com/24.04/ubuntu-24.04-desktop-amd64.iso'
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install ISO Mastering Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorriso squashfs-tools wget
+
+      - name: Download Base ISO
+        run: |
+          wget -q --show-progress -O base.iso "${{ github.event.inputs.base_iso_url }}"
+
+      - name: Execute Remaster Harness
+        run: |
+          sudo bash scripts/build_live_iso.sh --base-iso base.iso --output lenovo-d330-live-remastered.iso
+
+      - name: Generate Checksum
+        run: |
+          sha256sum lenovo-d330-live-remastered.iso > ISO_SHA256SUM
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: remastered-iso
+          path: |
+            lenovo-d330-live-remastered.iso
+            ISO_SHA256SUM

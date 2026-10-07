@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+    # Refresh systemd-hwdb and udev
+    if command -v systemd-hwdb >/dev/null 2>&1; then
+        systemd-hwdb update || true
+        udevadm trigger || true
+    fi
+
+    # Enable background services
+    systemctl daemon-reload || true
+    systemctl enable lenovo-d330-resume.service 2>/dev/null || true
+    systemctl enable d330-tablet-daemon.service 2>/dev/null || true
+    systemctl enable lenovo-d330-power.service 2>/dev/null || true
+    systemctl enable d330-hardware-state.service 2>/dev/null || true
+    systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
+    systemctl enable d330-sensor-filter.service 2>/dev/null || true
+
+    # Update initramfs if available
+    if command -v update-initramfs >/dev/null 2>&1; then
+        update-initramfs -u || true
+    fi
+fi
+
+exit 0

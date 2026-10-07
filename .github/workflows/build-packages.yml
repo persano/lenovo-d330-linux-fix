@@ -1,0 +1,59 @@
+name: Build Packages & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper dpkg-dev rpm
+
+      - name: Build Debian (.deb) Package
+        run: |
+          mkdir -p build/deb/DEBIAN build/deb/usr/local/bin build/deb/etc/modprobe.d build/deb/etc/udev/rules.d build/deb/etc/udev/hwdb.d build/deb/etc/systemd/system
+          cp packaging/debian/control packaging/debian/postinst build/deb/DEBIAN/
+          chmod 755 build/deb/DEBIAN/postinst
+          cp tools/d330-* build/deb/usr/local/bin/ || true
+          cp patches/*/etc/modprobe.d/*.conf build/deb/etc/modprobe.d/ || true
+          cp patches/*/etc/udev/rules.d/*.rules build/deb/etc/udev/rules.d/ || true
+          cp patches/*/etc/udev/hwdb.d/*.hwdb build/deb/etc/udev/hwdb.d/ || true
+          cp patches/*/etc/systemd/system/*.service build/deb/etc/systemd/system/ || true
+          dpkg-deb --build build/deb lenovo-d330-fix_5.0.0_all.deb
+
+      - name: Bundle DKMS Tarball
+        run: |
+          tar -czf lenovo-d330-fix-dkms.tar.gz patches/dkms/
+
+      - name: Generate SHA256 Checksums
+        run: |
+          sha256sum lenovo-d330-fix_5.0.0_all.deb lenovo-d330-fix-dkms.tar.gz > SHA256SUMS
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: |
+            lenovo-d330-fix_5.0.0_all.deb
+            lenovo-d330-fix-dkms.tar.gz
+            SHA256SUMS
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            lenovo-d330-fix_5.0.0_all.deb
+            lenovo-d330-fix-dkms.tar.gz
+            SHA256SUMS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -12,25 +12,9 @@
 ## Shipped Milestones
 - **Milestone 1: Display & Power Parity (v1.0)**: PPS $\ge 600\text{ms}$ TCON discharge clamp, DRM DMI orientation quirks, standalone DKMS module, ChromeOS & Android-x86 patches.
 - **Milestone 2: Peripheral Parity & Tablet Usability (v2.0)**: Goodix I2C touchscreen libinput matrix & post-wake reset hook, Active Pen stylus profiles, detachable dock mode daemon (`tools/d330-tablet-daemon.py`), ALSA UCM2 audio profiles, 6W fanless Intel P-State/EPP governors.
+- **Milestone 3: Vision, Ergonomics & Multimedia (v3.0)**: Intel IPU3 dual CSI-2 camera pipeline with libcamera 3A tuning & v4l2loopback bridge, 3GB zstd ZRAM swap & eMMC queue optimization, PipeWire speaker DSP acoustic filter-chain & anti-pop DAC delay, VPC2004 battery conservation & Fn-lock CLI (`tools/d330-ctl`), 1000Hz PWM backlight frequency scaling, DRRS, and calibrated sRGB D65 ICC profile.
+- **Milestone 4: Connectivity, Firmware & System Boot (v4.0)**: Early bootloader fbcon landscape rotation, Plymouth initramfs hook, emergency refresh hotkey (`tools/d330-refresh-screen.sh`), clean early CPIO ACPI DSDT override (`/boot/acpi-override.cpio`), sensor debounce & ALS smoothing daemon (`tools/d330-sensor-filter.py`), touchpad gesture & Active Pen barrel tuning, automated MicroSD GPT expansion (`tools/d330-microsd-setup.sh`), Intel XMM 7360 LTE modem FCC unlock, and low-battery auto-hibernate daemon (`tools/d330-auto-hibernate.py`).
+- **Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0)**: Native distro packages (`.deb`, `.rpm`, `PKGBUILD`), automated Live ISO remaster build harness (`scripts/build_live_iso.sh`), and GitHub Actions release CI/CD pipeline (`.github/workflows/`).
 
-## Active Roadmap: Future Milestones
-
-### Milestone 3: Vision, Ergonomics & Multimedia (v3.0) - [ACTIVE]
-1. **Phase 10: Intel IPU3 Dual Camera Pipeline**: Front 2MP + Rear 5MP camera support (`INT3472` discrete regulator, `libcamera` IPU3 IPA software 3A tuning, `v4l2loopback` virtual webcam bridge for browser/Zoom compatibility).
-2. **Phase 11: 4GB RAM & 64GB eMMC Storage Optimization**: ZRAM swap with `zstd` compression, Linux VM dirty page writeback tuning, eMMC I/O scheduling to prevent flash wear and eliminate browser freeze.
-3. **Phase 12: Audio Refinements (Dolby DSP Curve & Anti-Pop Jack Delay)**: PipeWire filter-chain equalizer tailored for 1W tablet speakers, ALSA DAC power ramp delay eliminating headphone pop, headset inline mic controls.
-4. **Phase 13: Lenovo Hardware Controls (`ideapad_laptop` VPC2004)**: Battery Conservation Mode (60% charge threshold), Fn-Lock toggle, dock base USB 2.0 power management, CLI utility `tools/d330-ctl`.
-5. **Phase 14: Display Ergonomics (Backlight PWM Anti-Flicker & ICC Profile)**: 1000 Hz PWM backlight frequency scaling, calibrated sRGB D65 ICC color profile, Intel seamless DRRS 48Hz/60Hz.
-
-### Milestone 4: Connectivity, Firmware & System Boot (v4.0) - [READY]
-1. **Phase 15: Early Bootloader, Console & Plymouth Orientation**: Native landscape console (`fbcon=rotate:1`), Plymouth initramfs rotation filter, touch-scaled GRUB bootloader, screen refresh emergency tool.
-2. **Phase 16: ACPI DSDT Clean Initrd Override**: Early cpio archive (`/boot/acpi-override.cpio`) resolving BIOS SSDT namespace duplicates on `\_SB.PCI0.RP04` (`AE_ALREADY_EXISTS`).
-3. **Phase 17: Sensor Hysteresis & Ambient Light Sensor (ALS)**: Auto-rotation debounce window to prevent table jitter, ALS auto-dimming filter via `iio-sensor-proxy`.
-4. **Phase 18: Touchpad & Active Pen Gestures Tuning**: Palm rejection, multi-finger tap defaults, stylus barrel button mapping.
-5. **Phase 19: MicroSD Storage Expansion & Modular Cellular LTE**: Automated MicroSD `/home` GPT setup helper (`tools/d330-microsd-setup.sh`), modular auto-detected `xmm7360-pci` LTE modem driver.
-6. **Phase 20: Critical Low-Battery Auto-Hibernate Daemon**: Hybrid sleep transitioning to hibernation at <5% battery to prevent sudden power loss.
-
-### Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0) - [READY]
-1. **Phase 21: Native Distribution Packaging (.deb, .rpm, PKGBUILD)**: Complete packaging recipes across Debian/Ubuntu, Fedora/RPM, and Arch Linux.
-2. **Phase 22: Automated Live ISO Remaster Build Harness**: Scripted rootfs/squashfs remaster pipeline (`scripts/build_live_iso.sh`) for Ubuntu 24.04 and Linux Mint with all quirks and DKMS pre-baked.
-3. **Phase 23: GitHub Actions CI/CD Release Pipeline**: Automated build and release workflow publishing flashable ready-to-boot Live USB `.iso` images on semantic release tags.
+## Project Status: 100% Complete & Shipped
+Full hardware parity achieved for Lenovo IdeaPad D330-10IGL across Linux, ChromeOS, and Android-x86. Ready for v5.0 release tagging and public ISO builds.

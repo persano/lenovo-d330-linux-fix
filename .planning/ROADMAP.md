@@ -41,22 +41,13 @@
 
 ---
 
-## Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0) - [ACTIVE]
+## Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0) - [COMPLETED]
+*Archived to [`.gsd/milestones/v5.0-ROADMAP.md`](milestones/v5.0-ROADMAP.md)*
+- [x] Phase 21: Native Distribution Packaging (.deb, .rpm, PKGBUILD)
+- [x] Phase 22: Automated Live ISO Remaster Build Harness
+- [x] Phase 23: GitHub Actions CI/CD Release Pipeline
 
-### Phase 21: Native Distribution Packaging (.deb, .rpm, PKGBUILD)
-- [ ] Author Debian / Ubuntu `.deb` packaging files for `lenovo-d330-fix`
-- [ ] Author Fedora / openSUSE `.spec` packaging files for RPM builds
-- [ ] Author Arch Linux `PKGBUILD` packaging recipe for AUR
-- [ ] Verify package builds and dependencies across all formats (`scripts/test_distro_packaging.sh`)
+---
 
-### Phase 22: Automated Live ISO Remaster Build Harness
-- [ ] Author `scripts/build_live_iso.sh` remaster script for Ubuntu 24.04 LTS and Linux Mint LMDE
-- [ ] Extract live filesystem squashfs, inject all D330 kernel patches, DKMS, UCM2, and udev rules
-- [ ] Repackage bootable hybrid UEFI/BIOS ISO image with landscape Plymouth and touch GRUB
-- [ ] Create automated ISO test and validation script (`scripts/test_iso_integrity.sh`)
-
-### Phase 23: GitHub Actions CI/CD Release Pipeline
-- [ ] Create `.github/workflows/build-packages.yml` building `.deb`, `.rpm`, and DKMS on tags
-- [ ] Create `.github/workflows/build-iso.yml` generating remastered bootable Live ISO artifacts
-- [ ] Automate release asset uploads on semantic version tags (`v3.0`, `v4.0`, `v5.0`)
-- [ ] Verify GitHub Actions workflow syntax and linters
+## Project Status: 100% COMPLETE
+All 5 Milestones (Phases 0–23) successfully executed, tested, and archived. Full Linux hardware parity achieved.

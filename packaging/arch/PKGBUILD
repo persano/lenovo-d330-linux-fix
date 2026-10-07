@@ -1,0 +1,31 @@
+# Maintainer: Antigravity Community <community@example.com>
+pkgname=lenovo-d330-fix
+pkgver=5.0.0
+pkgrel=1
+pkgdesc="Complete hardware integration and screen freeze fix for Lenovo IdeaPad D330-10IGL"
+arch=('any')
+url="https://github.com/lucasgabmoreno/linuxmint_lenovod330"
+license=('GPL2')
+depends=('dkms' 'tlp' 'pipewire' 'python' 'libinput')
+optdepends=('iio-sensor-proxy: orientation and ambient light auto-rotation'
+            'v4l2loopback-dkms: virtual loopback webcam bridge')
+
+package() {
+    # Install executables
+    install -d "${pkgdir}/usr/local/bin"
+    install -m 755 "${srcdir}"/../tools/d330-* "${pkgdir}/usr/local/bin/"
+
+    # Install modprobe
+    install -d "${pkgdir}/etc/modprobe.d"
+    install -m 644 "${srcdir}"/../patches/*/etc/modprobe.d/*.conf "${pkgdir}/etc/modprobe.d/"
+
+    # Install udev
+    install -d "${pkgdir}/etc/udev/rules.d"
+    install -d "${pkgdir}/etc/udev/hwdb.d"
+    install -m 644 "${srcdir}"/../patches/*/etc/udev/rules.d/*.rules "${pkgdir}/etc/udev/rules.d/"
+    install -m 644 "${srcdir}"/../patches/*/etc/udev/hwdb.d/*.hwdb "${pkgdir}/etc/udev/hwdb.d/"
+
+    # Install systemd
+    install -d "${pkgdir}/etc/systemd/system"
+    install -m 644 "${srcdir}"/../patches/*/etc/systemd/system/*.service "${pkgdir}/etc/systemd/system/"
+}

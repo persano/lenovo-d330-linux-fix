@@ -1,0 +1,12 @@
+lenovo-d330-fix (5.0.0-1) unstable; urgency=medium
+
+  * Release v5.0 full hardware parity package.
+  * Added IPU3 camera pipeline and libcamera 3A tuning profiles.
+  * Added ZRAM memory compression and eMMC 5.1 storage elevator tuning.
+  * Added PipeWire speaker DSP filter-chain and anti-pop power latency.
+  * Added ideapad_laptop VPC2004 CLI and state persistence.
+  * Added display ergonomics, 1000Hz PWM frequency, and calibrated ICC profile.
+  * Added early fbcon rotation, Plymouth hook, and DSDT CPIO override.
+  * Added sensor hysteresis, active pen gestures, MicroSD, and auto-hibernate.
+
+ -- Antigravity Community <community@example.com>  Wed, 07 Oct 2026 12:00:00 +0000
