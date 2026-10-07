@@ -38,13 +38,15 @@
 - [ ] Author PipeWire filter-chain equalizer / limiter preset for 1W tablet speakers
 - [ ] Configure ALSA DAC power ramp delay in modprobe (`power_save_node_latency=1000`)
 - [ ] Eliminate headphone sleep wake pop and speaker high-volume distortion
+- [ ] Handle headset inline microphone button events
 - [ ] Create audio DSP verification harness (`scripts/test_audio_dsp.sh`)
 
 ### Phase 13: Lenovo Hardware Controls (`ideapad_laptop` VPC2004)
 - [ ] Implement Battery Conservation Mode toggle (60% threshold via `VPC2004:00/conservation_mode`)
 - [ ] Implement top-row Fn-Lock toggle (`VPC2004:00/fn_lock`)
-- [ ] Configure dock base USB 2.0 power management
-- [ ] Build unified CLI control tool (`tools/d330-ctl`) and TLP integration
+- [ ] Configure dock base USB 2.0 power management and wake stability
+- [ ] Build unified CLI control tool (`tools/d330-ctl`) and systemd state persistence
+- [ ] Create hardware controls test script (`scripts/test_hardware_controls.sh`)
 
 ### Phase 14: Display Ergonomics (Backlight PWM Anti-Flicker & ICC Profile)
 - [ ] Configure Intel `i915` backlight PWM frequency scaling to 1000 Hz
@@ -54,14 +56,64 @@
 
 ---
 
-## Milestone 4: Connectivity, Firmware & System Boot (v4.0) - [PLANNED]
-- [ ] Phase 15: Early Plymouth Boot Splash & GRUB Orientation (`fbcon=rotate:1`)
-- [ ] Phase 16: ACPI DSDT Clean Initrd Override (`/boot/acpi-override.cpio`)
-- [ ] Phase 17: Sensor Hysteresis & Ambient Light Sensor (ALS) Auto-Dimming
-- [ ] Phase 18: MicroSD Storage Expansion (`tools/d330-microsd-setup.sh`) & Modular LTE (`xmm7360-pci`)
+## Milestone 4: Connectivity, Firmware & System Boot (v4.0) - [READY]
+
+### Phase 15: Early Bootloader, Console & Plymouth Orientation
+- [ ] Configure native landscape early framebuffer console (`fbcon=rotate:1`)
+- [ ] Deploy Plymouth initramfs rotation filter hook for 800x1280 panel
+- [ ] Configure GRUB touch-friendly font scaling and menu layout
+- [ ] Deploy emergency screen refresh hotkey script (`tools/d330-refresh-screen.sh`)
+- [ ] Create boot orientation test harness (`scripts/test_boot_orientation.sh`)
+
+### Phase 16: ACPI DSDT Clean Initrd Override
+- [ ] Decompile DSDT and secondary SSDT table declaring duplicate `\_SB.PCI0.RP04`
+- [ ] Remove duplicate root port objects to eliminate `AE_ALREADY_EXISTS` kernel errors
+- [ ] Package recompiled AML table into prepended early CPIO archive (`/boot/acpi-override.cpio`)
+- [ ] Update initramfs / bootloader hook to load ACPI override table
+- [ ] Create ACPI dmesg validation test script (`scripts/test_acpi_cleanliness.sh`)
+
+### Phase 17: Sensor Hysteresis & Ambient Light Sensor (ALS) Auto-Dimming
+- [ ] Configure accelerometer (`BOSC0200`) orientation debounce filter & hysteresis window
+- [ ] Configure Ambient Light Sensor (`ACPI0008`) exponential moving average smoothing
+- [ ] Integrate ALS with `iio-sensor-proxy` and D-Bus ambient light service
+- [ ] Create sensor debounce and ALS verification harness (`scripts/test_sensor_als.sh`)
+
+### Phase 18: Touchpad & Active Pen Gestures Tuning
+- [ ] Configure libinput touchpad palm rejection, edge scrolling, and multi-finger tap defaults
+- [ ] Map Active Pen stylus barrel buttons (eraser, secondary click) across Wayland and X11
+- [ ] Configure touch gesture thresholds for 10.1" screen scaling
+- [ ] Create touchpad and stylus button verification test script (`scripts/test_gestures_pen.sh`)
+
+### Phase 19: MicroSD Storage Expansion & Modular Cellular LTE
+- [ ] Deploy automated MicroSD `/home` and `/data` GPT setup utility (`tools/d330-microsd-setup.sh`)
+- [ ] Package modular `xmm7360-pci` DKMS module for models equipped with LTE modem
+- [ ] Configure ModemManager FCC unlock handler (`fcc-unlock.d/8086:7360`)
+- [ ] Create storage and cellular detection test harness (`scripts/test_storage_cellular.sh`)
+
+### Phase 20: Critical Low-Battery Auto-Hibernate Daemon
+- [ ] Configure systemd hybrid sleep / low-battery hibernate trigger at <5% capacity
+- [ ] Ensure swap partition / zram swap state machine safely suspends to disk on critical battery
+- [ ] Test wake from hibernation and display state restoration
+- [ ] Create low-battery hibernate validation test script (`scripts/test_auto_hibernate.sh`)
 
 ---
 
-## Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0) - [PLANNED]
-- [ ] Phase 19: Automated ISO Remaster Build Harness (Ubuntu 24.04 / Linux Mint)
-- [ ] Phase 20: GitHub Actions CI/CD Release Pipeline Publishing Pre-Patched ISOs
+## Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0) - [READY]
+
+### Phase 21: Native Distribution Packaging (.deb, .rpm, PKGBUILD)
+- [ ] Author Debian / Ubuntu `.deb` packaging files for `lenovo-d330-fix`
+- [ ] Author Fedora / openSUSE `.spec` packaging files for RPM builds
+- [ ] Author Arch Linux `PKGBUILD` packaging recipe for AUR
+- [ ] Verify package builds and dependencies across all formats (`scripts/test_distro_packaging.sh`)
+
+### Phase 22: Automated Live ISO Remaster Build Harness
+- [ ] Author `scripts/build_live_iso.sh` remaster script for Ubuntu 24.04 LTS and Linux Mint LMDE
+- [ ] Extract live filesystem squashfs, inject all D330 kernel patches, DKMS, UCM2, and udev rules
+- [ ] Repackage bootable hybrid UEFI/BIOS ISO image with landscape Plymouth and touch GRUB
+- [ ] Create automated ISO test and validation script (`scripts/test_iso_integrity.sh`)
+
+### Phase 23: GitHub Actions CI/CD Release Pipeline
+- [ ] Create `.github/workflows/build-packages.yml` building `.deb`, `.rpm`, and DKMS on tags
+- [ ] Create `.github/workflows/build-iso.yml` generating remastered bootable Live ISO artifacts
+- [ ] Automate release asset uploads on semantic version tags (`v3.0`, `v4.0`, `v5.0`)
+- [ ] Verify GitHub Actions workflow syntax and linters
