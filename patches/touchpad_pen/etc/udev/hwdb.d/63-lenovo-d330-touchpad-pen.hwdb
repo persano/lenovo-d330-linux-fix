@@ -1,0 +1,12 @@
+# Lenovo IdeaPad D330-10IGL Touchpad & Active Pen hwdb overrides
+# Fine-tunes pressure thresholds and dimensions
+
+# Dock Touchpad (USB 17ef / I2C touchpad)
+libinput:touchpad:input:b*v17EFp*
+ LIBINPUT_ATTR_PRESSURE_RANGE=25:75
+ LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=100
+ LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=10
+
+# Lenovo Active Pen Digitizer (Goodix GDIX1001 Stylus)
+libinput:touchscreen:input:b*v27C6p0118*
+ LIBINPUT_ATTR_PRESSURE_RANGE=10:1024

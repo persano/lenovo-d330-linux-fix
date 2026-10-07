@@ -1,0 +1,4 @@
+# Lenovo IdeaPad D330-10IGL Intel XMM 7360 LTE Modem udev rules
+# PCI Vendor 8086, Device 7360
+
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x8086", ATTR{device}=="0x7360", ENV{ID_MM_DEVICE_PROCESS}="1", ENV{ID_MM_FCC_UNLOCK_AVAILABLE}="1"

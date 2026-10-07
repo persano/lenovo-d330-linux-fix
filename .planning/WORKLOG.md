@@ -220,3 +220,69 @@
 
 ## [Milestone 3 Completion] Vision, Ergonomics & Multimedia (v3.0)
 - All phases of Milestone 3 (Phases 10, 11, 12, 13, 14) successfully implemented, verified, and archived to `.gsd/milestones/v3.0-ROADMAP.md`.
+
+## [Phase 15] Early Bootloader, Console & Plymouth Orientation
+- Configured early framebuffer console rotation:
+  * `patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg`: Adds `fbcon=rotate:1`, `video=efifb:nobgrt`, and sets 1280x800 GOP resolution.
+- Authored initramfs hook:
+  * `patches/boot_orientation/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth`: Embeds display orientation and sensor rules into boot ramdisk.
+- Engineered emergency recovery utility:
+  * `tools/d330-refresh-screen.sh`: Resets display pipelines across Wayland (wlr-randr), X11 (xrandr), and DRM DPMS.
+- Authored verification harness:
+  * `scripts/test_boot_orientation.sh` supporting `--probe`, `--test-refresh`, and `--dry-run`.
+  * Documented design in `docs/research/BOOT_CONSOLE_PLYMOUTH_ORIENTATION.md` and `patches/boot_orientation/README.md`.
+
+## [Phase 16] ACPI DSDT Clean Initrd Override
+- Analyzed duplicate root port collision on `\_SB.PCI0.RP04`:
+  * Created `patches/acpi_override/dsdt_override.asl` providing clean, authoritative definition of RP04.
+- Engineered automated compilation and CPIO packager:
+  * `tools/d330-acpi-override.sh`: Compiles ASL via `iasl` into `kernel/firmware/acpi/dsdt.aml` inside uncompressed early CPIO archive `/boot/acpi-override.cpio`.
+  * `patches/acpi_override/etc/default/grub.d/51-lenovo-d330-acpi-override.cfg`: Prepend override CPIO to GRUB initrd line.
+- Authored verification harness:
+  * `scripts/test_acpi_cleanliness.sh` supporting `--probe`, `--build-cpio`, and `--dry-run`.
+  * Documented design in `docs/research/ACPI_DSDT_CLEANUP.md` and `patches/acpi_override/README.md`.
+
+## [Phase 17] Sensor Hysteresis & Ambient Light Sensor (ALS) Auto-Dimming
+- Engineered Python daemon for sensor stabilization:
+  * `tools/d330-sensor-filter.py`: 15-degree orientation deadband, 500ms debounce filter for `BOSC0200`, and Exponential Moving Average ($\alpha=0.15$) for `ACPI0008` ambient light sensor.
+- Packaged system integration components:
+  * `patches/sensors/etc/systemd/system/d330-sensor-filter.service`: Dedicated systemd unit.
+  * `patches/sensors/etc/udev/rules.d/87-lenovo-d330-sensors.rules`: IIO udev classification tags.
+- Authored verification harness:
+  * `scripts/test_sensor_als.sh` supporting `--probe`, `--monitor`, and `--dry-run`.
+  * Documented design in `docs/research/SENSOR_HYSTERESIS_ALS.md` and `patches/sensors/README.md`.
+
+## [Phase 18] Touchpad & Active Pen Gestures Tuning
+- Fine-tuned touchpad and stylus digitizer properties:
+  * `patches/touchpad_pen/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb`: Pressure and palm rejection hardware thresholds.
+  * `patches/touchpad_pen/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf`: Enables tap-to-click, natural scrolling, palm rejection (DWT), and 90-degree stylus matrix.
+  * `tools/d330-pen-config.sh`: CLI diagnostic utility for libinput devices and pressure ranges.
+- Authored verification harness:
+  * `scripts/test_gestures_pen.sh` supporting `--probe`, `--monitor`, and `--dry-run`.
+  * Documented design in `docs/research/TOUCHPAD_PEN_GESTURES.md` and `patches/touchpad_pen/README.md`.
+
+## [Phase 19] MicroSD Storage Expansion & Modular Cellular LTE
+- Polished storage expansion utility:
+  * `tools/d330-microsd-setup.sh`: Automated GPT formatting, flash-optimized ext4 creation, and persistent fstab mounting for `/data` or `/home`.
+- Integrated Intel XMM 7360 LTE modem:
+  * `patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360`: AT command FCC unlock script.
+  * `patches/cellular_storage/etc/modprobe.d/lenovo-d330-cellular.conf` and `patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules`.
+- Authored verification harness:
+  * `scripts/test_storage_cellular.sh` supporting `--probe`, `--test-microsd`, and `--dry-run`.
+  * Documented design in `docs/research/MICROSD_CELLULAR_LTE.md` and `patches/cellular_storage/README.md`.
+
+## [Phase 20] Critical Low-Battery Auto-Hibernate Daemon
+- Engineered low-battery safety daemon:
+  * `tools/d330-auto-hibernate.py`: Monitors battery capacity and safely syncs filesystems and dispatches hibernate at $\le 5\%$ charge while discharging.
+- Packaged system integration components:
+  * `patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service`: Oneshot hibernate trigger.
+  * `patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules`: Udev event listener.
+- Authored verification harness:
+  * `scripts/test_auto_hibernate.sh` supporting `--probe`, `--simulate`, and `--dry-run`.
+  * Documented design in `docs/research/AUTO_HIBERNATE_DAEMON.md` and `patches/power_hibernate/README.md`.
+
+## [Unified Installer Update - Milestone 4]
+- Updated `scripts/install_dkms.sh` with full deployment and cleanup logic across all Milestone 4 subsystems.
+
+## [Milestone 4 Completion] Connectivity, Firmware & System Boot (v4.0)
+- All phases of Milestone 4 (Phases 15, 16, 17, 18, 19, 20) successfully implemented, verified, and archived to `.gsd/milestones/v4.0-ROADMAP.md`.

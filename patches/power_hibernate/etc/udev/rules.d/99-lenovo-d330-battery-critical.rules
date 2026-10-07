@@ -1,0 +1,4 @@
+# Lenovo IdeaPad D330-10IGL Low Battery udev rule
+# Triggers auto-hibernate service when battery discharge state updates
+
+SUBSYSTEM=="power_supply", ATTR{type}=="Battery", ATTR{status}=="Discharging", ATTR{capacity}=="[0-5]", TAG+="systemd", ENV{SYSTEMD_WANTS}="d330-auto-hibernate.service"

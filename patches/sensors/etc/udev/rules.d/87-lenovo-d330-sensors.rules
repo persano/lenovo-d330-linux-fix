@@ -1,0 +1,8 @@
+# Lenovo IdeaPad D330-10IGL Sensor udev rules
+# Sets device permissions and tags for IIO accelerometer and light sensor
+
+# Accelerometer BOSC0200
+SUBSYSTEM=="iio", ATTR{name}=="*bosc0200*", TAG+="uaccess", ENV{IIO_SENSOR_PROXY_TYPE}="accelerometer"
+
+# Ambient Light Sensor ACPI0008
+SUBSYSTEM=="iio", ATTR{name}=="*acpi0008*", TAG+="uaccess", ENV{IIO_SENSOR_PROXY_TYPE}="ambient-light-sensor"

@@ -1,0 +1,33 @@
+#!/bin/sh
+# Initramfs hook for Lenovo IdeaPad D330-10IGL Early Orientation & Plymouth
+# Embeds panel orientation quirks into early initramfs
+
+PREREQ=""
+
+prereqs() {
+    echo "$PREREQ"
+}
+
+case "$1" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Ensure drm, i915, and efifb modules are present in initramfs
+manual_add_modules i915
+manual_add_modules efifb
+manual_add_modules fbcon
+
+# Copy custom udev sensor and orientation rules into initramfs
+if [ -f /etc/udev/rules.d/90-lenovo-d330-touchscreen.rules ]; then
+    copy_file file /etc/udev/rules.d/90-lenovo-d330-touchscreen.rules
+fi
+if [ -f /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb ]; then
+    copy_file file /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb
+fi
+
+exit 0

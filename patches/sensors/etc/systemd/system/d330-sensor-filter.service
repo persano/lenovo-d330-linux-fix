@@ -1,0 +1,13 @@
+[Unit]
+Description=Lenovo IdeaPad D330 Sensor Debounce and ALS Filter Service
+After=iio-sensor-proxy.service
+ConditionPathExists=/sys/bus/iio/devices
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/d330-sensor-filter.py --monitor
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
