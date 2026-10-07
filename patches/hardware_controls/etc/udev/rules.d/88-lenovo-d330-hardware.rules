@@ -1,0 +1,5 @@
+# Lenovo IdeaPad D330-10IGL Hardware Control udev rules
+# Grants non-root users in plugdev/wheel access to adjust conservation mode & fn-lock
+
+SUBSYSTEM=="platform", DRIVERS=="ideapad_laptop", ATTR{conservation_mode}!="", MODE="0664", GROUP="plugdev"
+SUBSYSTEM=="platform", DRIVERS=="ideapad_laptop", ATTR{fn_lock}!="", MODE="0664", GROUP="plugdev"

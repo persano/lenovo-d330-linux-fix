@@ -1,0 +1,15 @@
+[Unit]
+Description=Lenovo IdeaPad D330 IPU3 Camera V4L2 Loopback Service
+After=systemd-modules-load.service pipewire.service
+ConditionPathExists=/dev/media0
+
+[Service]
+Type=simple
+ExecStartPre=/sbin/modprobe v4l2loopback
+ExecStart=/usr/local/bin/d330-camera-bridge.sh 0 /dev/video10 1280 720 30
+Restart=on-failure
+RestartSec=3
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

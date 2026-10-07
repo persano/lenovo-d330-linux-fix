@@ -1,0 +1,13 @@
+[Unit]
+Description=Lenovo IdeaPad D330 Hardware State Persistence
+After=systemd-modules-load.service
+ConditionPathExists=/sys/bus/platform/drivers/ideapad_laptop
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/d330-ctl restore
+ExecStop=/usr/local/bin/d330-ctl save
+
+[Install]
+WantedBy=multi-user.target

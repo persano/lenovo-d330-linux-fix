@@ -1,0 +1,17 @@
+# Lenovo IdeaPad D330-10IGL IPU3 Camera Subsystem udev rules
+# Sets device group permissions and tags for media controller and video nodes
+
+# Grant video group read/write access to media controller nodes (/dev/media*)
+KERNEL=="media[0-9]*", SUBSYSTEM=="media", GROUP="video", MODE="0660", TAG+="uaccess"
+
+# Grant video group access to V4L2 subdevices (/dev/v4l-subdev*)
+KERNEL=="v4l-subdev[0-9]*", SUBSYSTEM=="video4linux", GROUP="video", MODE="0660", TAG+="uaccess"
+
+# Grant video group access to standard /dev/video* nodes
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", GROUP="video", MODE="0660", TAG+="uaccess"
+
+# Tag INT3472 ACPI regulator devices for power management
+ACTION=="add", SUBSYSTEM=="platform", DRIVERS=="intel-skl-int3472*", ATTR{power/control}="auto"
+
+# Tag Intel IPU3 CIO2 PCI controller (PCI ID 8086:31a8)
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x8086", ATTR{device}=="0x31a8", ATTR{power/control}="auto"

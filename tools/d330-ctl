@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""
+Lenovo IdeaPad D330-10IGL Hardware Control Utility (d330-ctl)
+Manages VPC2004 ACPI platform features:
+- Battery Conservation Mode (60% charging limit)
+- Top-row Function Lock (Fn-Lock)
+- Dock USB Power Management
+- State Persistence across reboots
+"""
+
+import sys
+import os
+import argparse
+import json
+
+STATE_FILE = "/etc/d330-hardware-state.json"
+VPC_PATHS = [
+    "/sys/bus/platform/drivers/ideapad_laptop/VPC2004:00",
+    "/sys/devices/platform/VPC2004:00",
+    "/sys/bus/platform/devices/VPC2004:00"
+]
+
+def find_vpc_path():
+    for p in VPC_PATHS:
+        if os.path.isdir(p):
+            return p
+    return VPC_PATHS[0]
+
+def read_sysfs(path):
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r") as f:
+            return f.read().strip()
+    except Exception as e:
+        return None
+
+def write_sysfs(path, val):
+    if not os.path.exists(path):
+        return False, f"Path not found: {path}"
+    try:
+        with open(path, "w") as f:
+            f.write(str(val) + "\n")
+        return True, "Success"
+    except PermissionError:
+        return False, "Permission denied (run as root)"
+    except Exception as e:
+        return False, str(e)
+
+def cmd_battery(args):
+    vpc = find_vpc_path()
+    node = os.path.join(vpc, "conservation_mode")
+    if args.action == "status":
+        val = read_sysfs(node)
+        if val is None:
+            print("[INFO] Battery conservation mode node not detected (ideapad_laptop driver not active).")
+        else:
+            state = "ENABLED (60% limit)" if val == "1" else "DISABLED (100% full charge)"
+            print(f"Battery Conservation Mode: {state} (raw: {val})")
+    elif args.action in ("enable", "on"):
+        ok, msg = write_sysfs(node, 1)
+        if ok:
+            print("[OK] Battery Conservation Mode enabled (charging stopped at 60%).")
+        else:
+            print(f"[FAIL] {msg}")
+    elif args.action in ("disable", "off"):
+        ok, msg = write_sysfs(node, 0)
+        if ok:
+            print("[OK] Battery Conservation Mode disabled (charging to 100%).")
+        else:
+            print(f"[FAIL] {msg}")
+
+def cmd_fnlock(args):
+    vpc = find_vpc_path()
+    node = os.path.join(vpc, "fn_lock")
+    if args.action == "status":
+        val = read_sysfs(node)
+        if val is None:
+            print("[INFO] Fn-Lock node not detected in ideapad_laptop.")
+        else:
+            state = "ENABLED (F1-F12 primary)" if val == "1" else "DISABLED (Multimedia keys primary)"
+            print(f"Fn-Lock: {state} (raw: {val})")
+    elif args.action in ("enable", "on"):
+        ok, msg = write_sysfs(node, 1)
+        if ok:
+            print("[OK] Fn-Lock enabled (F1-F12 keys default).")
+        else:
+            print(f"[FAIL] {msg}")
+    elif args.action in ("disable", "off"):
+        ok, msg = write_sysfs(node, 0)
+        if ok:
+            print("[OK] Fn-Lock disabled (Multimedia actions default).")
+        else:
+            print(f"[FAIL] {msg}")
+
+def cmd_status(args):
+    print("=== Lenovo IdeaPad D330 Hardware Status ===")
+    vpc = find_vpc_path()
+    print(f"VPC2004 Root: {vpc} ({'Found' if os.path.isdir(vpc) else 'Offline'})")
+    
+    b_val = read_sysfs(os.path.join(vpc, "conservation_mode"))
+    b_str = "ENABLED (60%)" if b_val == "1" else ("DISABLED" if b_val == "0" else "N/A")
+    print(f"  - Battery Conservation: {b_str}")
+    
+    fn_val = read_sysfs(os.path.join(vpc, "fn_lock"))
+    fn_str = "ENABLED (F1-F12)" if fn_val == "1" else ("DISABLED (Media)" if fn_val == "0" else "N/A")
+    print(f"  - Function Lock:        {fn_str}")
+
+def cmd_save(args):
+    vpc = find_vpc_path()
+    state = {
+        "conservation_mode": read_sysfs(os.path.join(vpc, "conservation_mode")),
+        "fn_lock": read_sysfs(os.path.join(vpc, "fn_lock"))
+    }
+    try:
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f, indent=2)
+        print(f"[OK] Hardware state saved to {STATE_FILE}: {state}")
+    except Exception as e:
+        print(f"[FAIL] Could not save state: {e}")
+
+def cmd_restore(args):
+    if not os.path.exists(STATE_FILE):
+        print(f"[INFO] No state file at {STATE_FILE}. Nothing to restore.")
+        return
+    try:
+        with open(STATE_FILE, "r") as f:
+            state = json.load(f)
+        vpc = find_vpc_path()
+        if "conservation_mode" in state and state["conservation_mode"] is not None:
+            write_sysfs(os.path.join(vpc, "conservation_mode"), state["conservation_mode"])
+        if "fn_lock" in state and state["fn_lock"] is not None:
+            write_sysfs(os.path.join(vpc, "fn_lock"), state["fn_lock"])
+        print(f"[OK] Hardware state restored from {STATE_FILE}")
+    except Exception as e:
+        print(f"[FAIL] Could not restore state: {e}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Lenovo IdeaPad D330 Hardware Control CLI")
+    subparsers = parser.add_subparsers(dest="subcommand", help="Subcommand")
+
+    # status
+    p_status = subparsers.add_parser("status", help="Show all hardware control states")
+    p_status.set_defaults(func=cmd_status)
+
+    # battery
+    p_bat = subparsers.add_parser("battery", help="Manage battery conservation mode (60% threshold)")
+    p_bat.add_argument("action", choices=["status", "enable", "disable", "on", "off"], default="status", nargs="?")
+    p_bat.set_defaults(func=cmd_battery)
+
+    # fnlock
+    p_fn = subparsers.add_parser("fnlock", help="Manage top-row Fn-Lock behavior")
+    p_fn.add_argument("action", choices=["status", "enable", "disable", "on", "off"], default="status", nargs="?")
+    p_fn.set_defaults(func=cmd_fnlock)
+
+    # save / restore
+    p_save = subparsers.add_parser("save", help="Save current settings for systemd persistence")
+    p_save.set_defaults(func=cmd_save)
+
+    p_rest = subparsers.add_parser("restore", help="Restore settings from persistence file")
+    p_rest.set_defaults(func=cmd_restore)
+
+    args = parser.parse_args()
+    if hasattr(args, "func"):
+        args.func(args)
+    else:
+        cmd_status(args)
+
+if __name__ == "__main__":
+    main()

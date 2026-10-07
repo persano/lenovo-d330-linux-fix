@@ -103,10 +103,16 @@ do_install() {
             cp "${REPO_ROOT}/patches/audio/etc/modprobe.d/lenovo-d330-audio.conf" /etc/modprobe.d/
         [ -f "${REPO_ROOT}/patches/power/etc/modprobe.d/lenovo-d330-power.conf" ] && \
             cp "${REPO_ROOT}/patches/power/etc/modprobe.d/lenovo-d330-power.conf" /etc/modprobe.d/
+        [ -f "${REPO_ROOT}/patches/camera/etc/modprobe.d/lenovo-d330-camera.conf" ] && \
+            cp "${REPO_ROOT}/patches/camera/etc/modprobe.d/lenovo-d330-camera.conf" /etc/modprobe.d/
+        [ -f "${REPO_ROOT}/patches/audio_dsp/etc/modprobe.d/lenovo-d330-audio-antipop.conf" ] && \
+            cp "${REPO_ROOT}/patches/audio_dsp/etc/modprobe.d/lenovo-d330-audio-antipop.conf" /etc/modprobe.d/
+        [ -f "${REPO_ROOT}/patches/display_ergonomics/etc/modprobe.d/lenovo-d330-display-pwm.conf" ] && \
+            cp "${REPO_ROOT}/patches/display_ergonomics/etc/modprobe.d/lenovo-d330-display-pwm.conf" /etc/modprobe.d/
     fi
 
     # 4. Deploy udev rules and hardware databases
-    log_info "Deploying udev rules and hwdb entries (sensors, touchscreen, dock, power)..."
+    log_info "Deploying udev rules and hwdb entries (sensors, touchscreen, dock, power, camera, storage, hardware)..."
     if [ "$DRY_RUN" = false ]; then
         mkdir -p /etc/udev/hwdb.d /etc/udev/rules.d
         cp "${REPO_ROOT}/patches/dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb" /etc/udev/hwdb.d/
@@ -118,6 +124,14 @@ do_install() {
             cp "${REPO_ROOT}/patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules" /etc/udev/rules.d/
         [ -f "${REPO_ROOT}/patches/power/etc/udev/rules.d/95-lenovo-d330-power.rules" ] && \
             cp "${REPO_ROOT}/patches/power/etc/udev/rules.d/95-lenovo-d330-power.rules" /etc/udev/rules.d/
+        [ -f "${REPO_ROOT}/patches/camera/etc/udev/rules.d/92-lenovo-d330-camera.rules" ] && \
+            cp "${REPO_ROOT}/patches/camera/etc/udev/rules.d/92-lenovo-d330-camera.rules" /etc/udev/rules.d/
+        [ -f "${REPO_ROOT}/patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules" ] && \
+            cp "${REPO_ROOT}/patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules" /etc/udev/rules.d/
+        [ -f "${REPO_ROOT}/patches/audio_dsp/etc/udev/rules.d/91-lenovo-d330-headset-jack.rules" ] && \
+            cp "${REPO_ROOT}/patches/audio_dsp/etc/udev/rules.d/91-lenovo-d330-headset-jack.rules" /etc/udev/rules.d/
+        [ -f "${REPO_ROOT}/patches/hardware_controls/etc/udev/rules.d/88-lenovo-d330-hardware.rules" ] && \
+            cp "${REPO_ROOT}/patches/hardware_controls/etc/udev/rules.d/88-lenovo-d330-hardware.rules" /etc/udev/rules.d/
 
         if command -v systemd-hwdb >/dev/null 2>&1; then
             systemd-hwdb update || true
@@ -126,7 +140,7 @@ do_install() {
         fi
     fi
 
-    # 5. Deploy X11 calibration and sleep hooks
+    # 5. Deploy X11 calibration, sleep hooks, and system tuning
     log_info "Deploying X11 touchscreen matrix and sleep stabilization hook..."
     if [ "$DRY_RUN" = false ]; then
         if [ -d "/etc/X11/xorg.conf.d" ]; then
@@ -137,10 +151,18 @@ do_install() {
         [ -f "${REPO_ROOT}/patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh" ] && \
             cp "${REPO_ROOT}/patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh" /usr/lib/systemd/system-sleep/ && \
             chmod +x /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh
+
+        # Deploy sysctl and zram generator configs
+        mkdir -p /etc/sysctl.d /etc/systemd
+        [ -f "${REPO_ROOT}/patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf" ] && \
+            cp "${REPO_ROOT}/patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf" /etc/sysctl.d/
+        [ -f "${REPO_ROOT}/patches/storage_memory/etc/systemd/zram-generator.conf" ] && \
+            cp "${REPO_ROOT}/patches/storage_memory/etc/systemd/zram-generator.conf" /etc/systemd/
+        sysctl --system >/dev/null 2>&1 || true
     fi
 
-    # 6. Deploy Tablet Daemon and Power Tune utilities
-    log_info "Deploying tablet daemon and power tuning services..."
+    # 6. Deploy CLI tools and systemd background daemons
+    log_info "Deploying tablet daemon, hardware controls, camera bridge, and power tuning..."
     if [ "$DRY_RUN" = false ]; then
         mkdir -p /usr/local/bin
         [ -f "${REPO_ROOT}/tools/d330-tablet-daemon.py" ] && \
@@ -149,6 +171,15 @@ do_install() {
         [ -f "${REPO_ROOT}/tools/lenovo-d330-power-tune.sh" ] && \
             cp "${REPO_ROOT}/tools/lenovo-d330-power-tune.sh" /usr/local/bin/lenovo-d330-power-tune && \
             chmod +x /usr/local/bin/lenovo-d330-power-tune
+        [ -f "${REPO_ROOT}/tools/d330-ctl" ] && \
+            cp "${REPO_ROOT}/tools/d330-ctl" /usr/local/bin/d330-ctl && \
+            chmod +x /usr/local/bin/d330-ctl
+        [ -f "${REPO_ROOT}/tools/d330-camera-bridge.sh" ] && \
+            cp "${REPO_ROOT}/tools/d330-camera-bridge.sh" /usr/local/bin/d330-camera-bridge.sh && \
+            chmod +x /usr/local/bin/d330-camera-bridge.sh
+        [ -f "${REPO_ROOT}/tools/d330-backlight-pwm.py" ] && \
+            cp "${REPO_ROOT}/tools/d330-backlight-pwm.py" /usr/local/bin/d330-backlight-pwm.py && \
+            chmod +x /usr/local/bin/d330-backlight-pwm.py
 
         # Deploy systemd services
         cp "${REPO_ROOT}/patches/dkms/etc/systemd/system/lenovo-d330-resume.service" /etc/systemd/system/
@@ -156,16 +187,24 @@ do_install() {
             cp "${REPO_ROOT}/patches/dock/etc/systemd/system/d330-tablet-daemon.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/power/etc/systemd/system/lenovo-d330-power.service" ] && \
             cp "${REPO_ROOT}/patches/power/etc/systemd/system/lenovo-d330-power.service" /etc/systemd/system/
+        [ -f "${REPO_ROOT}/patches/camera/etc/systemd/system/lenovo-d330-camera-loopback.service" ] && \
+            cp "${REPO_ROOT}/patches/camera/etc/systemd/system/lenovo-d330-camera-loopback.service" /etc/systemd/system/
+        [ -f "${REPO_ROOT}/patches/hardware_controls/etc/systemd/system/d330-hardware-state.service" ] && \
+            cp "${REPO_ROOT}/patches/hardware_controls/etc/systemd/system/d330-hardware-state.service" /etc/systemd/system/
+        [ -f "${REPO_ROOT}/patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service" ] && \
+            cp "${REPO_ROOT}/patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service" /etc/systemd/system/
 
         systemctl daemon-reload || true
         systemctl enable lenovo-d330-resume.service || true
         systemctl enable d330-tablet-daemon.service 2>/dev/null || true
         systemctl enable lenovo-d330-power.service 2>/dev/null || true
+        systemctl enable d330-hardware-state.service 2>/dev/null || true
+        systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
         log_ok "Enabled systemd background units."
     fi
 
-    # 7. Deploy ALSA UCM2 Audio profiles
-    log_info "Deploying ALSA UCM2 audio profiles..."
+    # 7. Deploy ALSA UCM2 Audio profiles & PipeWire DSP
+    log_info "Deploying ALSA UCM2 audio profiles and PipeWire DSP filters..."
     if [ "$DRY_RUN" = false ]; then
         UCM_DIR="/usr/share/alsa/ucm2"
         if [ -d "$UCM_DIR" ] && [ -d "${REPO_ROOT}/patches/audio/ucm2/sof-essx8336" ]; then
@@ -173,12 +212,23 @@ do_install() {
             cp -r "${REPO_ROOT}/patches/audio/ucm2/sof-essx8336"/* "${UCM_DIR}/sof-essx8336/"
             log_ok "Installed UCM2 audio profiles to ${UCM_DIR}/sof-essx8336."
         fi
+        if [ -d "/etc/pipewire" ] && [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" ]; then
+            mkdir -p /etc/pipewire/filter-chain.conf.d
+            cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" /etc/pipewire/filter-chain.conf.d/
+            log_ok "Installed PipeWire speaker DSP filter preset."
+        fi
     fi
 
-    # 8. Deploy TLP configuration
-    if [ "$DRY_RUN" = false ] && [ -d "/etc/tlp.d" ] && [ -f "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" ]; then
-        cp "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" /etc/tlp.d/
-        log_ok "Deployed TLP power configuration."
+    # 8. Deploy TLP & Color Management configuration
+    if [ "$DRY_RUN" = false ]; then
+        if [ -d "/etc/tlp.d" ] && [ -f "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" ]; then
+            cp "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" /etc/tlp.d/
+            log_ok "Deployed TLP power configuration."
+        fi
+        if [ -d "/usr/share/color/icc" ] && [ -f "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" ]; then
+            cp "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" /usr/share/color/icc/
+            log_ok "Installed calibrated D330 ICC color profile."
+        fi
     fi
 
     # 9. Update Initramfs
@@ -221,24 +271,44 @@ do_uninstall() {
         rm -f /etc/modprobe.d/lenovo-d330-i915.conf
         rm -f /etc/modprobe.d/lenovo-d330-audio.conf
         rm -f /etc/modprobe.d/lenovo-d330-power.conf
+        rm -f /etc/modprobe.d/lenovo-d330-camera.conf
+        rm -f /etc/modprobe.d/lenovo-d330-audio-antipop.conf
+        rm -f /etc/modprobe.d/lenovo-d330-display-pwm.conf
         rm -f /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb
         rm -f /etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb
         rm -f /etc/udev/rules.d/90-lenovo-d330-touchscreen.rules
         rm -f /etc/udev/rules.d/85-lenovo-d330-dock.rules
         rm -f /etc/udev/rules.d/95-lenovo-d330-power.rules
+        rm -f /etc/udev/rules.d/92-lenovo-d330-camera.rules
+        rm -f /etc/udev/rules.d/60-lenovo-d330-emmc.rules
+        rm -f /etc/udev/rules.d/91-lenovo-d330-headset-jack.rules
+        rm -f /etc/udev/rules.d/88-lenovo-d330-hardware.rules
         rm -f /etc/X11/xorg.conf.d/50-touchscreen-d330.conf
         rm -f /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh
+        rm -f /etc/sysctl.d/99-lenovo-d330-zram.conf
+        rm -f /etc/systemd/zram-generator.conf
         rm -f /usr/local/bin/d330-tablet-daemon
         rm -f /usr/local/bin/lenovo-d330-power-tune
+        rm -f /usr/local/bin/d330-ctl
+        rm -f /usr/local/bin/d330-camera-bridge.sh
+        rm -f /usr/local/bin/d330-backlight-pwm.py
         rm -rf /usr/share/alsa/ucm2/sof-essx8336
+        rm -f /etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf
         rm -f /etc/tlp.d/50-lenovo-d330.conf
+        rm -f /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc
 
         systemctl disable --now lenovo-d330-resume.service >/dev/null 2>&1 || true
         systemctl disable --now d330-tablet-daemon.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
+        systemctl disable --now lenovo-d330-camera-loopback.service >/dev/null 2>&1 || true
+        systemctl disable --now d330-hardware-state.service >/dev/null 2>&1 || true
+        systemctl disable --now lenovo-d330-backlight-pwm.service >/dev/null 2>&1 || true
         rm -f /etc/systemd/system/lenovo-d330-resume.service
         rm -f /etc/systemd/system/d330-tablet-daemon.service
         rm -f /etc/systemd/system/lenovo-d330-power.service
+        rm -f /etc/systemd/system/lenovo-d330-camera-loopback.service
+        rm -f /etc/systemd/system/d330-hardware-state.service
+        rm -f /etc/systemd/system/lenovo-d330-backlight-pwm.service
         systemctl daemon-reload >/dev/null 2>&1 || true
 
         # Refresh

@@ -1,0 +1,18 @@
+# eMMC I/O elevator and queue optimization for Lenovo IdeaPad D330-10IGL
+# Flash storage controller: Intel Gemini Lake eMMC 5.1 Host Controller (PCI 8086:319c)
+# Target disk: /dev/mmcblk0
+
+# Set I/O scheduler to mq-deadline for deterministic flash read latency
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/scheduler}="mq-deadline"
+
+# Optimize read-ahead buffer to 128 KB for eMMC burst transfers
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/read_ahead_kb}="128"
+
+# Enable write merges to group random writes into sequential flash blocks
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/nomerges}="0"
+
+# Set rotational flag to 0 (solid-state media)
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rotational}="0"
+
+# Enable asynchronous writeback cache requests if supported by firmware
+ACTION=="add|change", KERNEL=="mmcblk[0-9]", ATTR{queue/rq_affinity}="2"

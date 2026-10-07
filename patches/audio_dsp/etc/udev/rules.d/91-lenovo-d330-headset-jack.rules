@@ -1,0 +1,8 @@
+# Lenovo IdeaPad D330-10IGL Headset Jack Button & Switch udev rules
+# Maps input events from 3.5mm TRRS headset inline remote button
+
+# Tag headset jack input device for desktop media key routing
+ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="*Headset*", ENV{ID_INPUT_KEY}="1"
+
+# Handle Everest / Intel SOF jack detection switches
+ACTION=="change", SUBSYSTEM=="sound", KERNEL=="card*", ENV{SOUND_INITIALIZED}="1"

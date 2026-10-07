@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: CC0-1.0
+# libcamera IPU3 IPA tuning data for Omnivision OV2680 (Front Camera)
+# Lenovo IdeaPad D330-10IGL
+---
+version: 1
+algorithms:
+  - BlackLevelCorrection:
+      Red: 64
+      GreenR: 64
+      GreenB: 64
+      Blue: 64
+  - Awb:
+      defaultEstimator: Bayes
+      Bayes:
+        temperatureK:
+          - 2500
+          - 3000
+          - 4000
+          - 5000
+          - 6500
+        redGain:
+          - 1.45
+          - 1.62
+          - 1.88
+          - 2.12
+          - 2.45
+        blueGain:
+          - 2.50
+          - 2.15
+          - 1.72
+          - 1.40
+          - 1.15
+  - Agc:
+      exposureModes:
+        Normal:
+          shutter:
+            - 100
+            - 10000
+            - 33333
+          gain:
+            - 1.0
+            - 2.0
+            - 8.0
+      constraintModes:
+        Normal:
+          lower: 0.15
+          upper: 0.85
+  - ToneMapping:
+      curve:
+        - [0, 0]
+        - [32, 60]
+        - [64, 110]
+        - [128, 175]
+        - [192, 225]
+        - [256, 255]
