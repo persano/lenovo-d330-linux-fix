@@ -9,3 +9,4 @@ drivers_base/*.zip
 Thumbs.db
 __pycache__/
 *.pyc
+.serena/
