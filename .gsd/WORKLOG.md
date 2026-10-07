@@ -102,6 +102,16 @@
 - Updated `PROJECT.md`, `STATE.md`, and `ROADMAP.md`.
 - Stood by for user invocation of `/gsd-autonomous` for Phase 6.
 
-
-
-
+## [Phase 6] Touchscreen & Active Pen Calibration
+- Created upstream-ready kernel patch `patches/touchscreen/d330_touchscreen_dmi.patch`:
+  * Matches DMI for Type `82H0` (HD), `81MD` (HD), and `81H3` (FHD) in `drivers/platform/x86/touchscreen_dmi.c`.
+  * Assigns swapped X/Y axes, inverted Y, and active stylus support properties.
+- Authored udev calibration rules and hwdb entries:
+  * `patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules`: Maps `LIBINPUT_CALIBRATION_MATRIX="0 1 0 -1 0 1"`, configures palm rejection thresholds (pressure 120, size 12).
+  * `patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb`: Direct DMI-based libinput hwdb property overrides.
+  * `patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf`: X11 InputClass transformation matrix and stylus pressure curves.
+- Developed I2C resume recovery sleep hook:
+  * `patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh`: Cycles Goodix I2C sysfs unbind/bind on post-resume to eliminate controller lockups.
+- Authored diagnostic and verification suite:
+  * `scripts/test_touch_calibration.sh` supporting `--dry-run`, `--test-unbind`, and `--monitor`.
+  * Documented design, mathematical transformation, and hardware behavior in `docs/research/TOUCHSCREEN_ACTIVE_PEN.md` and `patches/touchscreen/README.md`.

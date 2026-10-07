@@ -1,0 +1,71 @@
+--- a/drivers/platform/x86/touchscreen_dmi.c
++++ b/drivers/platform/x86/touchscreen_dmi.c
+@@ -584,6 +584,33 @@ static const struct ts_dmi_data jumper_ezpad_mini3_data = {
+ 	.properties	= jumper_ezpad_mini3_props,
+ };
+ 
++/* Lenovo IdeaPad D330-10IGL / D330-10IGM Goodix Touchscreen Quirk */
++static const struct property_entry lenovo_ideapad_d330_props[] = {
++	PROPERTY_ENTRY_U32("touchscreen-size-x", 800),
++	PROPERTY_ENTRY_U32("touchscreen-size-y", 1280),
++	PROPERTY_ENTRY_BOOL("touchscreen-inverted-y"),
++	PROPERTY_ENTRY_BOOL("touchscreen-swapped-x-y"),
++	PROPERTY_ENTRY_STRING("post-power-on-delay-ms", "150"),
++	PROPERTY_ENTRY_BOOL("touchscreen-stylus-supported"),
++	{ }
++};
++
++static const struct ts_dmi_data lenovo_ideapad_d330_data = {
++	.acpi_name	= "GDIX1001:00",
++	.properties	= lenovo_ideapad_d330_props,
++};
++
++static const struct property_entry lenovo_ideapad_d330_fhd_props[] = {
++	PROPERTY_ENTRY_U32("touchscreen-size-x", 1200),
++	PROPERTY_ENTRY_U32("touchscreen-size-y", 1920),
++	PROPERTY_ENTRY_BOOL("touchscreen-inverted-y"),
++	PROPERTY_ENTRY_BOOL("touchscreen-swapped-x-y"),
++	PROPERTY_ENTRY_STRING("post-power-on-delay-ms", "150"),
++	PROPERTY_ENTRY_BOOL("touchscreen-stylus-supported"),
++	{ }
++};
++
++static const struct ts_dmi_data lenovo_ideapad_d330_fhd_data = {
++	.acpi_name	= "GDIX1001:00",
++	.properties	= lenovo_ideapad_d330_fhd_props,
++};
++
+ /*
+  * Note newer Chuwi Hi8 Air models have a different touchscreen
+  * (Cherry Trail variant vs Z3735F).
+@@ -1045,6 +1072,30 @@ const struct dmi_system_id touchscreen_dmi_table[] = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "Jumper EZpad mini3"),
+ 		},
+ 	},
++	{
++		/* Lenovo IdeaPad D330-10IGL (Type 82H0 - HD model) */
++		.driver_data = (void *)&lenovo_ideapad_d330_data,
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGL"),
++		},
++	},
++	{
++		/* Lenovo IdeaPad D330-10IGM (Type 81MD - HD model) */
++		.driver_data = (void *)&lenovo_ideapad_d330_data,
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGM"),
++		},
++	},
++	{
++		/* Lenovo IdeaPad D330-10IGM (Type 81H3 - FHD model) */
++		.driver_data = (void *)&lenovo_ideapad_d330_fhd_data,
++		.matches = {
++			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGM"),
++		},
++	},
+ 	{
+ 		/* Medion Akoya E2215T */
+ 		.driver_data = (void *)&medion_akoya_e2215t_data,

@@ -1,13 +1,13 @@
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 2: Peripheral Parity & Tablet Usability (v2.0)
-- **Active Phase**: Phase 6 (Touchscreen & Active Pen Calibration) - [READY]
-- **Status**: Milestone 1 (v1.0) successfully archived and tagged. Milestone 2 phases initialized. Standing by for user invocation of `/gsd-autonomous`.
+- **Active Phase**: Phase 7 (Detachable Dock & Tablet Mode Daemon) - [ACTIVE]
+- **Status**: Phase 6 completed with kernel DMI quirks, udev calibration, sleep unbind/bind recovery hook, and Active Pen pressure profiles. Advancing to Phase 7.
 - **Blockers**: None.
-- **Next Immediate Action**: Execute Phase 6 (Touchscreen udev matrix, sleep unbind/bind hook, palm rejection) upon `/gsd-autonomous` trigger.
+- **Next Immediate Action**: Execute Phase 7 (Detachable Dock & Tablet Mode Daemon - INT33D5 ACPI sensor, mode switching daemon, systemd unit).
 
 ## Milestone 2 Phase Progress
-- [ ] Phase 6: Touchscreen & Active Pen Calibration
+- [x] Phase 6: Touchscreen & Active Pen Calibration
 - [ ] Phase 7: Detachable Dock & Tablet Mode Daemon
 - [ ] Phase 8: Audio & Microphone UCM Profiles
 - [ ] Phase 9: Battery Life & Power Governors

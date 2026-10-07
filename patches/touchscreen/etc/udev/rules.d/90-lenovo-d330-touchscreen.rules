@@ -1,0 +1,17 @@
+# Lenovo IdeaPad D330 Touchscreen and Active Pen udev configuration
+# Matches Goodix I2C Touchscreen controller (GDIX1001)
+
+# Apply coordinate transformation matrix for landscape orientation match
+# Portrait physical panel 800x1280 rotated 90 deg clockwise to 1280x800:
+# [0, 1, 0; -1, 0, 1] translates touch input into correct landscape coordinates
+ACTION=="add|change", KERNEL=="event*", ATTRS{name}=="Goodix Capacitive TouchScreen*", \
+    ENV{LIBINPUT_CALIBRATION_MATRIX}="0 1 0 -1 0 1", \
+    ENV{LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD}="120", \
+    ENV{LIBINPUT_ATTR_PALM_SIZE_THRESHOLD}="12", \
+    ENV{WL_OUTPUT}="eDP-1"
+
+# Active Stylus / Pen match
+ACTION=="add|change", KERNEL=="event*", ATTRS{name}=="*Pen*|*Stylus*|*GDIX1001*Pen*", \
+    ENV{LIBINPUT_CALIBRATION_MATRIX}="0 1 0 -1 0 1", \
+    ENV{ID_INPUT_TABLET}="1", \
+    ENV{WL_OUTPUT}="eDP-1"

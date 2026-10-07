@@ -14,12 +14,12 @@
 ## Milestone 2: Peripheral Parity & Tablet Usability (v2.0) - [ACTIVE]
 
 ### Phase 6: Touchscreen & Active Pen Calibration
-- [ ] Add udev libinput calibration matrix for D330 touch digitizer (`GDIX1001`)
-- [ ] Add X11 coordinate transformation matrix configuration (`50-touchscreen-d330.conf`)
-- [ ] Implement I2C touch controller unbind/rebind sleep resume stabilization hook
-- [ ] Create DMI quirk patch for `touchscreen_dmi.c` / `goodix.c`
-- [ ] Configure palm rejection and stylus pressure thresholds for Lenovo Active Pen
-- [ ] Verify touch accuracy, multi-touch gestures, and wake recovery
+- [x] Add udev libinput calibration matrix for D330 touch digitizer (`GDIX1001`)
+- [x] Add X11 coordinate transformation matrix configuration (`50-touchscreen-d330.conf`)
+- [x] Implement I2C touch controller unbind/rebind sleep resume stabilization hook
+- [x] Create DMI quirk patch for `touchscreen_dmi.c` / `goodix.c`
+- [x] Configure palm rejection and stylus pressure thresholds for Lenovo Active Pen
+- [x] Verify touch accuracy, multi-touch gestures, and wake recovery
 
 ### Phase 7: Detachable Dock & Tablet Mode Daemon
 - [ ] Analyze ACPI Hall effect hinge sensor / keyboard dock events (`INT33D5`)

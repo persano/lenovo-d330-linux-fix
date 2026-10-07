@@ -1,0 +1,18 @@
+# Lenovo IdeaPad D330 Touchscreen hwdb entries
+# Maps touch matrix directly in libinput hwdb subsystem
+
+# IdeaPad D330-10IGL (Type 82H0)
+touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGL:*
+ LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
+ LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
+ LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
+
+# IdeaPad D330-10IGM (Type 81MD and 81H3)
+touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGM:*
+ LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
+ LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
+ LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
+
+# Generic fallback for GDIX1001 ACPI device
+touchscreen:acpi:GDIX1001*:dmi:*:svnLENOVO:*
+ LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
