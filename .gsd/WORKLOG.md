@@ -30,3 +30,18 @@
   * UEFI BIOS Update: `https://download.lenovo.com/consumer/mobiles/g0cn14ww.exe` (`DS545459`)
 - Created `scripts/acquire_lenovo_drivers.sh` supporting automated download, unpacking (`innoextract`, `7z`, `cabextract`), and artifact inspection.
 - Validated script syntax with `bash -n`.
+- Committed and pushed Phase 2 (`c489f88`).
+
+## [Phase 3] Hardware Telemetry & ACPI Extraction
+- Authored `scripts/extract_telemetry.sh` with dual-mode operational support:
+  * Local execution (`--local`) requiring root privileges.
+  * Remote SSH execution (`--host user@ip`) with automated payload staging, remote sudo collection, tarball bundling, scp retrieval, and remote cleanup.
+- Implemented automated extraction pipeline for:
+  * DMI platform identifiers (`dmidecode`, `/sys/class/dmi/id/*`).
+  * ACPI AML tables (`/sys/firmware/acpi/tables/*`, `acpidump`) and ASL disassembly (`iasl -d`).
+  * Intel GPU VBT binary (`i915_vbt`) and automated decoding (`intel_vbt_decode`).
+  * DRM connector state, modes, CRTC timings, power wells, and EDID decoding (`edid-decode`).
+  * Debugfs GPIO pin allocations and IIO accelerometer mount matrix parameters.
+  * System power sleep profiles (`/sys/power/mem_sleep`, `wakeup_count`).
+- Created `docs/dumps/README.md` documenting prerequisite packages, invocation syntax, archive hierarchy, and reverse engineering checkpoints.
+- Validated script syntax with `bash -n` and verified `--help` output.

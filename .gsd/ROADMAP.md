@@ -25,12 +25,12 @@
 - [x] Commit and push Phase 2
 
 ## Phase 3: Hardware Telemetry & ACPI Extraction
-- [ ] Create `scripts/extract_telemetry.sh` for remote target extraction
-- [ ] Implement ACPI tables dump and disassembly (`acpidump`, `iasl -d`)
-- [ ] Implement VBT extraction and decoding (`intel_vbt_decode`)
-- [ ] Implement EDID, DRM modes, PPS timing target extraction
-- [ ] Document usage and extraction steps
-- [ ] Commit and push Phase 3
+- [x] Create `scripts/extract_telemetry.sh` for remote target extraction
+- [x] Implement ACPI tables dump and disassembly (`acpidump`, `iasl -d`)
+- [x] Implement VBT extraction and decoding (`intel_vbt_decode`)
+- [x] Implement EDID, DRM modes, PPS timing target extraction
+- [x] Document usage and extraction steps (`docs/dumps/README.md`)
+- [x] Commit and push Phase 3
 
 ## Phase 4: Differential Analysis & Reverse Engineering (Ghidra + REA)
 - [ ] Analyze `igdkmd64.sys` power transition callbacks
