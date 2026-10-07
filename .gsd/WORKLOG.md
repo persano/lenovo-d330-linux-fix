@@ -18,3 +18,15 @@
 - Cataloged ACPI DSDT/SSDT root port namespace clashes on `\_SB.PCI0.RP04` (`AE_ALREADY_EXISTS`).
 - Compared upstream kernel quirks (`drm_panel_orientation_quirks.c`) for 81H3, 81MD vs 82H0.
 - Stored comprehensive analysis in `docs/research/COMMUNITY_FINDINGS.md`.
+- Committed and pushed Phase 1 (`a60bdf1`).
+
+## [Phase 2] Official Lenovo Windows Driver Baseline Acquisition
+- Enumerated Lenovo D330-10IGL (Type 82H0) driver catalog via Lenovo Support endpoints.
+- Resolved direct CDN URLs for key packages:
+  * Intel VGA Driver: `https://download.lenovo.com/consumer/mobiles/3gid020fh6y37sb0.exe` (`DS545452`)
+  * Intel HID Event Filter / Mode Transition: `https://download.lenovo.com/consumer/mobiles/3gid010fu8cg1sb0.exe` (`DS545445`)
+  * Intel Serial-IO / GPIO Driver: `https://download.lenovo.com/consumer/mobiles/3gid010f3ffk4sb0.exe` (`DS545448`)
+  * Bosch G-sensor Accelerometer: `https://download.lenovo.com/consumer/mobiles/3gid020fy96b0sb0.exe` (`DS545444`)
+  * UEFI BIOS Update: `https://download.lenovo.com/consumer/mobiles/g0cn14ww.exe` (`DS545459`)
+- Created `scripts/acquire_lenovo_drivers.sh` supporting automated download, unpacking (`innoextract`, `7z`, `cabextract`), and artifact inspection.
+- Validated script syntax with `bash -n`.

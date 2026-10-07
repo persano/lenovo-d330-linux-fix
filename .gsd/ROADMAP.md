@@ -18,11 +18,11 @@
 - [x] Commit and push Phase 1
 
 ## Phase 2: Official Lenovo Windows Driver Baseline Acquisition
-- [ ] Create `scripts/acquire_lenovo_drivers.sh` with automated fetching & extraction logic
-- [ ] Target packages: Intel Graphics (`igdkmd64.sys`), Lenovo Mode Transition (`DS545445`), Serial IO / GPIO, BIOS update
-- [ ] Implement robust unpackers (`innoextract`, `7z`, cabextract)
-- [ ] Verify script syntax and instructions
-- [ ] Commit and push Phase 2
+- [x] Create `scripts/acquire_lenovo_drivers.sh` with automated fetching & extraction logic
+- [x] Target packages: Intel Graphics (`igdkmd64.sys`), Lenovo Mode Transition (`DS545445`), Serial IO / GPIO (`DS545448`), BIOS update (`DS545459`)
+- [x] Implement robust unpackers (`innoextract`, `7z`, cabextract)
+- [x] Verify script syntax and instructions
+- [x] Commit and push Phase 2
 
 ## Phase 3: Hardware Telemetry & ACPI Extraction
 - [ ] Create `scripts/extract_telemetry.sh` for remote target extraction
