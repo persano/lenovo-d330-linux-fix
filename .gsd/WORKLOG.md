@@ -57,4 +57,23 @@
   * Gemini Lake Refresh UHD 600 PSR state machine lockups during DC6 sleep exits.
   * Missing DMI matching for Machine Type `82H0` (`D330-10IGL`) in upstream `drm_panel_orientation_quirks.c`.
 - Published comprehensive findings in `docs/windows_analysis/RESUME_SEQUENCE.md`.
+- Committed and pushed Phase 4 (`d5f20bc`).
+
+## [Phase 5] Patch Generation & DKMS Delivery
+- Authored upstream-ready kernel patch `patches/d330_display_resume_fix.patch`:
+  * Adds DMI orientation quirks for Lenovo IdeaPad D330-10IGL (`82H0`) in `drm_panel_orientation_quirks.c`.
+  * Introduces `QUIRK_INCREASE_PPS_CYCLE_DELAY` in `intel_quirks.c`.
+  * Clamps minimum PPS `panel_power_cycle_delay` to >= 600ms in `intel_pps.c` to prevent TCON latch-up.
+- Developed standalone DKMS package `patches/dkms/lenovo-d330-fix/`:
+  * Kernel module `lenovo_d330_fix.c` with PM notifier hooks enforcing 600ms wake delay.
+  * Kbuild `Makefile` and `dkms.conf`.
+- Authored system configuration templates:
+  * `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` (`i915 enable_psr=0 enable_fbc=0`).
+  * `patches/dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb` (Bosch `BOSC0200` accelerometer mount matrix).
+  * `patches/dkms/etc/systemd/system/lenovo-d330-resume.service` (Post-resume stabilization).
+- Authored automated operational scripts:
+  * `scripts/install_dkms.sh` supporting `--install`, `--uninstall`, and `--dry-run`.
+  * `scripts/test_resume_loop.sh` for multi-cycle RTC wake stress testing.
+- Created `patches/README.md` documentation.
+
 

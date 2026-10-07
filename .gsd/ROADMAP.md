@@ -39,6 +39,7 @@
 - [x] Commit and push Phase 4
 
 ## Phase 5: Patch Generation & DKMS Delivery
-- [ ] Formulate DMI quirk table patch for `82H0`
-- [ ] Package DRM kernel patch and DKMS module
-- [ ] Commit and push Phase 5 deliverables
+- [x] Formulate DMI quirk table patch for `82H0`
+- [x] Package DRM kernel patch and DKMS module
+- [x] Commit and push Phase 5 deliverables
+

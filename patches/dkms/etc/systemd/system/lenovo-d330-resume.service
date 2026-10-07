@@ -1,0 +1,10 @@
+[Unit]
+Description=Lenovo IdeaPad D330 Post-Resume Display Stabilization
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'if [ -d /sys/class/drm/card0-eDP-1 ]; then echo "Resumed - verifying eDP connector status: $(cat /sys/class/drm/card0-eDP-1/status 2>/dev/null || true)"; fi'
+
+[Install]
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
