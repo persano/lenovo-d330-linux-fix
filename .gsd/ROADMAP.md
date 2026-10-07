@@ -9,13 +9,13 @@
 - [x] Initial commit and push
 
 ## Phase 1: Community Research & Prior Art Ingestion
-- [ ] Inspect `lucasgabmoreno/linuxmint_lenovod330` repository
-- [ ] Analyze `lenovod330-refreshscreen.sh` workaround script
-- [ ] Analyze systemd suspend masking workarounds
-- [ ] Analyze kernel command line parameters (`video=efifb:nobgrt`, `i915.enable_psr=0`, `i915.enable_fbc=0`)
-- [ ] Analyze sensor orientation quirks (`BOSC0200` in `/lib/udev/hwdb.d/60-sensor.hwdb`)
-- [ ] Document findings in `docs/research/COMMUNITY_FINDINGS.md`
-- [ ] Commit and push Phase 1
+- [x] Inspect `lucasgabmoreno/linuxmint_lenovod330` repository
+- [x] Analyze `lenovod330-refreshscreen.sh` workaround script
+- [x] Analyze systemd suspend masking workarounds
+- [x] Analyze kernel command line parameters (`video=efifb:nobgrt`, `i915.enable_psr=0`, `i915.enable_fbc=0`)
+- [x] Analyze sensor orientation quirks (`BOSC0200` in `/lib/udev/hwdb.d/60-sensor.hwdb`)
+- [x] Document findings in `docs/research/COMMUNITY_FINDINGS.md`
+- [x] Commit and push Phase 1
 
 ## Phase 2: Official Lenovo Windows Driver Baseline Acquisition
 - [ ] Create `scripts/acquire_lenovo_drivers.sh` with automated fetching & extraction logic
