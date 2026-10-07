@@ -35,10 +35,14 @@ Reverse engineering of the official Lenovo Windows 10 driver baseline (`igdkmd64
 | **Standalone DKMS Module** | [`patches/dkms/lenovo-d330-fix/`](patches/dkms/lenovo-d330-fix/) | Out-of-tree kernel module (`lenovo_d330_fix.ko`) hooking kernel PM events to enforce safe TCON discharge without rebuilding kernel. |
 | **Hardware DB Rules** | [`patches/dkms/etc/udev/hwdb.d/`](patches/dkms/etc/udev/hwdb.d/) | Bosch `BOSC0200` accelerometer mount matrix calibration (`0, 1, 0; -1, 0, 0; 0, 0, 1`). |
 | **Modprobe Config** | [`patches/dkms/etc/modprobe.d/`](patches/dkms/etc/modprobe.d/) | `i915 enable_psr=0 enable_fbc=0` to eliminate GLK pipe freeze. |
+| **ChromeOS Patches** | [`patches/chromeos/`](patches/chromeos/) | Kernel patches for `chromeos-5.15` and `chromeos-6.6`+ branches. |
+| **Android-x86 / Bliss OS** | [`patches/android/`](patches/android/) | Kernel patches (5.15 & 6.6) and sensor HAL matrix configs for Android. |
+| **Distro Install Guide** | [`docs/DISTRO_INSTALL_GUIDE.md`](docs/DISTRO_INSTALL_GUIDE.md) | Guide for Ubuntu/Mint .deb rebuilds, Fedora RPMs, Arch PKGBUILD, and ISO modification. |
 | **Automated Installer** | [`scripts/install_dkms.sh`](scripts/install_dkms.sh) | Zero-friction installation script (`--install`, `--uninstall`, `--dry-run`). |
 | **Stress Test Harness** | [`scripts/test_resume_loop.sh`](scripts/test_resume_loop.sh) | Automated multi-cycle RTC wake test loop (`rtcwake -m mem -s 10`). |
 | **Telemetry Extractor** | [`scripts/extract_telemetry.sh`](scripts/extract_telemetry.sh) | Local and remote SSH hardware dump utility (ACPI, VBT, EDID, GPIO). |
 | **Differential RE Suite** | [`tools/`](tools/) | Static driver analyzer, Ghidra export script, and PPS timing model. |
+
 
 ---
 
@@ -95,6 +99,8 @@ dmesg | grep lenovo_d330_fix
 ├── drivers_base/        # Official Lenovo Windows driver baseline references
 ├── patches/
 │   ├── d330_display_resume_fix.patch  # Unified DRM kernel patch
+│   ├── chromeos/        # ChromeOS kernel 5.15 & 6.6 patches
+│   ├── android/         # Android-x86 / Bliss OS kernel patches & HAL configs
 │   └── dkms/            # Standalone out-of-tree DKMS package & configs
 ├── scripts/
 │   ├── acquire_lenovo_drivers.sh      # Downloader for Lenovo OEM drivers

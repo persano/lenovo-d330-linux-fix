@@ -75,5 +75,20 @@
   * `scripts/install_dkms.sh` supporting `--install`, `--uninstall`, and `--dry-run`.
   * `scripts/test_resume_loop.sh` for multi-cycle RTC wake stress testing.
 - Created `patches/README.md` documentation.
+- Committed and pushed Phase 5 (`7c313fb`) and initial README (`87d425f`).
+
+## [Cross-Platform Delivery] ChromeOS, Android-x86 & Distro Customization
+- Authored targeted ChromeOS kernel patches:
+  * `patches/chromeos/d330_chromeos_5.15.patch` (for `chromeos-5.15` LTS).
+  * `patches/chromeos/d330_chromeos_6.6.patch` (for `chromeos-6.6`+).
+  * `patches/chromeos/README.md` (deployment guide for ChromeOS Flex, Brunch, and source builds).
+- Authored targeted Android-x86 / Bliss OS patches:
+  * `patches/android/d330_android_x86_5.15.patch` (Bliss OS 14/15).
+  * `patches/android/d330_android_x86_6.6.patch` (Bliss OS 16+).
+  * `patches/android/android_hal_configs/sensor_hal.prop` (Sensor HAL accelerometer matrix).
+  * `patches/android/README.md` (Android bootloader and HAL documentation).
+- Authored distro kernel replacement & installer customization guide:
+  * `docs/DISTRO_INSTALL_GUIDE.md` (step-by-step procedures for live system kernel overwrite via DKMS, Debian/Ubuntu `.deb` kernel compilation, Fedora RPM build, Arch PKGBUILD, and ISO squashfs remastering).
+
 
 

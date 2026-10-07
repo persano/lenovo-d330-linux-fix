@@ -1,0 +1,5 @@
+# Android Sensor HAL Mount Matrix Configuration for BOSC0200
+# Place in /system/build.prop, /vendor/build.prop, or /system/etc/sensors.prop
+
+hal.sensors.iio.accel.matrix=0,1,0,-1,0,0,0,0,1
+ro.hardware.sensors.iio=true
