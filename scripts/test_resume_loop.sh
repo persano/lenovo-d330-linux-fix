@@ -40,12 +40,34 @@ Options:
 EOF
 }
 
+die_arg() {
+    echo "[!] $*" >&2
+    usage
+    exit 1
+}
+
+require_arg() {
+    # $1 = option flag, $2 = the parsed value (may be empty/unset) -- IN-02:
+    # a trailing flag with no value must not abort on unbound $2 under set -u.
+    if [ -z "${2:-}" ] || [ "${2#--}" != "$2" ]; then
+        die_arg "Option $1 requires an argument."
+    fi
+}
+
+require_uint() {
+    # $1 = option flag, $2 = value; must be a non-negative integer so a
+    # non-numeric --cycles cannot silently run 0 cycles and exit 0.
+    if ! echo "$2" | grep -qE '^[0-9]+$'; then
+        die_arg "Option $1 requires a non-negative integer (got: '$2')."
+    fi
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -c|--cycles) CYCLES="$2"; shift 2 ;;
-        -s|--sleep) SLEEP_SECS="$2"; shift 2 ;;
-        -w|--wake) WAKE_SECS="$2"; shift 2 ;;
-        -l|--log) LOG_FILE="$2"; LOG_FILE_SET=true; shift 2 ;;
+        -c|--cycles) require_arg "$1" "${2:-}"; require_uint "$1" "$2"; CYCLES="$2"; shift 2 ;;
+        -s|--sleep) require_arg "$1" "${2:-}"; require_uint "$1" "$2"; SLEEP_SECS="$2"; shift 2 ;;
+        -w|--wake) require_arg "$1" "${2:-}"; require_uint "$1" "$2"; WAKE_SECS="$2"; shift 2 ;;
+        -l|--log) require_arg "$1" "${2:-}"; LOG_FILE="$2"; LOG_FILE_SET=true; shift 2 ;;
         --simulate|--dry-run) SIMULATE=true; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
