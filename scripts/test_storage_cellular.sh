@@ -56,7 +56,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -95,11 +95,21 @@ if [[ "$MODE" == "dry-run" ]]; then
     # its non-zero exit propagates under set -e.
     bash scripts/test_audio_dsp.sh --dry-run
 
+    # RNNoise structural validator (Phase 38): validates the mic graph under
+    # pipewire.conf.d. Same contract as the suites above.
+    bash scripts/test_mic_rnnoise.sh --dry-run
+
     # RNNoise SC2 (Phase 38): with the LADSPA plugin absent the probe MUST exit
-    # non-zero. Assert the fail-closed contract directly rather than trusting the
-    # code path by inspection.
-    if D330_LADSPA_DIRS="/nonexistent-empty-ladspa" bash scripts/test_mic_rnnoise.sh --probe >/dev/null 2>&1; then
+    # non-zero AND emit the missing-plugin diagnostic. Assert both, so a
+    # missing/crashing script (any non-zero exit) cannot be counted as SC2-passing.
+    sc2_out=""
+    if sc2_out="$(D330_LADSPA_DIRS="/nonexistent-empty-ladspa" bash scripts/test_mic_rnnoise.sh --probe 2>&1)"; then
         echo "[FAIL] RNNoise probe passed with librnnoise_ladspa.so absent (SC2)" >&2
+        exit 1
+    fi
+    if ! printf '%s\n' "$sc2_out" | grep -q 'librnnoise_ladspa.so not found'; then
+        echo "[FAIL] RNNoise probe exited non-zero without the missing-plugin diagnostic (SC2)" >&2
+        printf '%s\n' "$sc2_out" >&2
         exit 1
     fi
     echo "[OK] RNNoise probe fails closed when librnnoise_ladspa.so is absent"
