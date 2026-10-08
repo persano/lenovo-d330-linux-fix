@@ -31,9 +31,9 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **How Decided**: Rather than maintaining an out-of-tree full `i915.ko` module rebuild (which breaks on every kernel update), we evaluated two approaches:
   1. Patching upstream kernel tree via `drm/i915/display/intel_pps.c`.
   2. Standalone DKMS module hooking module parameters or override via DRM DMI quirks.
-  * *Decision*: Deliver both: a standalone DKMS helper module + modprobe parameter tuning (`patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` with `fastboot=1`, `enable_fbc=1`, `enable_psr=0`) and a systemd resume hook that forces TCON discharge sequencing.
+  * *Decision*: Deliver both: a standalone DKMS banner module (DMI match + honest suspend/resume breadcrumbs only) + modprobe parameter tuning (`patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` with `fastboot=1`, `enable_fbc=1`, `enable_psr=0`); the 600 ms TCON power-cycle clamp is delivered by the Option 2 kernel patch (`patches/d330_display_resume_fix.patch`), not by a systemd hook or the DKMS module.
 * **What Done**:
-  - `patches/dkms/`: Kernel module source tree and `dkms.conf` to clamp PPS delay.
+  - `patches/dkms/`: DKMS banner module source tree and `dkms.conf` (DMI match + honest breadcrumbs; it does NOT clamp the PPS delay — the Option 2 kernel patch does).
   - `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf`: Set stable DRM parameters.
   - Echo-only post-resume systemd unit: **REMOVED in Phase 34** — it only logged eDP connector status and never restored display output, so the unit and every installer/postinst/spec reference were deleted. Display resume is handled by the i915 parameters plus the Option 2 kernel patch clamp.
 * **Auditor Verification Points**:
