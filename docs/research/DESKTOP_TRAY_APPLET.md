@@ -7,4 +7,4 @@ While command line control via `d330-ctl` allows scripted management, normal des
 - Visual dock mode state indication.
 
 ## 2. Implementation
-`tools/d330-tray.py` and `d330-tray.desktop` provide an autostart tray applet compatible with GNOME Shell (via AppIndicator extension), KDE Plasma, XFCE, and Cinnamon system trays.
+`tools/d330-tray.py` and `d330-tray.desktop` provide a dependency-free stdlib notification/status helper: a `--status` CLI that reports battery conservation (60%) state and a `notify-send` desktop notification at session start. No GTK, no AppIndicator, and no interactive tray menu.

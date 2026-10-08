@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Lenovo IdeaPad D330-10IGL System Tray Hardware Applet (d330-tray)
-Provides system tray icon for one-click controls:
-- 60% Battery Conservation Mode
-- Auto-Rotation Lock / Unlock
-- Docked vs Tablet Mode status display
-- Quick emergency screen refresh trigger
+Lenovo IdeaPad D330-10IGL hardware status helper (d330-tray)
+Dependency-free stdlib notification/status helper:
+- Reports battery conservation (60% charge limit) state via `--status`
+- Sends a `notify-send` desktop notification when autostarted
+No GTK, no AppIndicator, no interactive tray menu.
 """
 
 import sys
@@ -19,28 +18,28 @@ def run_cmd(cmd):
         return ""
 
 def get_battery_conservation_state():
+    """Return 'enabled', 'disabled', or 'unknown' when the state is unreadable."""
     out = run_cmd("d330-ctl battery status 2>/dev/null")
-    return "ENABLED" in out
-
-def toggle_conservation_mode():
-    cur = get_battery_conservation_state()
-    target = "disable" if cur else "enable"
-    run_cmd(f"pkexec d330-ctl battery {target} 2>/dev/null")
-    print(f"[Tray] Toggled conservation mode -> {target}")
-
-def emergency_refresh():
-    run_cmd("d330-refresh-screen 2>/dev/null")
-    print("[Tray] Executed emergency screen refresh.")
+    if "ENABLED" in out:
+        return "enabled"
+    if "DISABLED" in out:
+        return "disabled"
+    return "unknown"
 
 def main():
     if "--status" in sys.argv:
-        cons = "Enabled (60%)" if get_battery_conservation_state() else "Disabled (100%)"
+        state = get_battery_conservation_state()
+        cons = {
+            "enabled": "Enabled (60%)",
+            "disabled": "Disabled (100%)",
+            "unknown": "Unknown (d330-ctl unavailable or conservation node not detected)",
+        }[state]
         print("=== D330 Tray Applet Status ===")
         print(f"  - Battery Conservation: {cons}")
         return
 
     print("=== Lenovo IdeaPad D330 Tray Applet Initialized ===")
-    print("One-click triggers active: Conservation Mode, Screen Refresh, Rotation Lock.")
+    print("Status helper active: run 'd330-tray --status' for battery conservation state.")
     # In headless / test CLI, print capabilities and exit cleanly
     if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
         print("[INFO] Headless environment. Exiting tray loop.")

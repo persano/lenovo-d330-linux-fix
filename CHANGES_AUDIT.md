@@ -362,7 +362,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **Why**: Users lacked a one-command way to check battery conservation mode and trigger screen recovery without opening the terminal.
 * **How Decided**:
   - Kept the helper deliberately dependency-free: a stdlib Python script (`tools/d330-tray.py`) that uses `notify-send` plus a `--status` CLI, with no GTK or AppIndicator dependency.
-  - Exposes battery conservation state and a screen-refresh trigger that call the installed `d330-ctl` / `d330-refresh-screen` binaries (no cwd-relative fallbacks).
+  - Exposes battery conservation state via a `--status` CLI that calls the installed `d330-ctl` binary (no cwd-relative fallbacks), reporting `Unknown` when the state cannot be read.
 * **What Done**:
   - `tools/d330-tray.py`: lightweight stdlib notification/status helper (`notify-send` + `--status`); starts via XDG autostart. No GTK, no AppIndicator.
   - `patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop`: User autostart desktop entry (`Exec=/usr/local/bin/d330-tray`).
