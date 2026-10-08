@@ -10,11 +10,12 @@
 # so the deploy manifest drives a fixture round trip; everything else is a
 # static grep against the installer and the two packaging enable sites.
 #
-# Cases (16): manifest-single-source, manifest-deploy-consistency,
+# Cases (17): manifest-single-source, manifest-deploy-consistency,
 # verify-drift-detected, verify-clean-passes, verify-conditional-absent,
 # verify-removed-direction, grub-regen-both-paths, uninstall-rescue-bypass,
-# enable-parity-9, dropin-narrow-removal, warn-named-packages, uninstall-gaps,
-# uninstall-nonroot-warn, no-broad-rm-rf, no-broad-ucm-rm-rf, bash-n-all.
+# enable-parity-9, user-unit-packaged, dropin-narrow-removal,
+# warn-named-packages, uninstall-gaps, uninstall-nonroot-warn, no-broad-rm-rf,
+# no-broad-ucm-rm-rf, bash-n-all.
 # ==============================================================================
 
 set -euo pipefail
@@ -25,7 +26,9 @@ cd "$REPO_ROOT"
 
 S="scripts/install_dkms.sh"
 DEBIAN_POSTINST="packaging/debian/postinst"
+DEBIAN_RULES="packaging/debian/rules"
 RPM_SPEC="packaging/rpm/lenovo-d330-fix.spec"
+ARCH_PKGBUILD="packaging/arch/PKGBUILD"
 SUITE="scripts/test_installer_symmetry.sh"
 STORAGE="scripts/test_storage_cellular.sh"
 
@@ -33,7 +36,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 35 installer symmetry guard suite (16 cases, static greps +
+Runs the Phase 35 installer symmetry guard suite (17 cases, static greps +
 manifest-driven --verify fixture, no real systemctl/dkms/grub).
 
 Options:
@@ -348,6 +351,25 @@ case_enable_parity_9() {
     done
 }
 
+# CR-01 (Phase 36): the tablet daemon is a systemd USER unit, so every packager
+# must copy patches/*/usr/lib/systemd/user/*.service into its package tree --
+# otherwise the existing `systemctl --global enable d330-tablet-daemon.service`
+# in deb postinst / RPM %post finds no unit and silently enables nothing.
+case_user_unit_packaged() {
+    local f
+    for f in "$DEBIAN_RULES" "$RPM_SPEC" "$ARCH_PKGBUILD"; do
+        if [ ! -f "$f" ]; then
+            echo "    [detail] packager missing: $f"
+            CASE_FAIL=1
+            continue
+        fi
+        if ! grep -q "usr/lib/systemd/user" "$f"; then
+            echo "    [detail] user unit not installed by $f"
+            CASE_FAIL=1
+        fi
+    done
+}
+
 case_dropin_narrow_removal() {
     if ! grep -q "d330-override.conf" "$S"; then
         echo "    [detail] narrow drop-in removal target missing"
@@ -460,6 +482,7 @@ CASE_NAMES=(
     case_grub_regen_both_paths
     case_uninstall_rescue_bypass
     case_enable_parity_9
+    case_user_unit_packaged
     case_dropin_narrow_removal
     case_warn_named_packages
     case_uninstall_gaps

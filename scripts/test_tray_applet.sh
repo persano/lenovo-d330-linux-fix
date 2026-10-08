@@ -44,7 +44,12 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying tray applet..."
-    python3 tools/d330-tray.py --status || true
+    rc=0
+    python3 tools/d330-tray.py --status || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        echo "[DRY-RUN] FAIL: tray --status exited $rc"
+        exit 1
+    fi
     echo "[DRY-RUN] Verification complete."
     exit 0
 fi
