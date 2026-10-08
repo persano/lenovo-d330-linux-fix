@@ -5,7 +5,10 @@ ConditionPathExists=/sys/class/powercap/intel-rapl
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/d330-thermal-tune.sh --apply
+# Fallback only: skip when thermald is the active runtime thermal/RAPL owner,
+# so the two never write the RAPL constraint knobs concurrently.
+ExecCondition=/bin/sh -c '! systemctl is-active --quiet thermald'
+ExecStart=/usr/local/bin/d330-thermal-tune --apply
 RemainAfterExit=yes
 
 [Install]
