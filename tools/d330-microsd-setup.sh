@@ -161,7 +161,11 @@ confirm_destructive() {
 preflight_tools() {
     local missing=()
     local bin
-    for bin in parted partprobe udevadm lsblk findmnt mkfs.ext4; do
+    local bins=("$@")
+    if [ ${#bins[@]} -eq 0 ]; then
+        bins=(parted partprobe udevadm lsblk findmnt mkfs.ext4)
+    fi
+    for bin in "${bins[@]}"; do
         if ! command -v "$bin" >/dev/null 2>&1; then
             missing+=("$bin")
         fi
@@ -175,6 +179,29 @@ preflight_tools() {
             exit 1
         fi
     fi
+}
+
+# ------------------------------------------------------------------------------
+# build_fstab_line: single source of truth for the boot-safe fstab entry
+# (locked option string: nofail + systemd device timeout close audit C2's
+# boot-hang path). Dump/pass fields stay 0 2.
+# ------------------------------------------------------------------------------
+build_fstab_line() {
+    local uuid="$1"
+    echo "UUID=$uuid $MOUNT_POINT ext4 noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s 0 2"
+}
+
+# ------------------------------------------------------------------------------
+# rollback_fstab_line: idempotent EXIT-trap payload. Removes exactly the line
+# that was appended, so a second call is a no-op; never aborts the trap itself.
+# ------------------------------------------------------------------------------
+rollback_fstab_line() {
+    if [ -f "${FSTAB_FILE:-/etc/fstab}" ] && [ -n "${LINE:-}" ] && grep -qxF "$LINE" "$FSTAB_FILE" 2>/dev/null; then
+        grep -vxF "$LINE" "$FSTAB_FILE" > "$FSTAB_FILE.gsdtmp" || true
+        mv -f "$FSTAB_FILE.gsdtmp" "$FSTAB_FILE" || true
+        log_warn "Rolled back fstab entry after failed mount."
+    fi
+    return 0
 }
 
 # ------------------------------------------------------------------------------
@@ -306,27 +333,95 @@ fi
 
 if [ "$ACTION" = "mount-data" ]; then
     MOUNT_POINT="/data"
+    FSTAB_FILE="${D330_FSTAB:-/etc/fstab}"
     log_info "Configuring permanent mount at $MOUNT_POINT..."
-    if [ $DRY_RUN -eq 1 ]; then
+
+    # Read-only guard first. guard_mountpoint_empty is deliberately NOT run
+    # here: a re-run against an already-mounted /data must still reach the
+    # duplicate check (that guard is the pre-parted/mkfs guard).
+    if [ "$DRY_RUN" -eq 1 ]; then
+        guard_failures=0
+        guard_not_root_device || guard_failures=$((guard_failures + 1))
+        confirm_destructive || guard_failures=$((guard_failures + 1))
+        if [ "$guard_failures" -gt 0 ]; then
+            log_err "Dry-run aborted: $guard_failures guard(s) FAILED."
+            exit 1
+        fi
+        PART_DEV=$(lsblk -lnpo NAME,TYPE "$TARGET_DEV" 2>/dev/null | awk '$2=="part"{print $1; exit}' || true)
+        UUID=""
+        if [ -n "$PART_DEV" ]; then
+            UUID=$(blkid -s UUID -o value "$PART_DEV" 2>/dev/null || true)
+        fi
+        if [ -z "$UUID" ]; then
+            UUID="<uuid resolved by blkid>"
+        fi
         log_info "[DRY-RUN] mkdir -p $MOUNT_POINT"
-        log_info "[DRY-RUN] Append to /etc/fstab: UUID=... $MOUNT_POINT ext4 noatime,lazytime,commit=60 0 2"
+        log_info "[DRY-RUN] Append to $FSTAB_FILE: $(build_fstab_line "$UUID")"
         log_info "Dry-run complete: no changes were made."
         exit 0
-    else
-        mkdir -p "$MOUNT_POINT"
-        UUID=$(blkid -s UUID -o value "$PART_DEV" 2>/dev/null || true)
-        if [ -n "$UUID" ]; then
-            if ! grep -q "$UUID" /etc/fstab; then
-                echo "UUID=$UUID $MOUNT_POINT ext4 noatime,lazytime,commit=60 0 2" >> /etc/fstab
-                mount "$MOUNT_POINT" || true
-                log_ok "Mounted $PART_DEV to $MOUNT_POINT with optimized commit=60 options."
-            else
-                log_info "Entry already present in /etc/fstab."
-            fi
-        else
-            log_err "Could not resolve UUID for $PART_DEV. Format card first."
-        fi
     fi
+
+    guard_not_root_device || exit 1
+
+    # Test seam: D330_FSTAB redirects fstab writes into a user-owned path, so
+    # the root gate is skipped ONLY for ACTION=mount-data with that seam set.
+    # The format path's root gate above stays unconditional.
+    if [ "$ACTION" = "mount-data" ] && [ -n "${D330_FSTAB:-}" ] && [ "$EUID" -ne 0 ]; then
+        log_info "Root gate skipped: D330_FSTAB seam writes a user-owned fstab path."
+    elif [ "$EUID" -ne 0 ]; then
+        log_err "Root privileges required for fstab writes. Run with sudo."
+        exit 1
+    fi
+
+    preflight_tools blkid findmnt mount lsblk
+
+    PART_DEV=$(lsblk -lnpo NAME,TYPE "$TARGET_DEV" | awk '$2=="part"{print $1; exit}' || true)
+    UUID=$(blkid -s UUID -o value "$PART_DEV" 2>/dev/null || true)
+    if [ -z "$UUID" ]; then
+        log_err "Could not resolve UUID for $PART_DEV. Format card first."
+        exit 1
+    fi
+
+    if grep -Fq "UUID=$UUID" "$FSTAB_FILE"; then
+        EXISTING_OPTS=$(awk -v u="UUID=$UUID" '$1==u {print $4; exit}' "$FSTAB_FILE")
+        case "$EXISTING_OPTS" in
+            *nofail*)
+                log_info "Entry already present in $FSTAB_FILE with boot-safe options."
+                exit 0
+                ;;
+        esac
+        log_err "Existing $FSTAB_FILE entry for UUID=$UUID is missing: nofail,x-systemd.device-timeout=10s"
+        log_err "No automatic migration was performed. Fix it manually with:"
+        log_err "  sed -i 's|^UUID=$UUID $MOUNT_POINT ext4 [^ ]* 0 2\$|UUID=$UUID $MOUNT_POINT ext4 noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s 0 2|' $FSTAB_FILE"
+        exit 1
+    fi
+
+    confirm_destructive
+
+    mkdir -p "$MOUNT_POINT"
+
+    LINE=$(build_fstab_line "$UUID")
+    CAND=$(mktemp)
+    printf '%s\n' "$LINE" > "$CAND"
+    if ! findmnt --verify --tab-file "$CAND" >/dev/null 2>&1; then
+        rm -f "$CAND"
+        log_err "fstab entry failed verification; $FSTAB_FILE not modified."
+        exit 1
+    fi
+    rm -f "$CAND"
+
+    printf '%s\n' "$LINE" >> "$FSTAB_FILE"
+    trap 'rollback_fstab_line' EXIT
+
+    mount_rc=0
+    mount "$MOUNT_POINT" || mount_rc=$?
+    if [ "$mount_rc" -ne 0 ]; then
+        log_err "Mount of $MOUNT_POINT failed; fstab entry rolled back."
+        exit "$mount_rc"
+    fi
+
+    log_ok "Mounted $PART_DEV to $MOUNT_POINT with boot-safe nofail options."
+    trap - EXIT
 fi
 
 if [ "$ACTION" = "mount-home" ]; then
