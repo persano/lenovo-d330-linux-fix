@@ -9,7 +9,7 @@
 # Checks:
 #   1. swappiness is 180 in the zram sysctl and in the audit (not 150)
 #   2. eMMC I/O scheduler is mq-deadline in the udev rule and audit (not bfq)
-#   3. i915 enable_fbc=0 in the boot cfg and audit (not enable_fbc=1)
+#   3. i915 enable_fbc=0 in the boot cfg, the modprobe conf and audit (not enable_fbc=1)
 #   4. panel_orientation is present in the boot cfg and audit
 #   5. softlockup_panic=1 present / nowatchdog absent in fastboot cfg and audit
 #   6. no PWM 1000 Hz boot service (no tracked unit, audit documents removal)
@@ -18,7 +18,8 @@
 #   9. the shipped scripts/test_*.sh count stated in the audit matches the tree
 #  10. no touch-mode claim in the audit or d330-ctl
 #  11. scripts/*.sh and tools/*.sh are mode 100755 in the index
-#  12. no 0-byte tracked files
+#  12. no 0-byte tracked files (sized from the index, not the worktree)
+#  13. FCC unlock hook: source non-empty + deploy/remove/manifest parity
 #
 # Modes: default runs every check; `--probe` lists them; `--help` prints usage.
 # Exit status is non-zero when any check fails.
@@ -34,27 +35,32 @@ AUDIT="CHANGES_AUDIT.md"
 ZRAM_SYSCTL="patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf"
 EMMC_RULE="patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules"
 BOOT_CFG="patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg"
+MODPROBE_I915="patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf"
 FASTBOOT_CFG="patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg"
 WIRELESS_CONF="patches/wireless/etc/modprobe.d/lenovo-d330-wireless.conf"
 TRAY_TOOL="tools/d330-tray.py"
 CTL_TOOL="tools/d330-ctl"
 PWM_SERVICE="patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service"
+INSTALLER="scripts/install_dkms.sh"
+FCC_SRC="patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086"
+FCC_TARGET="/etc/ModemManager/fcc-unlock.d/8086:7360"
 
 case "${1:-}" in
     --probe)
         echo "doc-parity would check:"
         echo "  1. swappiness 180      : $ZRAM_SYSCTL + $AUDIT"
         echo "  2. mq-deadline         : $EMMC_RULE + $AUDIT"
-        echo "  3. enable_fbc=0        : $BOOT_CFG + $AUDIT"
+        echo "  3. enable_fbc=0        : $BOOT_CFG + $MODPROBE_I915 + $AUDIT"
         echo "  4. panel_orientation   : $BOOT_CFG + $AUDIT"
         echo "  5. softlockup_panic=1  : $FASTBOOT_CFG + $AUDIT"
         echo "  6. no PWM boot service : $PWM_SERVICE absent"
         echo "  7. no GTK/AppIndicator : $TRAY_TOOL + $AUDIT"
         echo "  8. no iwlwifi          : $WIRELESS_CONF + $AUDIT"
-        echo "  9. test-script count   : ls scripts/test_*.sh vs $AUDIT"
+        echo "  9. test-script count   : git ls-files scripts/test_*.sh vs $AUDIT"
         echo " 10. no touch-mode       : $CTL_TOOL + $AUDIT"
         echo " 11. shell modes 100755  : scripts/*.sh tools/*.sh"
-        echo " 12. no 0-byte files     : git ls-files"
+        echo " 12. no 0-byte files     : git ls-files -s (index)"
+        echo " 13. FCC unlock deploy   : $FCC_SRC -> $FCC_TARGET"
         exit 0
         ;;
     -h|--help)
@@ -108,6 +114,11 @@ if grep -q 'i915.enable_fbc=0' "$BOOT_CFG"; then
 else
     fail "$BOOT_CFG does not carry i915.enable_fbc=0"
 fi
+if grep -q 'enable_fbc=0' "$MODPROBE_I915" && grep -q 'enable_psr=0' "$MODPROBE_I915"; then
+    ok "modprobe-i915-enable-fbc-psr-0"
+else
+    fail "$MODPROBE_I915 must set enable_fbc=0 and enable_psr=0 (audit 2.1)"
+fi
 if grep -q 'enable_fbc=0' "$AUDIT" && ! grep -q 'enable_fbc=1' "$AUDIT"; then
     ok "audit-enable-fbc-0"
 else
@@ -150,8 +161,11 @@ else
 fi
 
 # 7. no GTK3 / AppIndicator tray claim ---------------------------------------
-if grep -q 'GTK3' "$AUDIT"; then
-    fail "$AUDIT still claims a GTK3 tray"
+# Ignore the audit's own negative claims ("no GTK", "without AppIndicator"); a
+# positive GTK/AppIndicator tray claim must fail.
+gtk_claim="$(grep -inE 'GTK|AppIndicator' "$AUDIT" | grep -viE 'no[ -]?(GTK|AppIndicator)|without[ -]?(GTK|AppIndicator)' || true)"
+if [ -n "$gtk_claim" ]; then
+    fail "$AUDIT still claims a GTK/AppIndicator tray"
 elif grep -qE '(^|[[:space:]])(import[[:space:]]+gi|from[[:space:]]+gi|import[[:space:]]+Gtk|gi\.repository)' "$TRAY_TOOL"; then
     fail "$TRAY_TOOL imports GTK/gi"
 else
@@ -166,7 +180,7 @@ else
 fi
 
 # 9. test-script count parity -------------------------------------------------
-test_count="$(ls scripts/test_*.sh | wc -l | tr -d '[:space:]')"
+test_count="$(git ls-files 'scripts/test_*.sh' | wc -l | tr -d '[:space:]')"
 if grep -qE "(^|[^0-9])${test_count} (test|validation)" "$AUDIT"; then
     ok "test-script-count-parity ($test_count)"
 else
@@ -189,18 +203,32 @@ else
 fi
 
 # 12. no 0-byte tracked files -------------------------------------------------
+# Size the index blobs (git cat-file -s) rather than the worktree, so a deleted
+# or unchecked-out 0-byte tracked blob still fails.
 empty_files=""
-while IFS= read -r f; do
-    [ -e "$f" ] || continue
-    [ -f "$f" ] || continue
-    if [ ! -s "$f" ]; then
-        empty_files="${empty_files} ${f}"
+while read -r mode hash stage path; do
+    [ "$stage" = "0" ] || continue
+    if [ "$(git cat-file -s "$hash" 2>/dev/null || echo 1)" -eq 0 ]; then
+        empty_files="${empty_files} ${path}"
     fi
-done < <(git ls-files)
+done < <(git ls-files -s)
 if [ -z "$empty_files" ]; then
     ok "no-zero-byte-tracked-files"
 else
     fail "0-byte tracked files:${empty_files}"
+fi
+
+# 13. FCC unlock hook deploy parity ------------------------------------------
+# The headline cellular fix: the tracked `8086` source (non-empty) is copied to
+# the colon-named ModemManager target on install, removed on uninstall, and
+# listed in the deploy manifest.
+if [ -s "$FCC_SRC" ] \
+   && grep -qE 'cp .*fcc-unlock\.d/8086.* /etc/ModemManager/fcc-unlock\.d/8086:7360' "$INSTALLER" \
+   && grep -q "rm -f ${FCC_TARGET}" "$INSTALLER" \
+   && grep -q "^${FCC_TARGET}[[:space:]]" "$INSTALLER"; then
+    ok "fcc-unlock-deploy-parity"
+else
+    fail "FCC unlock deploy/remove/manifest parity broken (source $FCC_SRC, target $FCC_TARGET)"
 fi
 
 echo ""
