@@ -56,7 +56,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -68,6 +68,11 @@ if [[ "$MODE" == "dry-run" ]]; then
     # Guard suite: its non-zero exit propagates under set -e, so any failing
     # case fails this mode; its passed=N failed=M summary flows into this output.
     bash scripts/test_microsd_guards.sh
+
+    # Hibernate guard suite: same contract as the microsd suite above - its
+    # non-zero exit propagates under set -e, so any failing case fails this
+    # mode; its passed=N failed=M summary flows into this output.
+    bash scripts/test_hibernate_guards.sh
 
     # Inventory context only - these paths are not checks.
     echo "[INFO] ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
