@@ -28,6 +28,7 @@ mkdir -p %{buildroot}/etc/modprobe.d
 mkdir -p %{buildroot}/etc/udev/rules.d
 mkdir -p %{buildroot}/etc/udev/hwdb.d
 mkdir -p %{buildroot}/etc/systemd/system
+mkdir -p %{buildroot}/usr/lib/systemd/user
 
 cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/ || true
 # d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
@@ -38,6 +39,9 @@ cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/ || 
 cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/ || true
 cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/ || true
 cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/system/ || true
+# systemd USER unit: %post enables it with `systemctl --global enable`, which
+# requires the unit under /usr/lib/systemd/user.
+cp %{_builddir}/patches/*/usr/lib/systemd/user/*.service %{buildroot}/usr/lib/systemd/user/ || true
 
 %post
 systemd-hwdb update || true
@@ -61,6 +65,7 @@ systemctl enable d330-swapfile.service 2>/dev/null || true
 /etc/udev/rules.d/*
 /etc/udev/hwdb.d/*
 /etc/systemd/system/*
+/usr/lib/systemd/user/*
 
 %changelog
 * Wed Oct 07 2026 Antigravity Community <community@example.com> - 5.0.0-1

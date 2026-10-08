@@ -28,4 +28,9 @@ package() {
     # Install systemd
     install -d "${pkgdir}/etc/systemd/system"
     install -m 644 "${srcdir}"/../patches/*/etc/systemd/system/*.service "${pkgdir}/etc/systemd/system/"
+
+    # Install systemd USER unit (tablet daemon); enabled globally by the desktop
+    # session hook, so it must land under /usr/lib/systemd/user.
+    install -d "${pkgdir}/usr/lib/systemd/user"
+    install -m 644 "${srcdir}"/../patches/*/usr/lib/systemd/user/*.service "${pkgdir}/usr/lib/systemd/user/"
 }
