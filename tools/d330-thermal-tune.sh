@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # Lenovo IdeaPad D330-10IGL RAPL Thermal Power Tuning Utility
+#
+# Fallback only: thermald is the runtime thermal/RAPL owner (see
+# /etc/thermald/thermal-conf.xml, which matches the x86_pkg_temp zone). This
+# script applies a fixed PL1/PL2 only when thermald is absent; it must not run
+# concurrently with thermald.
+#
 # Programs Intel Running Average Power Limit (RAPL) sysfs parameters:
 # - PL1 (Long term / sustained): 5.0 Watts (5000000 uW)
 # - PL2 (Short term burst): 8.0 Watts (8000000 uW) with 10s time window
@@ -18,8 +24,18 @@ show_status() {
         echo "RAPL Interface: $RAPL_DIR"
         pl1=$(cat "$RAPL_DIR/constraint_0_power_limit_uw" 2>/dev/null || echo "N/A")
         pl2=$(cat "$RAPL_DIR/constraint_1_power_limit_uw" 2>/dev/null || echo "N/A")
-        echo "  - PL1 (Sustained): $((pl1 / 1000000)) W (raw: $pl1 uW)"
-        echo "  - PL2 (Burst):     $((pl2 / 1000000)) W (raw: $pl2 uW)"
+        # Numeric guard: a non-numeric value (e.g. "N/A") would otherwise make
+        # the shell arithmetic fail or silently read as 0.
+        if [[ "$pl1" =~ ^[0-9]+$ ]]; then
+            echo "  - PL1 (Sustained): $((pl1 / 1000000)) W (raw: $pl1 uW)"
+        else
+            echo "  - PL1 (Sustained): N/A (raw: $pl1)"
+        fi
+        if [[ "$pl2" =~ ^[0-9]+$ ]]; then
+            echo "  - PL2 (Burst):     $((pl2 / 1000000)) W (raw: $pl2 uW)"
+        else
+            echo "  - PL2 (Burst):     N/A (raw: $pl2)"
+        fi
     else
         echo "[INFO] Intel RAPL powercap interface not active in current kernel environment."
     fi
