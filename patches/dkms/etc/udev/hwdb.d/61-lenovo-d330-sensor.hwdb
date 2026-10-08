@@ -1,16 +1,21 @@
 # /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb
 # Accelerometer Mount Matrix Configuration for Lenovo IdeaPad D330 Series
 #
-# Maps Bosch BOSC0200 sensor coordinate space to match logical display landscape
+# Maps Bosch BOSC0200 sensor coordinate space to match logical display landscape.
+#
+# Match on the space-free DMI product code. The DMI modalias product string
+# carries a space (`pvrLenovo ideapad D330-10IGL`), so a space-stripped product
+# pattern never matches:
+#   IGL = Type 82H0, IGM = Types 81MD / 81H3
 
 # Lenovo IdeaPad D330-10IGL (Type 82H0)
-sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGL:*
- ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
-
-# Lenovo IdeaPad D330-10IGL (82H0 product name match)
 sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:pn82H0:*
  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
 
-# Lenovo IdeaPad D330-10IGM (Types 81H3 and 81MD)
-sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGM:*
+# Lenovo IdeaPad D330-10IGM (Type 81MD)
+sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:pn81MD:*
+ ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
+
+# Lenovo IdeaPad D330-10IGM (Type 81H3)
+sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:pn81H3:*
  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1

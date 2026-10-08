@@ -1,14 +1,25 @@
 # Lenovo IdeaPad D330 Touchscreen hwdb entries
 # Maps touch matrix directly in libinput hwdb subsystem
+#
+# Match on the space-free DMI product code. The DMI modalias product string
+# carries a space (`pvrLenovo ideapad D330-10IGL`), so a space-stripped product
+# pattern never matches:
+#   IGL = Type 82H0, IGM = Types 81MD / 81H3
 
 # IdeaPad D330-10IGL (Type 82H0)
-touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGL:*
+touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn82H0:*
  LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
  LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
 
-# IdeaPad D330-10IGM (Type 81MD and 81H3)
-touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGM:*
+# IdeaPad D330-10IGM (Type 81MD)
+touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn81MD:*
+ LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
+ LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
+ LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
+
+# IdeaPad D330-10IGM (Type 81H3)
+touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn81H3:*
  LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
  LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
