@@ -98,7 +98,7 @@
   2. fstab line parses under `systemd-analyze verify`
   3. `--dry-run` prints the guard outcomes.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -107,7 +107,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 32-02-PLAN.md — fstab boot safety: locked nofail options, verify-before-append, rollback trap, duplicate refusal (audit C2)
+- [x] 32-02-PLAN.md — fstab boot safety: locked nofail options, verify-before-append, rollback trap, duplicate refusal (audit C2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
