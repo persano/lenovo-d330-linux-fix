@@ -3,26 +3,25 @@ gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
 current_phase: 42
-current_phase_name: Documentation Parity & Repository Polish
-status: planning
-stopped_at: Phase 41 complete, ready to plan Phase 42
-last_updated: "2026-10-08T21:09:08.787Z"
+status: completed
+stopped_at: Phase 42 complete — all phases complete
+last_updated: "2026-10-08T22:40:28.922Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 41 complete, transitioned to Phase 42
-state_head: 20a9a7072dd73a77074d157a270fdc7b8041e16e
+last_activity_desc: Phase 42 complete
+state_head: 05ba6edeed10dee93e530b26452d0f5f511c9c7a
 progress:
   total_phases: 11
-  completed_phases: 10
-  total_plans: 13
-  completed_plans: 13
-  percent: 91
+  completed_phases: 11
+  total_plans: 15
+  completed_plans: 15
+  percent: 100
 ---
 
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 7 — Pre-Deployment Audit Remediation (v7.0), Phases 32–42
-- **Active Phase**: Phase 42: Documentation Parity & Repository Polish (Audit M17, N1–N5, N7, N9, N10)
-- **Status**: Executing. Phases 32–41 complete (10/11 phases). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
+- **Active Phase**: Milestone 7 close-out — audit / complete / cleanup (Phases 32–42 all done)
+- **Status**: All phases complete (11/11: 32–42). Milestone 7 remediation implemented. Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — all remediated; final milestone audit pending.
 - **Blockers**:
   * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
   * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
@@ -44,7 +43,9 @@ progress:
   * [PENDING DEPLOY] Phase 40 UAT tests 1–3 — on-device `tlp-stat -s` vs `/sys/class/powercap` agreement after AC hot-plug, a clean TLP journal across a full AC/battery cycle, and a reproduced boot bench — deferred under documented VERIFICATION overrides (no D330/TLP/RAPL here). Machine-checked equivalents green (`test_power_stack.sh` 12/0, non-vacuous; storage --dry-run rc 0). Re-run at sign-off: `/gsd-verify-work 40`.
   * [RESOLVED — Phase 40] M13/M14 — the power stack had multiple writers per knob: `lenovo-d330-power-tune.sh` applied a boot-only 75% CPU cap that survived AC plug; the udev `95` rule forced `power/control=auto` broadly while TLP also drove runtime PM (permanent flapping); TLP `INTEL_GPU_MIN_FREQ_ON_AC=100` was below the GLK ~300 MHz min (rejected write every AC event); `nowatchdog` disabled the very lockup detection the device needs; thermald `<Type>cpu</Type>` could be ignored and `d330-thermal-tune.sh` `$((pl1/1000000))` turned `N/A` into 0. Fixed: AC-aware perf cap (mains by `type`, fail-safe to battery) re-applied on a Mains-filtered `power_supply` change rule, TLP as sole owner of PCI/USB/MMC runtime PM with scoped udev for i2c/sound/eMMC/dock, GPU min removed + max/boost documented, `nowatchdog`→`softlockup_panic=1`+`panic=10` with §7.7 claim corrected, thermald `x86_pkg_temp` + numeric guards (pl1/pl2/temp) + `ExecCondition` fallback + debian Recommends. New `scripts/test_power_stack.sh` (12/0, non-vacuous, repo-wide `power/control` scan). Suites 12/0 + 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + 10/0 + 17/0 + 7/0. Hardware/boot SC1-3 deferred (see PENDING DEPLOY).
   * [RESOLVED — Phase 41] M12/N8 — 23 of 27 `test_*.sh` exited 0 no matter what and their `--dry-run` modes validated nothing. Fixed: failure counters + non-zero exit across the always-green scripts (removed `cmd || true` + unconditional success), live mutations gated behind `--apply` (thermals/boot_speed/battery_power/memory_storage), parser/arith bugs fixed (`((x++))` under `set -e`, `--stress N`/`--cycle-test N` values consumed, real daemon `--simulate-*` flags), false `[OK]` for missing subjects removed (cellular rules/FCC hook, tablet-osk daemon status, hardware toggle), `SCRIPT_DIR` CWD anchors, `build_live_iso.sh --dry-run` validates real prereqs + `test_iso_integrity.sh` inherits it, and new `scripts/test_harness_trust.sh` (SC1 mutation on 5 subjects with intact-baseline guard; SC2 structural no-mutation-without-`--apply` scan) wired into the aggregate runner. Suites all green. No hardware override needed.
-- **Next Immediate Action**: Plan/execute Phase 42 (documentation parity + repo polish: chmod +x tracked scripts, recreate the FCC-unlock hook, reconcile every CHANGES_AUDIT contradiction, remove dead code, add runtime deps, packaging fails loudly, README tree, per Audit M17/N1–N5/N7/N9/N10) — the last milestone-7 phase before the milestone audit.
+  * [RESOLVED — Phase 42] M17/N1–N5/N7/N9/N10 — repo/docs were not release-clean: 50 shell scripts tracked `100644` though README says `sudo ./scripts/install_dkms.sh`; the FCC-unlock hook was an empty blob whose colon name never matched; CHANGES_AUDIT carried wrong values (fbc, swappiness/BFQ, touch-mode, PWM, earlyoom, PL2 window, `--avoid`, wireless, tray, test count, power_cycle_delay_ms 500-vs-600); dead code + unclosed handles; packagers piped every `cp` into `|| true`. Fixed: all `scripts/*.sh`+`tools/*.sh` (and `tools/d330-ctl`) tracked `100755` with packager `chmod 755`; FCC hook shipped as target `/etc/ModemManager/fcc-unlock.d/8086:7360` with warn-on-missing; every CHANGES_AUDIT contradiction reconciled to code; dead code (`SW_LID`, except shadow) removed + handles closed; packagers fail loudly (no `cp || true`) + optional deps declared (thermald/earlyoom/zram-generator/rnnoise/vainfo/desktop); README tree + `.desktop` hygiene; new `scripts/test_doc_parity.sh` (19/0). Suites all green. Only the real package build is host-bound (see PENDING DEPLOY).
+  * [PENDING DEPLOY] Phase 42 UAT test 1 — real `dpkg-buildpackage -b` / `makepkg -f` / `rpmbuild -bb` failing on a deliberately broken copy step — deferred under a documented VERIFICATION override (no debhelper-13/makepkg/rpmbuild here). Machine half green (no `cp ... || true` remains in any packager; doc-parity guard 19/0). Re-run on a Linux/POSIX host at sign-off: `/gsd-verify-work 42`.
+- **Next Immediate Action**: Run the Milestone 7 audit (`audit-milestone`) over phases 32–42, then complete + cleanup. All 11 phases are verified; hardware/daemon/packaging SCs are covered by documented per-phase VERIFICATION overrides to re-run on the D330 at sign-off.
 
 ## Archived Milestones
 
@@ -61,10 +62,10 @@ progress:
 
 ## Current Position
 
-Phase: 42 — Documentation Parity & Repository Polish
+Phase: 42
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-08 — Phase 41 complete, transitioned to Phase 42
+Status: All phases complete
+Last activity: 2026-10-08 — Phase 42 complete
 
 ## Performance Metrics
 
@@ -94,5 +95,5 @@ Last activity: 2026-10-08 — Phase 41 complete, transitioned to Phase 42
 ## Session
 
 **Last session:** 2026-10-08T19:10:45.949Z
-**Stopped at:** Phase 41 complete, ready to plan Phase 42
+**Stopped at:** Phase 42 complete — all phases complete
 **Resume file:** None
