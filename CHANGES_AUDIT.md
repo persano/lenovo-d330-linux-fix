@@ -356,7 +356,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **Why**: Cold boot from the internal 64GB SanDisk eMMC took 28–35 seconds on stock installations. `systemd-networkd-wait-online.service` and `NetworkManager-wait-online.service` block the graphical login target until an IP is negotiated, wasting several seconds of cold-boot time.
 * **How Decided**:
   - Mask `systemd-networkd-wait-online.service` and `NetworkManager-wait-online.service` (non-blocking network startup). This is the real boot-time win.
-  - Keep `tsc=reliable` (skips lengthy boot-time clocksource calibration) and `split_lock_mitigate=0` (eliminates atomic penalty on Celeron). Phase 40 removed `nowatchdog` and replaced it with `softlockup_panic=1`, so a lockup self-recovers instead of being silenced.
+  - Phase 40 removed `nowatchdog` and replaced it with `softlockup_panic=1 panic=10`, so a lockup panics and the box auto-reboots after 10 s instead of going silent.
 * **What Done**:
   - `patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg`: GRUB boot options.
   - `tools/d330-fastboot-tune.sh`: Optimization script masking slow services.
