@@ -1,12 +1,17 @@
 # Lenovo IdeaPad D330-10IGL Touchpad & Active Pen hwdb overrides
-# Fine-tunes pressure thresholds and dimensions
+# Fine-tunes pressure thresholds and dimensions.
+#
+# Lookup keys must use the `evdev:` namespace (systemd's rules compose
+# `evdev:input:<modalias>`); the old `libinput:` key is never composed, so
+# those entries were inert. X11 consumers are configured authoritatively by
+# patches/touchpad_pen/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf.
 
 # Dock Touchpad (USB 17ef / I2C touchpad)
-libinput:touchpad:input:b*v17EFp*
+evdev:input:b*v17EFp*
  LIBINPUT_ATTR_PRESSURE_RANGE=25:75
  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=100
  LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=10
 
 # Lenovo Active Pen Digitizer (Goodix GDIX1001 Stylus)
-libinput:touchscreen:input:b*v27C6p0118*
+evdev:input:b*v27C6p0118*
  LIBINPUT_ATTR_PRESSURE_RANGE=10:1024

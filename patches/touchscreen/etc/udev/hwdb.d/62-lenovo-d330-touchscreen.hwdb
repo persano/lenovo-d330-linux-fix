@@ -1,5 +1,13 @@
 # Lenovo IdeaPad D330 Touchscreen hwdb entries
-# Maps touch matrix directly in libinput hwdb subsystem
+#
+# Authoritative calibration path:
+#   patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules
+# sets ENV{LIBINPUT_CALIBRATION_MATRIX} (and the palm thresholds) directly on
+# the matching event device. These hwdb entries are the imported fallback and
+# must use an `evdev:` lookup key, which systemd's own rules compose as
+#   evdev:name:<input device name>:dmi:<dmi modalias>
+# (the old `touchscreen:` namespace is never composed; libinput >=1.12 dropped
+# hwdb model configuration, so those keys were inert).
 #
 # Match on the space-free DMI product code. The DMI modalias product string
 # carries a space (`pvrLenovo ideapad D330-10IGL`), so a space-stripped product
@@ -7,23 +15,23 @@
 #   IGL = Type 82H0, IGM = Types 81MD / 81H3
 
 # IdeaPad D330-10IGL (Type 82H0)
-touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn82H0:*
+evdev:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn82H0:*
  LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
  LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
 
 # IdeaPad D330-10IGM (Type 81MD)
-touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn81MD:*
+evdev:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn81MD:*
  LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
  LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
 
 # IdeaPad D330-10IGM (Type 81H3)
-touchscreen:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn81H3:*
+evdev:name:Goodix Capacitive TouchScreen:dmi:*:svnLENOVO:pn81H3:*
  LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120
  LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12
 
-# Generic fallback for GDIX1001 ACPI device
-touchscreen:acpi:GDIX1001*:dmi:*:svnLENOVO:*
+# Generic fallback for a GDIX1001 ACPI device whose input name differs.
+evdev:name:GDIX1001*:dmi:*:svnLENOVO:*
  LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1
