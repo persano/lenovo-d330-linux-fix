@@ -98,7 +98,7 @@
   2. fstab line parses under `systemd-analyze verify`
   3. `--dry-run` prints the guard outcomes.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -111,7 +111,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 32-03-PLAN.md — Honest `--mount-home` stub, success-line gating, harness Wave 0 integration
+- [x] 32-03-PLAN.md — Honest `--mount-home` stub, success-line gating, harness Wave 0 integration
 
 - **Audit Ref**: C1, C2.
 - **Components**:
