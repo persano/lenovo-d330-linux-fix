@@ -12,15 +12,18 @@ optdepends=('iio-sensor-proxy: orientation and ambient light auto-rotation'
             'thermald: RAPL/thermal policy owner (fallback: tools/d330-thermal-tune.sh)'
             'earlyoom: userspace OOM prevention on 4GB RAM'
             'zram-generator: compressed in-RAM swap'
-            'rnnoise-ladspa: RNNoise microphone denoising LADSPA plugin'
+            'rnnoise: RNNoise runtime library (LADSPA plugin built separately)'
             'libva-utils: vainfo for VA-API diagnostics'
             'glib2: gsettings desktop session wiring'
             'xdg-utils: desktop notification / autostart helpers')
 
 package() {
-    # Install executables
+    # Install executables (d330-acpi-override.sh and d330-pen-config.sh are
+    # development-only helpers — CHANGES_AUDIT.md 8.1 — and must not ship).
     install -d "${pkgdir}/usr/local/bin"
     install -m 755 "${srcdir}"/../tools/d330-* "${pkgdir}/usr/local/bin/"
+    rm -f "${pkgdir}/usr/local/bin/d330-acpi-override.sh" \
+          "${pkgdir}/usr/local/bin/d330-pen-config.sh"
 
     # Install modprobe
     install -d "${pkgdir}/etc/modprobe.d"

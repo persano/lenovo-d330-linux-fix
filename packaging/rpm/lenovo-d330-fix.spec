@@ -16,7 +16,7 @@ Requires:       libinput
 Recommends:     thermald
 Recommends:     earlyoom
 Recommends:     zram-generator
-Suggests:       librnnoise-ladspa
+Suggests:       rnnoise
 Suggests:       libva-utils
 Suggests:       glib2
 Suggests:       desktop-file-utils
@@ -39,10 +39,14 @@ mkdir -p %{buildroot}/etc/systemd/system
 mkdir -p %{buildroot}/usr/lib/systemd/user
 
 cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/
+# d330-acpi-override.sh and d330-pen-config.sh are development-only helpers
+# (CHANGES_AUDIT.md 8.1) and must not ship in packages.
+rm -f %{buildroot}/usr/local/bin/d330-acpi-override.sh %{buildroot}/usr/local/bin/d330-pen-config.sh
 # d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
 # install the daemon as /usr/local/bin/d330-auto-hibernate, mode 755.
 mv %{buildroot}/usr/local/bin/d330-auto-hibernate.py %{buildroot}/usr/local/bin/d330-auto-hibernate
-chmod 755 %{buildroot}/usr/local/bin/d330-auto-hibernate
+# cp preserves 0644; make every installed tool executable explicitly.
+chmod 755 %{buildroot}/usr/local/bin/d330-*
 cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/
 cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/
 cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/
