@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# patches/ and tools/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 
 show_help() {
@@ -73,15 +78,15 @@ case "$MODE" in
 
         echo ""
         echo "--- 2. Touchscreen Long-Press Right-Click Config ---"
-        if grep -q "EmulateThirdButton" patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf; then
+        if grep -q "EmulateThirdButton" "$SCRIPT_DIR/patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf"; then
             echo "  [OK] EmulateThirdButton enabled in X11 input class"
         fi
         ;;
     simulate-dock)
-        python3 tools/d330-tablet-daemon.py --dry-run --simulate-dock
+        python3 "$SCRIPT_DIR/tools/d330-tablet-daemon.py" --dry-run --simulate-dock
         ;;
     simulate-tab)
-        python3 tools/d330-tablet-daemon.py --dry-run --simulate-undock
+        python3 "$SCRIPT_DIR/tools/d330-tablet-daemon.py" --dry-run --simulate-undock
         ;;
 esac
 
