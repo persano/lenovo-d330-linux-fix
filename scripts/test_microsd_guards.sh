@@ -156,6 +156,23 @@ done
 
 chmod +x "$SHIM_DIR"/* 2>/dev/null || true
 
+# WR-05: assert the shims actually took effect before any case runs.
+# command -v proves PATH resolution picks SHIM_DIR (catches a failed chmod),
+# and one real exec of the parted shim proves the temp dir is executable
+# (catches a noexec mount, which command -v alone cannot). Without this, a
+# degraded shim silently falls through to the real parted/mkfs.
+for probe_bin in parted mkfs.ext4; do
+    probe_resolved=$(PATH="$SHIM_DIR:$PATH" command -v "$probe_bin" 2>/dev/null || true)
+    if [ "$probe_resolved" != "$SHIM_DIR/$probe_bin" ]; then
+        echo "  [FAIL] PATH shims not active: 'command -v $probe_bin' -> '${probe_resolved:-<none>}' (expected $SHIM_DIR/$probe_bin)"
+        exit 1
+    fi
+done
+if ! "$SHIM_DIR/parted" --shim-activation-probe >/dev/null 2>&1; then
+    echo "  [FAIL] shim not executable: $SHIM_DIR/parted (chmod failed or noexec mount)"
+    exit 1
+fi
+
 # Canary + log are visible to every tool invocation below
 export D330_SHIM_CANARY="$CANARY"
 export D330_SHIM_LOG
@@ -250,7 +267,7 @@ case_mounted_target_abort() {
     rm -f "$CANARY"
     D330_SHIM_LSBLK_MOUNTPOINTS=/mnt/data \
     D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
-        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 || rc=$?
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 </dev/null || rc=$?
     expect_rc_ne_zero "$rc"
     expect_out "[GUARD] mountpoints: FAIL"
     expect_no_canary
@@ -261,7 +278,7 @@ case_root_refusal_target_is_prefix() {
     rm -f "$CANARY"
     D330_SHIM_LSBLK_MOUNTPOINTS= \
     D330_SHIM_ROOT_SOURCE="${TEST_DEV}p1" \
-        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 || rc=$?
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 </dev/null || rc=$?
     expect_rc_ne_zero "$rc"
     expect_out "[GUARD] root-device: FAIL"
     expect_no_canary
@@ -272,7 +289,7 @@ case_root_refusal_source_is_prefix() {
     rm -f "$CANARY"
     D330_SHIM_LSBLK_MOUNTPOINTS= \
     D330_SHIM_ROOT_SOURCE="${TEST_DEV%?}" \
-        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 || rc=$?
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 </dev/null || rc=$?
     expect_rc_ne_zero "$rc"
     expect_out "[GUARD] root-device: FAIL"
     expect_no_canary
@@ -283,7 +300,7 @@ case_root_refusal_equal() {
     rm -f "$CANARY"
     D330_SHIM_LSBLK_MOUNTPOINTS= \
     D330_SHIM_ROOT_SOURCE="$TEST_DEV" \
-        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 || rc=$?
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --device "$TEST_DEV" > "$CASE_OUT" 2>&1 </dev/null || rc=$?
     expect_rc_ne_zero "$rc"
     expect_out "[GUARD] root-device: FAIL"
     expect_no_canary
