@@ -27,12 +27,12 @@ fi
 # 2. X11 recovery via xrandr
 if command -v xrandr >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
     log "Cycling X11 outputs via xrandr..."
-    OUTPUT=$(xrandr --current | grep " connected" | awk '{print $1}' | head -n 1)
+    OUTPUT=$(xrandr --current | grep " connected" | awk '{print $1}' | head -n 1 || true)
     if [[ -n "$OUTPUT" ]]; then
         # Reuse the current rotation instead of forcing one: forcing
         # `--rotate right` on an already-rotated output would double it.
         CUR_ROT=$(xrandr --current | awk -v out="$OUTPUT" \
-            '$1==out { for (i=2; i<=NF; i++) if ($i ~ /^(normal|left|right|inverted)$/) { print $i; exit } }')
+            '$1==out { for (i=2; i<=NF; i++) { r=$i; gsub(/[()]/,"",r); if (r ~ /^(normal|left|right|inverted)$/) { print r; exit } } }' || true)
         CUR_ROT="${CUR_ROT:-normal}"
         xrandr --output "$OUTPUT" --off || true
         sleep 0.6
@@ -43,11 +43,12 @@ if command -v xrandr >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
 fi
 
 # 3. No kernel-DRM fallback that only pretends to work.
-# Writing /sys/class/drm/*/dpms is a no-op on modern i915: the node is
-# writable but does not drive a connector modeset, so the old Off/On cycle
-# reported success while changing nothing. If neither wlr-randr nor xrandr was
-# available there is no safe userspace modeset to force from here.
+# Writing /sys/class/drm/*/dpms is rejected on modern i915: the node is
+# read-only (DEVICE_ATTR_RO(dpms) since <=5.15), so a write fails instead of
+# driving a connector modeset, and the old Off/On cycle reported success while
+# changing nothing. If neither wlr-randr nor xrandr actually ran there is no
+# safe userspace modeset to force from here, so exit non-zero rather than
+# claiming a refresh that never happened.
 log "No usable display server detected; skipping the no-op kernel DPMS cycle."
 log "Re-run from a graphical session with wlr-randr or xrandr, or switch VT."
-
-log "Screen refresh cycle complete."
+exit 1
