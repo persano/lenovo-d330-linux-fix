@@ -746,6 +746,13 @@ do_install() {
 
 do_uninstall() {
     log_info "Uninstalling ${PKG_NAME}..."
+    # WR-04: --uninstall is allowed for non-root rescue shells, and every removal
+    # below is `|| true`. Track whether we could actually act, so the final line
+    # is honest instead of claiming a restore that never happened.
+    UNINSTALL_SKIPPED_NONROOT=false
+    if [ "$DRY_RUN" = false ] && [ "$EUID" -ne 0 ]; then
+        UNINSTALL_SKIPPED_NONROOT=true
+    fi
     if [ "$DRY_RUN" = false ]; then
         # Unload module
         modprobe -r "${PKG_NAME//-/_}" >/dev/null 2>&1 || true
@@ -891,7 +898,13 @@ do_uninstall() {
             dracut -f || true
         fi
     fi
-    log_ok "Uninstallation complete. System restored to baseline state."
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY-RUN] Uninstall steps were simulated; no changes made."
+    elif [ "$UNINSTALL_SKIPPED_NONROOT" = true ]; then
+        log_warn "not root - removals were skipped; re-run as root to restore baseline state."
+    else
+        log_ok "Uninstallation complete. System restored to baseline state."
+    fi
 }
 
 # ------------------------------------------------------------------------------
