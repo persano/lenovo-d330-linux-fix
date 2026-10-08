@@ -103,10 +103,39 @@ class D330TabletDaemon:
             return 0  # Laptop mode (dock connected)
         return 1      # Tablet mode (dock disconnected)
 
+    def current_desktop(self):
+        """Lower-cased XDG_CURRENT_DESKTOP value, or '' when unknown."""
+        return os.environ.get("XDG_CURRENT_DESKTOP", "").strip().lower()
+
+    def session_tokens(self):
+        """Space-joined tokens describing this session (desktop + display server)."""
+        tokens = [self.current_desktop()]
+        if os.environ.get("WAYLAND_DISPLAY"):
+            tokens.append("wayland")
+        elif os.environ.get("DISPLAY"):
+            tokens.append("x11")
+        return " ".join(t for t in tokens if t)
+
     def apply_commands(self, commands):
-        """Run (label, command) pairs; return the labels of any that failed."""
+        """Run (label, command, targets) triples applicable to this session.
+
+        `targets` lists the session tokens a command is written for (e.g.
+        "gnome", "cinnamon", "kde", "x11"); an empty tuple means "any desktop".
+        Commands that do not target the current session are skipped instead of
+        run, so success is honest rather than unreachable: a GNOME/KDE/Cinnamon
+        session only reports failures for commands that actually apply to it,
+        and only a genuinely session-less run warns (M6). Best-effort commands
+        already carrying `|| true` keep succeeding by construction.
+        """
+        tokens = self.session_tokens()
+        has_session = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
         failed = []
-        for label, cmd in commands:
+        for label, cmd, targets in commands:
+            if not has_session:
+                failed.append(label)
+                continue
+            if targets and not any(t in tokens for t in targets):
+                continue
             ok, _ = run_command(cmd)
             if not ok:
                 failed.append(label)
@@ -131,28 +160,34 @@ class D330TabletDaemon:
             logger.info("[DRY-RUN] Enabled touchpad, locked orientation to landscape, disabled OSK.")
             return
 
-        # 1-3. Orientation, touchpad, and OSK desktop commands. Collect their
-        # results so success is only reported when they actually applied (M6);
-        # `|| true` best-effort calls are inherently reported as applied.
+        # 1-3. Orientation, touchpad, and OSK desktop commands, each tagged with
+        # the session it targets, so success is only reported for commands that
+        # actually apply to the current desktop (M6); `|| true` best-effort calls
+        # are inherently reported as applied.
         failed = self.apply_commands([
             ("gsettings orientation",
-             "gsettings set org.gnome.settings-daemon.plugins.orientation active false"),
+             "gsettings set org.gnome.settings-daemon.plugins.orientation active false",
+             ("gnome",)),
             ("xrandr rotate normal",
-             "xrandr --output eDP-1 --rotate normal 2>/dev/null || xrandr --output eDP-1 --rotate right 2>/dev/null"),
+             "xrandr --output eDP-1 --rotate normal 2>/dev/null || xrandr --output eDP-1 --rotate right 2>/dev/null",
+             ("x11",)),
             ("xinput enable SynPS/2 Synaptics TouchPad",
-             "xinput enable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true"),
+             "xinput enable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true", ()),
             ("xinput enable Elan Touchpad",
-             "xinput enable 'Elan Touchpad' 2>/dev/null || true"),
+             "xinput enable 'Elan Touchpad' 2>/dev/null || true", ()),
             ("xinput enable ELAN0676 Touchpad",
-             "xinput enable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true"),
+             "xinput enable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true", ()),
             ("gsettings gnome OSK off",
-             "gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false"),
+             "gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false",
+             ("gnome",)),
             ("gsettings cinnamon OSK off",
-             "gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled false"),
+             "gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled false",
+             ("cinnamon",)),
             ("qdbus KWin OSK off",
-             "qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled false 2>/dev/null || true"),
+             "qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled false 2>/dev/null || true",
+             ("kde",)),
             ("killall onboard",
-             "killall onboard 2>/dev/null || true"),
+             "killall onboard 2>/dev/null || true", ()),
         ])
         self.report_mode_result("Laptop mode", failed)
 
@@ -167,25 +202,30 @@ class D330TabletDaemon:
             logger.info("[DRY-RUN] Enabled auto-rotation, enabled OSK, disabled external dock inputs.")
             return
 
-        # 1-3. Orientation, OSK, and touchpad desktop commands; success is only
-        # reported when they actually applied (M6).
+        # 1-3. Orientation, OSK, and touchpad desktop commands, each tagged with
+        # the session it targets; success is only reported for commands that
+        # actually apply to the current desktop (M6).
         failed = self.apply_commands([
             ("gsettings orientation auto",
-             "gsettings set org.gnome.settings-daemon.plugins.orientation active true"),
+             "gsettings set org.gnome.settings-daemon.plugins.orientation active true",
+             ("gnome",)),
             ("gsettings gnome OSK on",
-             "gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true"),
+             "gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true",
+             ("gnome",)),
             ("gsettings cinnamon OSK on",
-             "gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled true"),
+             "gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled true",
+             ("cinnamon",)),
             ("qdbus KWin OSK on",
-             "qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled true 2>/dev/null || true"),
+             "qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled true 2>/dev/null || true",
+             ("kde",)),
             ("launch onboard",
-             "which onboard >/dev/null 2>&1 && (pgrep onboard >/dev/null || onboard &) || true"),
+             "which onboard >/dev/null 2>&1 && (pgrep onboard >/dev/null || onboard &) || true", ()),
             ("xinput disable SynPS/2 Synaptics TouchPad",
-             "xinput disable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true"),
+             "xinput disable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true", ()),
             ("xinput disable Elan Touchpad",
-             "xinput disable 'Elan Touchpad' 2>/dev/null || true"),
+             "xinput disable 'Elan Touchpad' 2>/dev/null || true", ()),
             ("xinput disable ELAN0676 Touchpad",
-             "xinput disable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true"),
+             "xinput disable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true", ()),
         ])
         self.report_mode_result("Tablet mode", failed)
 
