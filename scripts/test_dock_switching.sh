@@ -41,6 +41,7 @@ STATUS=0
 TEST_LAPTOP=0
 TEST_TABLET=0
 CYCLE_N=0
+FAILED=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -84,9 +85,13 @@ done
 # 2. Check daemon status
 if [ -f "$DAEMON_SCRIPT" ]; then
     log_info "Querying daemon hardware status..."
-    python3 "$DAEMON_SCRIPT" --status || true
+    if ! python3 "$DAEMON_SCRIPT" --status; then
+        log_err "Daemon status query failed at $DAEMON_SCRIPT."
+        FAILED=$((FAILED + 1))
+    fi
 else
     log_err "Daemon script not found at $DAEMON_SCRIPT"
+    FAILED=$((FAILED + 1))
 fi
 
 # 3. Actions
@@ -112,6 +117,11 @@ if [ $CYCLE_N -gt 0 ]; then
         sleep 0.5
     done
     log_ok "Completed $CYCLE_N cycle test successfully."
+fi
+
+if [ "$FAILED" -gt 0 ]; then
+    log_err "${FAILED} dock verification check(s) failed."
+    exit 1
 fi
 
 log_ok "Dock verification check finished."
