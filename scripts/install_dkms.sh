@@ -115,7 +115,10 @@ run_kernel_src_step() {
 
     log_info "Probing clamp patch against kernel tree '$kernel_src' (patch -p1 --dry-run)..."
     local dry_rc=0
-    patch -p1 -d "$kernel_src" --dry-run --forward --batch < "$patch_file" >/dev/null 2>&1 || dry_rc=$?
+    # WR-04: no --forward here -- with it, an already-clamped tree reports
+    # "Skipping patch" and returns non-zero, producing a false "clamp NOT
+    # delivered" warning. Plain --dry-run only gates on context applicability.
+    patch -p1 -d "$kernel_src" --dry-run --batch < "$patch_file" >/dev/null 2>&1 || dry_rc=$?
 
     if [ "$dry_rc" -ne 0 ]; then
         log_warn "[WARN] Clamp patch does NOT apply to '$kernel_src' (context mismatch; rc=$dry_rc)."
