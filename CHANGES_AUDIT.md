@@ -338,10 +338,10 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **How Decided**:
   - The D330 ships a Realtek RTL8821CE only, so no Intel Wi-Fi driver options are configured.
   - Modprobe options for the Realtek radio:
-    * `ant_sel=2`: selects the auxiliary antenna port, where Bluetooth isolation is better.
+    * `ant_sel=2`: selects the auxiliary antenna port, where Bluetooth isolation is better. This is a parameter of the out-of-tree `rtl8821ce` DKMS driver ONLY; the in-tree `rtw88_8821ce` driver does not expose it (an `options rtw88_8821ce ant_sel=...` line is ignored), so it is set on the `rtl8821ce` line alone.
     * `rtw88_core.disable_lps_deep=1` (`disable_lps_deep=y`): prevents the chip from entering the PCIe deep sleep state that stalls during wake.
     * `rtw88_pci.disable_aspm=1` (`disable_aspm=y`): keeps ASPM off on the RTL8821CE PCIe link.
-  - Both module spellings (`rtl8821ce` legacy DKMS and `rtw88_8821ce` in-tree) are emitted so whichever driver the kernel ships reads its option.
+  - The in-tree `rtw88_8821ce` driver is tuned through its `rtw88_core` / `rtw88_pci` helper modules; `ant_sel` is available only on the legacy out-of-tree `rtl8821ce` DKMS driver.
   - Realtek Wi-Fi/BT coexistence is handled automatically by the driver and firmware; there is no manual coexistence module parameter.
   - Systemd sleep script `lenovo-d330-wifi-resume.sh` to trigger interface wake.
 * **What Done**:

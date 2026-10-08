@@ -3,7 +3,7 @@
 # Verifies the Realtek RTL8821CE module configuration and antenna settings.
 #
 # `--dry-run` parses the shipped modprobe conf and exits non-zero if an unknown
-# module name is configured or the in-tree `rtw88_8821ce` name is missing (SC3).
+# module name is configured or the in-tree `rtw88_core` helper is missing (SC3).
 
 set -uo pipefail
 
@@ -68,17 +68,20 @@ if [[ "$MODE" == "dry-run" ]]; then
         fi
     done
 
-    # The in-tree driver name must be present (the D330's primary driver).
-    if ! printf '%s\n' $mods | grep -qx "rtw88_8821ce"; then
-        echo "[FAIL] in-tree module rtw88_8821ce is not configured" >&2
+    # The in-tree helper must be present: the D330's in-tree driver is
+    # rtw88_8821ce, whose tuning is attached to the rtw88_core/rtw88_pci helper
+    # modules. This checks the module NAME only, not option semantics.
+    if ! printf '%s\n' $mods | grep -qx "rtw88_core"; then
+        echo "[FAIL] in-tree module rtw88_core is not configured" >&2
         fail=1
     fi
 
-    # ant_sel must actually be set on a Realtek 8821ce line.
-    if grep -qE '^[[:space:]]*options[[:space:]]+(rtl8821ce|rtw88_8821ce)[[:space:]].*ant_sel=' "$CONF"; then
-        echo "  [OK] ant_sel set on a Realtek 8821ce module"
+    # ant_sel is valid ONLY on the out-of-tree rtl8821ce driver. Do not assert
+    # it (or any option semantics) on rtw88_8821ce, which ignores it.
+    if grep -qE '^[[:space:]]*options[[:space:]]+rtl8821ce[[:space:]].*ant_sel=' "$CONF"; then
+        echo "  [OK] ant_sel set on the out-of-tree rtl8821ce module"
     else
-        echo "[FAIL] no ant_sel= option on a Realtek 8821ce module" >&2
+        echo "[FAIL] no ant_sel= option on the out-of-tree rtl8821ce module" >&2
         fail=1
     fi
 
