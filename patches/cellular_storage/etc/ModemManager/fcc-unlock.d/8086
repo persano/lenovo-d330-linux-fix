@@ -2,7 +2,8 @@
 
 # NOTE: ModemManager looks up this hook as `8086:7360`. The Windows checkout
 # cannot store a literal colon in a filename, so it is tracked here as `8086`.
-# On a POSIX checkout rename to `8086:7360` (see ROADMAP N2).
+# Do NOT rename it: scripts/install_dkms.sh copies this `8086` source to the
+# colon-named `8086:7360` target when it installs (see ROADMAP N2).
 #
 # SPDX-License-Identifier: CC0-1.0
 # 2024 Thomas Vogt

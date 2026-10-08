@@ -208,7 +208,7 @@ check_prerequisites() {
     done
     if [ "$rnnoise_found" != true ]; then
         log_warn "librnnoise_ladspa.so not found (/usr/lib/ladspa, /usr/lib/*/ladspa)."
-        log_warn "RNNoise mic denoiser stays inactive; install it via: apt install librnnoise-ladspa"
+        log_warn "RNNoise mic denoiser stays inactive; build/install librnnoise_ladspa.so manually (not distro-packaged)."
     else
         log_ok "librnnoise_ladspa.so found; RNNoise mic denoiser available."
     fi
@@ -404,6 +404,8 @@ do_install() {
         if [ -d "/etc/ModemManager/fcc-unlock.d" ] && [ -f "${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086" ]; then
             cp "${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086" /etc/ModemManager/fcc-unlock.d/8086:7360
             chmod +x /etc/ModemManager/fcc-unlock.d/8086:7360
+        else
+            log_warn "ModemManager FCC unlock not deployed: /etc/ModemManager/fcc-unlock.d or the ${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086 source is missing."
         fi
 
         if command -v systemd-hwdb >/dev/null 2>&1; then
