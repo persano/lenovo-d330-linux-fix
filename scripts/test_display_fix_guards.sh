@@ -129,8 +129,12 @@ case_kernel_src_dryrun_first() {
     expect_file_out "patch -p1" "$INSTALLER"
     expect_file_out "log_warn" "$INSTALLER"
     local dry apply
-    dry=$(grep -n -- "--dry-run" "$INSTALLER" | head -1 | cut -d: -f1 || true)
-    apply=$(grep -n "patch -p1 -d .* <" "$INSTALLER" | head -1 | cut -d: -f1 || true)
+    # WR-03: match the actual commands, not prose/usage. The dry-run probe is a
+    # line that starts with `patch` AND carries `--dry-run`; the real apply is a
+    # `patch` line WITHOUT `--dry-run`. Comparing those two line numbers makes
+    # a reorder (apply before probe) genuinely fail this case.
+    dry=$(grep -nE '^[[:space:]]*patch .*--dry-run' "$INSTALLER" | head -1 | cut -d: -f1 || true)
+    apply=$(grep -nE '^[[:space:]]*patch ' "$INSTALLER" | grep -v -F -- '--dry-run' | head -1 | cut -d: -f1 || true)
     if [ -z "${dry:-}" ] || [ -z "${apply:-}" ] || [ "$dry" -ge "$apply" ]; then
         echo "    [detail] dry-run probe does not precede apply (dry=${dry:-none} apply=${apply:-none})"
         CASE_FAIL=1
