@@ -5,7 +5,7 @@ ConditionPathExists=/sys/bus/iio/devices
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/d330-sensor-filter.py --monitor
+ExecStart=/usr/local/bin/d330-sensor-filter --monitor
 Restart=on-failure
 RestartSec=5
 
