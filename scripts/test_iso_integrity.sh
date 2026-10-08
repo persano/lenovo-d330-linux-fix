@@ -52,7 +52,12 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying ISO build harness..."
-    bash scripts/build_live_iso.sh --dry-run
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if ! bash "$SCRIPT_DIR/build_live_iso.sh" --dry-run; then
+        echo "[FAIL] build_live_iso.sh --dry-run reported unmet prerequisites." >&2
+        exit 1
+    fi
+    echo "[DRY-RUN] ISO build harness prerequisites validated."
     exit 0
 fi
 

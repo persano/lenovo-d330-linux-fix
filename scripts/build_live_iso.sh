@@ -61,18 +61,72 @@ echo "=========================================================="
 
 if [[ "$DRY_RUN" = true ]]; then
     log_info "[DRY-RUN] Validating remastering pipeline prerequisites..."
-    log_info "Base ISO:   ${BASE_ISO:-[Unspecified mock-ubuntu-24.04-desktop.iso]}"
-    log_info "Output ISO: $OUTPUT_ISO"
-    log_info "Required tools: xorriso, unsquashfs, mksquashfs"
-    log_info "Injection manifest:"
-    log_info "  - i915 PPS and orientation quirks (patches/dkms/)"
-    log_info "  - Goodix touchscreen & Active Pen matrices (patches/touchscreen/, patches/touchpad_pen/)"
-    log_info "  - ALSA UCM2 audio profiles (patches/audio/ucm2/)"
-    log_info "  - PipeWire 1W speaker DSP curve (patches/audio_dsp/)"
-    log_info "  - ZRAM 3GB zstd swap generator & eMMC scheduler (patches/storage_memory/)"
-    log_info "  - Tablet dock daemon and VPC2004 CLI (tools/)"
-    log_info "  - Early fbcon=rotate:1 and clean ACPI DSDT override (patches/boot_orientation/, patches/acpi_override/)"
-    log_ok "[DRY-RUN] Remaster build pipeline validated successfully."
+    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    dry_failed=0
+
+    # 1. Required build tools must be present on PATH.
+    for tool in xorriso unsquashfs mksquashfs; do
+        if command -v "$tool" >/dev/null 2>&1; then
+            log_ok "tool present: $tool"
+        else
+            log_err "missing required ISO tool: $tool (install: apt install xorriso squashfs-tools)"
+            dry_failed=$((dry_failed + 1))
+        fi
+    done
+
+    # 2. Base ISO: optional in a dry-run, but if given it must exist.
+    if [[ -n "$BASE_ISO" ]]; then
+        if [[ -f "$BASE_ISO" ]]; then
+            log_ok "base ISO present: $BASE_ISO ($(stat -c%s "$BASE_ISO") bytes)"
+        else
+            log_err "base ISO not found: $BASE_ISO"
+            dry_failed=$((dry_failed + 1))
+        fi
+    else
+        log_warn "no --base-iso supplied; skipping base-ISO file check (required for a real build)"
+    fi
+
+    # 3. Output path: the parent directory must exist and be writable.
+    out_parent="$(dirname "$OUTPUT_ISO")"
+    if [[ -d "$out_parent" ]]; then
+        log_ok "output directory present: $out_parent"
+    else
+        log_err "output parent directory missing: $out_parent"
+        dry_failed=$((dry_failed + 1))
+    fi
+
+    # 4. Source paths the injection pipeline copies from.
+    for src in tools patches patches/dkms patches/touchscreen patches/audio/ucm2 \
+               patches/audio_dsp patches/storage_memory patches/boot_orientation \
+               patches/acpi_override; do
+        if [[ -e "$REPO_ROOT/$src" ]]; then
+            log_ok "source path present: $src"
+        else
+            log_err "missing source path: $src"
+            dry_failed=$((dry_failed + 1))
+        fi
+    done
+
+    # 5. Required source files: the pipeline's `cp tools/d330-*` glob needs at
+    #    least one match, otherwise the injected live image is silently empty.
+    tool_payload=0
+    for f in "$REPO_ROOT"/tools/d330-*; do
+        if [[ -e "$f" ]]; then
+            tool_payload=$((tool_payload + 1))
+        fi
+    done
+    if [[ "$tool_payload" -gt 0 ]]; then
+        log_ok "tool payload present: $tool_payload tools/d330-* file(s)"
+    else
+        log_err "no tools/d330-* files found under $REPO_ROOT/tools"
+        dry_failed=$((dry_failed + 1))
+    fi
+
+    if [[ "$dry_failed" -gt 0 ]]; then
+        log_err "[DRY-RUN] $dry_failed prerequisite check(s) failed; remaster build cannot proceed."
+        exit 1
+    fi
+    log_ok "[DRY-RUN] Remaster prerequisites validated (tools, source tree, output path)."
     exit 0
 fi
 
