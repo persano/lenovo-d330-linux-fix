@@ -98,12 +98,12 @@
   2. fstab line parses under `systemd-analyze verify`
   3. `--dry-run` prints the guard outcomes.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 32-01-PLAN.md — Explicit device selection and the pre-write guard chain (audit C1), plus the PATH-shim guard suite
+- [x] 32-01-PLAN.md — Explicit device selection and the pre-write guard chain (audit C1), plus the PATH-shim guard suite
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
