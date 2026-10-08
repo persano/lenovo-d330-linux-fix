@@ -61,7 +61,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -136,6 +136,12 @@ if [[ "$MODE" == "dry-run" ]]; then
     # conf and exits non-zero on an unknown module name or a missing in-tree
     # `rtw88_8821ce`. Same contract as the suites above.
     bash scripts/test_wireless_coex.sh --dry-run
+
+    # Harness-trust meta-guard (Phase 41, SC1/SC2): breaks the subject of five
+    # representative test scripts and asserts each exits non-zero (SC1), then
+    # statically asserts no test script mutates the system without an --apply
+    # gate (SC2). Restores every mutated file; same contract as the suites above.
+    bash scripts/test_harness_trust.sh
 
     # Cellular packaging inventory: resolve the real FCC-unlock hook instead of
     # printing a hardcoded path that does not exist.
