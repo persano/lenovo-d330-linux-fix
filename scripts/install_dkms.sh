@@ -36,12 +36,119 @@ Options:
   --install     Install DKMS module, modprobe configs, and udev hwdb rules (Default)
   --uninstall   Remove DKMS module, modprobe configs, and udev hwdb rules
   --dry-run     Check system prerequisites and show actions without applying changes
+  --verify [--root DIR]
+                Diff deployed paths against the installer's own deploy manifest and
+                exit non-zero on drift. Read-only: needs neither build tools nor root.
+                --root DIR checks a fixture tree instead of / (skips systemctl checks).
+  --dump-manifest
+                Print the deploy manifest as path<TAB>kind lines and exit (read-only).
   --kernel-src PATH
                 Option 2: apply patches/d330_display_resume_fix.patch to the
                 kernel source tree at PATH. Gated by `patch -p1 --dry-run`;
                 a context mismatch warns and never fails the install.
   -h, --help    Display this help message
 EOF
+}
+
+# ------------------------------------------------------------------------------
+# deploy_manifest: the SINGLE source of truth for the deployed artifact set.
+#
+# Emits `path<TAB>kind` for every artifact install/uninstall/--verify care about.
+# Kinds:
+#   dir          installer-owned directory removed wholesale on uninstall
+#   file         deployed config/data file (existence + removal)
+#   exec         deployed executable (existence + exec bit + removal)
+#   unit         systemd unit file copied to /etc/systemd/system
+#   unit-enabled runtime enablement target (is-enabled; skipped for --root != /)
+#   grub-snippet /etc/default/grub.d snippet (GRUB must be regenerated both ways)
+#   fstab-line   exact /etc/fstab line (skipped for --root != /)
+#   state        runtime state file (written by a unit ExecStop, removed on uninstall)
+#
+# Ordering, logged output and copy semantics of do_install()/do_uninstall() are
+# intentionally preserved (the phase-33 hibernate guard suite greps their exact
+# literal lines); this manifest is the authoritative inventory that --verify
+# diffs against and that the symmetry guard suite cross-checks the script for.
+# ------------------------------------------------------------------------------
+deploy_manifest() {
+    cat <<'MANIFEST'
+/usr/src/lenovo-d330-fix-1.0.0	dir
+/etc/modprobe.d/lenovo-d330-i915.conf	file
+/etc/modprobe.d/lenovo-d330-audio.conf	file
+/etc/modprobe.d/lenovo-d330-power.conf	file
+/etc/modprobe.d/lenovo-d330-camera.conf	file
+/etc/modprobe.d/lenovo-d330-audio-antipop.conf	file
+/etc/modprobe.d/lenovo-d330-display-pwm.conf	file
+/etc/modprobe.d/lenovo-d330-cellular.conf	file
+/etc/modprobe.d/lenovo-d330-wireless.conf	file
+/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb	file
+/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb	file
+/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb	file
+/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules	file
+/etc/udev/rules.d/85-lenovo-d330-dock.rules	file
+/etc/udev/rules.d/95-lenovo-d330-power.rules	file
+/etc/udev/rules.d/92-lenovo-d330-camera.rules	file
+/etc/udev/rules.d/60-lenovo-d330-emmc.rules	file
+/etc/udev/rules.d/91-lenovo-d330-headset-jack.rules	file
+/etc/udev/rules.d/88-lenovo-d330-hardware.rules	file
+/etc/udev/rules.d/87-lenovo-d330-sensors.rules	file
+/etc/udev/rules.d/78-lenovo-d330-cellular.rules	file
+/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules	file
+/etc/ModemManager/fcc-unlock.d/8086:7360	exec
+/etc/X11/xorg.conf.d/50-touchscreen-d330.conf	file
+/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf	file
+/usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh	exec
+/usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh	exec
+/etc/sysctl.d/99-lenovo-d330-zram.conf	file
+/etc/systemd/zram-generator.conf	file
+/etc/default/grub.d/50-lenovo-d330-boot.cfg	grub-snippet
+/etc/default/grub.d/51-lenovo-d330-acpi-override.cfg	grub-snippet
+/etc/default/grub.d/52-lenovo-d330-fastboot.cfg	grub-snippet
+/etc/default/grub.d/53-lenovo-d330-resume.cfg	grub-snippet
+/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth	exec
+/etc/environment.d/50-lenovo-d330-vaapi.conf	file
+/etc/default/earlyoom	file
+/etc/systemd/system/earlyoom.service.d/d330-override.conf	file
+/etc/thermald/thermal-conf.xml	file
+/etc/xdg/autostart/d330-tray.desktop	file
+/usr/local/bin/d330-tablet-daemon	exec
+/usr/local/bin/lenovo-d330-power-tune	exec
+/usr/local/bin/d330-ctl	exec
+/usr/local/bin/d330-camera-bridge.sh	exec
+/usr/local/bin/d330-backlight-pwm.py	exec
+/usr/local/bin/d330-refresh-screen	exec
+/usr/local/bin/d330-sensor-filter	exec
+/usr/local/bin/d330-auto-hibernate	exec
+/usr/local/bin/d330-microsd-setup	exec
+/usr/local/bin/d330-thermal-tune	exec
+/usr/local/bin/d330-fastboot-tune	exec
+/usr/local/bin/d330-vaapi-check	exec
+/usr/local/bin/d330-tray	exec
+/etc/systemd/system/d330-tablet-daemon.service	unit
+/etc/systemd/system/lenovo-d330-power.service	unit
+/etc/systemd/system/lenovo-d330-camera-loopback.service	unit
+/etc/systemd/system/d330-hardware-state.service	unit
+/etc/systemd/system/lenovo-d330-backlight-pwm.service	unit
+/etc/systemd/system/d330-sensor-filter.service	unit
+/etc/systemd/system/d330-auto-hibernate.service	unit
+/etc/systemd/system/d330-thermal.service	unit
+/etc/systemd/system/d330-swapfile.service	unit
+/usr/share/alsa/ucm2/sof-essx8336	dir
+/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf	file
+/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf	file
+/etc/tlp.d/50-lenovo-d330.conf	file
+/usr/share/color/icc/Lenovo-D330-sRGB-D65.icc	file
+/etc/d330-hardware-state.json	state
+d330-tablet-daemon.service	unit-enabled
+lenovo-d330-power.service	unit-enabled
+lenovo-d330-camera-loopback.service	unit-enabled
+d330-hardware-state.service	unit-enabled
+lenovo-d330-backlight-pwm.service	unit-enabled
+d330-sensor-filter.service	unit-enabled
+d330-auto-hibernate.service	unit-enabled
+d330-thermal.service	unit-enabled
+d330-swapfile.service	unit-enabled
+/var/swapfile none swap sw 0 0	fstab-line
+MANIFEST
 }
 
 check_prerequisites() {
@@ -731,15 +838,114 @@ do_uninstall() {
     log_ok "Uninstallation complete. System restored to baseline state."
 }
 
+# ------------------------------------------------------------------------------
+# do_verify: diff the deployed tree against deploy_manifest() (M11/N6 machine
+# check). Read-only: no build tools, no root. `--root DIR` checks a fixture tree
+# and skips the runtime-only kinds (unit-enabled, fstab-line) that need systemd
+# or the real /etc. Exits non-zero (and prints a DRIFT line per entry) on any
+# mismatch so install->uninstall symmetry is machine-checked, not eyeballed.
+# ------------------------------------------------------------------------------
+do_verify() {
+    local root="${1:-/}"
+    local path kind full
+    local total=0 drift=0
+
+    log_info "Verifying deployed artifacts against the deploy manifest (root=${root})..."
+    while IFS=$'\t' read -r path kind; do
+        [ -n "$path" ] || continue
+        total=$((total + 1))
+
+        case "$kind" in
+            unit-enabled)
+                if [ "$root" = "/" ] && command -v systemctl >/dev/null 2>&1; then
+                    if [ "$(systemctl is-enabled "$path" 2>/dev/null || true)" = "enabled" ]; then
+                        echo "  [OK] $path ($kind)"
+                    else
+                        echo "  [DRIFT] $path ($kind): unit not enabled"
+                        drift=$((drift + 1))
+                    fi
+                else
+                    echo "  [SKIP] $path ($kind): systemctl unavailable or non-root target"
+                fi
+                continue
+                ;;
+            fstab-line)
+                if [ "$root" = "/" ]; then
+                    if grep -qxF "$path" /etc/fstab 2>/dev/null; then
+                        echo "  [OK] fstab: $path"
+                    else
+                        echo "  [DRIFT] fstab entry missing: $path"
+                        drift=$((drift + 1))
+                    fi
+                else
+                    echo "  [SKIP] fstab line ($kind): non-root target"
+                fi
+                continue
+                ;;
+        esac
+
+        if [ "$root" = "/" ]; then
+            full="$path"
+        else
+            full="${root%/}${path}"
+        fi
+
+        case "$kind" in
+            dir)
+                if [ -d "$full" ]; then
+                    echo "  [OK] $path ($kind)"
+                else
+                    echo "  [DRIFT] $path ($kind): missing directory"
+                    drift=$((drift + 1))
+                fi
+                ;;
+            exec)
+                if [ -f "$full" ] && [ -x "$full" ]; then
+                    echo "  [OK] $path ($kind)"
+                else
+                    echo "  [DRIFT] $path ($kind): missing or not executable"
+                    drift=$((drift + 1))
+                fi
+                ;;
+            *)
+                if [ -f "$full" ]; then
+                    echo "  [OK] $path ($kind)"
+                else
+                    echo "  [DRIFT] $path ($kind): missing"
+                    drift=$((drift + 1))
+                fi
+                ;;
+        esac
+    done < <(deploy_manifest)
+
+    echo ""
+    if [ "$drift" -gt 0 ]; then
+        log_err "verify: ${drift} DRIFT of ${total} manifest entries (root=${root})."
+        return 1
+    fi
+    log_ok "verify: all ${total} manifest entries present (root=${root})."
+    return 0
+}
+
 ACTION="install"
 DRY_RUN=false
 KERNEL_SRC=""
+VERIFY_ROOT="/"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --install) ACTION="install"; shift ;;
         --uninstall) ACTION="uninstall"; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
+        --verify) ACTION="verify"; shift ;;
+        --dump-manifest) ACTION="dump-manifest"; shift ;;
+        --root)
+            if [ -z "${2:-}" ] || [ "${2#--}" != "$2" ]; then
+                log_err "--root requires a directory argument."
+                usage
+                exit 1
+            fi
+            VERIFY_ROOT="$2"; shift 2 ;;
         --kernel-src)
             if [ -z "${2:-}" ] || [ "${2#--}" != "$2" ]; then
                 log_err "--kernel-src requires a path argument."
@@ -756,9 +962,18 @@ if [ "$DRY_RUN" = true ]; then
     log_warn "Operating in DRY-RUN mode. No files will be modified."
 fi
 
-check_prerequisites
+# --verify and --dump-manifest are read-only diagnostics: they must run without
+# dkms/make/gcc and without root, so the install prerequisite gate is skipped.
+# (--uninstall gains the same rescue-shell bypass in Task 3 / M11.)
+if [ "$ACTION" = "verify" ] || [ "$ACTION" = "dump-manifest" ]; then
+    log_info "Read-only mode '$ACTION': skipping prerequisite and root checks."
+else
+    check_prerequisites
+fi
 
 case "$ACTION" in
     install) do_install ;;
     uninstall) do_uninstall ;;
+    verify) do_verify "$VERIFY_ROOT" ;;
+    dump-manifest) deploy_manifest ;;
 esac
