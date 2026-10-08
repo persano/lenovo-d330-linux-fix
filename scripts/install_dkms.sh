@@ -504,11 +504,13 @@ do_install() {
             cp "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-swapfile.service" /etc/systemd/system/
 
         systemctl daemon-reload || true
-        # The echo-only resume unit was removed in Phase 34: its ExecStart only
-        # echoed connector status, so it was an echo, not a recovery. The
-        # enabled-unit census therefore drops from 9 to 8 (Phase 35 recount).
+        # Phase 34 removed the echo-only resume unit; the shipped census is 9
+        # units (35-RESEARCH Finding 2). SC2: all 9 must return enabled, so this
+        # enable block, packaging/debian/postinst and the RPM %post each enable
+        # the same 9 (camera-loopback was the previously-missing one).
         systemctl enable d330-tablet-daemon.service 2>/dev/null || true
         systemctl enable lenovo-d330-power.service 2>/dev/null || true
+        systemctl enable lenovo-d330-camera-loopback.service 2>/dev/null || true
         systemctl enable d330-hardware-state.service 2>/dev/null || true
         systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
         systemctl enable d330-sensor-filter.service 2>/dev/null || true

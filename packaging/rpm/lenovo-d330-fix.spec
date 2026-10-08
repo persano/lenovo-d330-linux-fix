@@ -43,8 +43,14 @@ cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/
 systemd-hwdb update || true
 udevadm trigger || true
 systemctl daemon-reload || true
+# SC2: enable all 9 shipped units (parity with install_dkms.sh and deb postinst).
 systemctl enable d330-tablet-daemon.service 2>/dev/null || true
 systemctl enable lenovo-d330-power.service 2>/dev/null || true
+systemctl enable lenovo-d330-camera-loopback.service 2>/dev/null || true
+systemctl enable d330-hardware-state.service 2>/dev/null || true
+systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
+systemctl enable d330-sensor-filter.service 2>/dev/null || true
+systemctl enable d330-thermal.service 2>/dev/null || true
 systemctl enable d330-auto-hibernate.service 2>/dev/null || true
 systemctl enable d330-swapfile.service 2>/dev/null || true
 
