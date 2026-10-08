@@ -3,22 +3,26 @@
 # scripts/test_power_stack.sh
 #
 # Static guard suite (Phase 40, audit M13/M14): the power stack must have exactly
-# one writer per knob. TLP owns runtime PM + GPU freq, the udev rules are scoped
-# to the controllers TLP does not manage, the CPU perf cap is AC-aware and
-# re-applied on power-source change, `nowatchdog` is gone, and the thermal
-# fallback guards its arithmetic.
+# one writer per knob. TLP owns runtime PM (PCI/PCIe) + GPU freq + EPP/governor,
+# the udev rules are scoped to the controllers TLP does not manage, the CPU perf
+# cap is AC-aware and re-applied on mains-source change, `nowatchdog` is gone,
+# and the thermal fallback guards its arithmetic.
 #
 # Asserted:
-#   (1) tools/lenovo-d330-power-tune.sh reads AC state and writes max_perf_pct
-#       from an AC/battery branch (no unconditional cap) and no longer races TLP
-#       by writing the runtime-PM control attribute;
-#   (2) 95-lenovo-d330-power.rules has a power_supply ACTION=="change" re-run rule;
-#   (3) the udev rules no longer broadly force the runtime-PM control attribute
-#       on TLP-managed classes (<=2 occurrences, none for pci/i2c/sound);
+#   (1) tools/lenovo-d330-power-tune.sh reads AC state (by type == "Mains",
+#       defaulting to battery), writes max_perf_pct from an AC/battery branch
+#       (no unconditional cap) and no longer writes the runtime-PM control
+#       attribute or the EPP/governor knobs TLP owns;
+#   (2) 95-lenovo-d330-power.rules has a Mains-filtered power_supply
+#       ACTION=="change" re-run rule;
+#   (3) every power/control writer in patches/*/etc/udev/rules.d/*.rules is
+#       scoped: the 95 rules cover i2c/sound/mmc/dock only (no pci), and any
+#       PCI writer repo-wide is device-scoped (the IPU3 camera exception);
 #   (4) TLP declares RUNTIME_PM_ON_AC as the runtime-PM writer;
 #   (5) no rejected INTEL_GPU_MIN_FREQ_ON_AC=100, and MAX/BOOST are kept;
-#   (6) nowatchdog absent and softlockup_panic=1 present in the fastboot cfg;
-#   (7) d330-thermal-tune.sh has a numeric guard before the /1000000 arithmetic;
+#   (6) nowatchdog absent and softlockup_panic=1 + panic=10 present as real
+#       GRUB_CMDLINE_LINUX_DEFAULT tokens (comment text does not count);
+#   (7) d330-thermal-tune.sh has numeric guards before its arithmetic;
 #   (8) thermald thermal-conf.xml uses the real x86_pkg_temp zone type;
 #   (9) packaging/debian/control Recommends thermald.
 #
@@ -48,18 +52,21 @@ failed=0
 ok()   { echo "  [PASS] $1"; passed=$((passed + 1)); }
 fail() { echo "  [FAIL] $1"; failed=$((failed + 1)); }
 
-# (1) AC-aware CPU perf cap: reads power_supply online state, writes max_perf_pct
-# from a branch (100 on AC / 75 on battery), and does not write the runtime-PM
-# control attribute (that belongs to TLP + the scoped udev rule).
+# (1) AC-aware CPU perf cap: detects AC via power_supply type == "Mains"
+# (defaulting to battery), writes max_perf_pct from a branch (100 on AC / 75 on
+# battery), and does not write the runtime-PM control attribute or the EPP/
+# governor knobs (those belong to TLP).
 if grep -q 'power_supply' "$POWER_TUNE" \
-   && grep -q 'online' "$POWER_TUNE" \
+   && grep -Fq 'IS_ON_AC=0' "$POWER_TUNE" \
+   && grep -Fq '"Mains"' "$POWER_TUNE" \
+   && grep -q 'online=' "$POWER_TUNE" \
    && grep -q 'max_perf_pct' "$POWER_TUNE" \
    && grep -q 'MAX_PERF=100' "$POWER_TUNE" \
    && grep -q 'MAX_PERF=75' "$POWER_TUNE" \
    && grep -Fq '$MAX_PERF' "$POWER_TUNE"; then
-    ok "CPU perf cap is AC-aware (max_perf_pct from AC/battery branch)"
+    ok "CPU perf cap is AC-aware (detects Mains, max_perf_pct from AC/battery branch)"
 else
-    fail "CPU perf cap is not AC-aware (missing AC read or branch/write)"
+    fail "CPU perf cap is not AC-aware (missing Mains detection or branch/write)"
 fi
 if grep -q '/power/control' "$POWER_TUNE"; then
     fail "power-tune.sh still writes /power/control (a second runtime-PM writer)"
@@ -67,23 +74,34 @@ else
     ok "power-tune.sh no longer writes /power/control (TLP is sole runtime-PM owner)"
 fi
 
-# (2) power_supply change re-run rule
-if grep -q 'SUBSYSTEM=="power_supply"' "$POWER_RULES" && grep -q 'ACTION=="change"' "$POWER_RULES"; then
-    ok "95-power rules re-run on power_supply change (AC plug lifts the cap)"
+# (2) power_supply change re-run rule, Mains-filtered
+if grep -q 'SUBSYSTEM=="power_supply"' "$POWER_RULES" \
+   && grep -q 'ACTION=="change"' "$POWER_RULES" \
+   && grep -q 'POWER_SUPPLY_TYPE}=="Mains"' "$POWER_RULES"; then
+    ok "95-power rules re-run on Mains power_supply change (AC plug lifts the cap)"
 else
-    fail "95-power rules lack a power_supply ACTION==change re-run rule"
+    fail "95-power rules lack a Mains-filtered power_supply ACTION==change re-run rule"
 fi
 
-# (3) scoped runtime PM in udev
-n=$(grep -c 'power/control' "$POWER_RULES" || true)
+# (3) scoped runtime PM: the 95 rules cover only i2c/sound/mmc/dock (no pci);
+# repo-wide, any PCI power/control writer must be device-scoped (the IPU3 camera
+# exception), so TLP remains the sole broad PCI writer.
 broad=0
-for cls in pci i2c sound; do
-    grep -qE "SUBSYSTEM==\"$cls\".*power/control" "$POWER_RULES" && broad=1
+grep -qE 'SUBSYSTEM=="pci".*power/control' "$POWER_RULES" && broad=1
+missing=""
+for cls in i2c sound mmc usb; do
+    grep -qE "SUBSYSTEM==\"$cls\".*power/control" "$POWER_RULES" || missing="$missing $cls"
 done
-if [ "${n:-0}" -le 2 ] && [ "$broad" -eq 0 ]; then
-    ok "udev runtime PM scoped to TLP-unmanaged devices ($n <= 2; no pci/i2c/sound)"
+repo_broad=0
+pci_lines=$(grep -rhE 'SUBSYSTEM=="pci".*power/control' patches/*/etc/udev/rules.d/*.rules 2>/dev/null || true)
+while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    printf '%s' "$line" | grep -q 'ATTR{device}' || repo_broad=1
+done <<< "$pci_lines"
+if [ -z "$missing" ] && [ "$broad" -eq 0 ] && [ "$repo_broad" -eq 0 ]; then
+    ok "udev runtime PM scoped (i2c/sound/mmc/usb present; no pci in 95; PCI writers device-scoped)"
 else
-    fail "udev still broadly forces power/control (n=$n, broad=$broad)"
+    fail "udev runtime PM not scoped (missing:$missing 95-pci=$broad repo-broad-pci=$repo_broad)"
 fi
 
 # (4) TLP is the declared runtime-PM owner
@@ -105,23 +123,26 @@ else
     fail "TLP GPU MAX/BOOST frequencies are missing"
 fi
 
-# (6) watchdog: nowatchdog gone, softlockup_panic=1 in
-if grep -q 'nowatchdog' "$FASTBOOT_CFG"; then
+# (6) watchdog: nowatchdog gone, softlockup_panic=1 + panic=10 as real
+# GRUB_CMDLINE_LINUX_DEFAULT tokens (comment text does not satisfy these).
+if grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*nowatchdog' "$FASTBOOT_CFG"; then
     fail "fastboot cfg still disables watchdog detection with nowatchdog"
 else
-    ok "no nowatchdog in fastboot cfg"
+    ok "no nowatchdog in fastboot cfg cmdline"
 fi
-if grep -q 'softlockup_panic=1' "$FASTBOOT_CFG"; then
-    ok "softlockup_panic=1 present (a hung boot self-recovers)"
+if grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*softlockup_panic=1' "$FASTBOOT_CFG" \
+   && grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*panic=10' "$FASTBOOT_CFG"; then
+    ok "softlockup_panic=1 + panic=10 in cmdline (a hung boot panics then auto-reboots)"
 else
-    fail "softlockup_panic=1 missing from fastboot cfg"
+    fail "softlockup_panic=1 and/or panic=10 missing from fastboot cfg cmdline"
 fi
 
-# (7) thermal numeric guard
-if grep -qE '=~ *\^\[0-9\]' "$THERMAL_TUNE"; then
-    ok "d330-thermal-tune.sh guards pl1/pl2 with a numeric regex"
+# (7) thermal numeric guards (pl1/pl2 and thermal-zone temp); portable
+# fixed-string match, not GNU-grep-dependent \^ handling.
+if grep -Fq '=~ ^[0-9]' "$THERMAL_TUNE"; then
+    ok "d330-thermal-tune.sh guards its arithmetic with a numeric regex"
 else
-    fail "d330-thermal-tune.sh lacks the numeric guard before /1000000"
+    fail "d330-thermal-tune.sh lacks the numeric guard before its arithmetic"
 fi
 
 # (8) thermald zone type matches the real sysfs type

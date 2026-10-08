@@ -14,4 +14,8 @@ KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", GROUP="video", MODE="0660", TAG
 ACTION=="add", SUBSYSTEM=="platform", DRIVERS=="intel-skl-int3472*", ATTR{power/control}="auto"
 
 # Tag Intel IPU3 CIO2 PCI controller (PCI ID 8086:31a8)
+# Device-scoped exception to the "TLP owns PCI runtime PM" rule: this is the
+# camera IP function, explicitly matched by vendor+device rather than the whole
+# PCI bus. It is the ONLY PCI power/control writer outside TLP and the power
+# guard suite asserts every such writer is device-scoped (ME-01).
 ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x8086", ATTR{device}=="0x31a8", ATTR{power/control}="auto"
