@@ -1,14 +1,23 @@
 # Lenovo IdeaPad D330 Runtime Power Management Udev Rules
 #
 # Ownership split (Phase 40): TLP is the single runtime-PM owner for the
-# classes it manages -- PCI/PCIe, USB and the Intel audio DSP -- via
-# RUNTIME_PM_ON_AC / RUNTIME_PM_ON_BAT in
-# /etc/tlp.d/50-lenovo-d330.conf. udev MUST NOT also write the runtime-PM
-# control attribute for those classes, or two writers race and TLP's AC/DC
-# policy is silently lost.
+# classes it manages via RUNTIME_PM_ON_AC / RUNTIME_PM_ON_BAT in
+# /etc/tlp.d/50-lenovo-d330.conf. TLP's RUNTIME_PM_* knobs drive PCI/PCIe
+# devices only; it does NOT set power/control on i2c-client or sound-class
+# devices (SOUND_POWER_SAVE_* writes snd_hda_intel/parameters/power_save, a
+# different knob). udev MUST NOT write power/control for the PCI/USB classes
+# TLP owns, or two writers race and TLP's AC/DC policy is silently lost.
 #
 # The rules below cover ONLY the controllers TLP does not manage:
-# the eMMC host controller and the detachable dock.
+# the i2c bus, the Intel audio DSP, the eMMC host controller and the dock.
+# The IPU3 CIO2 camera PCI function (8086:31a8) is a deliberate device-scoped
+# exception and lives in 92-lenovo-d330-camera.rules.
+
+# i2c Serial IO bus runtime PM (TLP's RUNTIME_PM_ON_AC is PCI-only)
+ACTION=="add", SUBSYSTEM=="i2c", ATTR{power/control}="auto"
+
+# Intel audio DSP runtime PM (SOUND_POWER_SAVE_* writes a different knob)
+ACTION=="add", SUBSYSTEM=="sound", ATTR{power/control}="auto"
 
 # eMMC host controller runtime PM (not covered by TLP's PCI runtime PM)
 ACTION=="add", SUBSYSTEM=="mmc", ATTR{power/control}="auto"
@@ -18,6 +27,8 @@ ACTION=="add", SUBSYSTEM=="mmc", ATTR{power/control}="auto"
 # runtime PM on (never autosuspend).
 ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="17ef", ATTR{power/control}="on"
 
-# Re-apply the AC-aware CPU performance cap when the power source changes, so
-# plugging AC lifts the max_perf_pct cap without a reboot (Phase 40).
-ACTION=="change", SUBSYSTEM=="power_supply", RUN+="/bin/systemctl --no-block restart lenovo-d330-power.service"
+# Re-apply the AC-aware CPU performance cap when the mains adapter state
+# changes, so plugging AC lifts the max_perf_pct cap without a reboot (Phase 40).
+# Filtered to Mains so battery capacity/status events do not churn the service;
+# the restarted script only writes max_perf_pct (TLP owns EPP/governor).
+ACTION=="change", SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_TYPE}=="Mains", RUN+="/usr/bin/systemctl --no-block restart lenovo-d330-power.service"
