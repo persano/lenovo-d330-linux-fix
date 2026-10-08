@@ -20,14 +20,21 @@ jobs:
 
       - name: Build Debian (.deb) Package
         run: |
-          mkdir -p build/deb/DEBIAN build/deb/usr/local/bin build/deb/etc/modprobe.d build/deb/etc/udev/rules.d build/deb/etc/udev/hwdb.d build/deb/etc/systemd/system
+          mkdir -p build/deb/DEBIAN build/deb/usr/local/bin build/deb/etc/modprobe.d build/deb/etc/udev/rules.d build/deb/etc/udev/hwdb.d build/deb/etc/systemd/system build/deb/usr/lib/systemd/user build/deb/etc/pipewire/pipewire.conf.d build/deb/etc/xdg/autostart
           cp packaging/debian/control packaging/debian/postinst build/deb/DEBIAN/
           chmod 755 build/deb/DEBIAN/postinst
-          cp tools/d330-* build/deb/usr/local/bin/ || true
-          cp patches/*/etc/modprobe.d/*.conf build/deb/etc/modprobe.d/ || true
-          cp patches/*/etc/udev/rules.d/*.rules build/deb/etc/udev/rules.d/ || true
-          cp patches/*/etc/udev/hwdb.d/*.hwdb build/deb/etc/udev/hwdb.d/ || true
-          cp patches/*/etc/systemd/system/*.service build/deb/etc/systemd/system/ || true
+          cp tools/d330-* build/deb/usr/local/bin/
+          cp tools/lenovo-d330-power-tune.sh build/deb/usr/local/bin/
+          rm -f build/deb/usr/local/bin/d330-acpi-override.sh build/deb/usr/local/bin/d330-pen-config.sh
+          for f in d330-tablet-daemon.py d330-sensor-filter.py d330-tray.py d330-auto-hibernate.py d330-refresh-screen.sh d330-microsd-setup.sh d330-thermal-tune.sh d330-fastboot-tune.sh d330-vaapi-check.sh lenovo-d330-power-tune.sh; do mv "build/deb/usr/local/bin/$f" "build/deb/usr/local/bin/${f%.*}"; done
+          chmod 755 build/deb/usr/local/bin/*
+          cp patches/*/etc/modprobe.d/*.conf build/deb/etc/modprobe.d/
+          cp patches/*/etc/udev/rules.d/*.rules build/deb/etc/udev/rules.d/
+          cp patches/*/etc/udev/hwdb.d/*.hwdb build/deb/etc/udev/hwdb.d/
+          cp patches/*/etc/systemd/system/*.service build/deb/etc/systemd/system/
+          cp patches/*/usr/lib/systemd/user/*.service build/deb/usr/lib/systemd/user/
+          cp patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf build/deb/etc/pipewire/pipewire.conf.d/
+          cp patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop build/deb/etc/xdg/autostart/
           dpkg-deb --build build/deb lenovo-d330-fix_5.0.0_all.deb
 
       - name: Bundle DKMS Tarball

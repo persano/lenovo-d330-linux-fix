@@ -37,6 +37,7 @@ INSTALLER="scripts/install_dkms.sh"
 DEBIAN_POSTINST="packaging/debian/postinst"
 DEBIAN_RULES="packaging/debian/rules"
 RPM_SPEC="packaging/rpm/lenovo-d330-fix.spec"
+PKGBUILD="packaging/arch/PKGBUILD"
 README="patches/power_hibernate/README.md"
 
 usage() {
@@ -235,22 +236,22 @@ case_execstart_matches_install_path() {
         echo "    [detail] installer copy target missing"
         CASE_FAIL=1
     fi
-    # Packaging must install the suffix-free name ExecStart= needs, mode 755
-    # (rpm spec %install and debian rules, review CR-01).
-    if ! grep -qFx 'mv %{buildroot}/usr/local/bin/d330-auto-hibernate.py %{buildroot}/usr/local/bin/d330-auto-hibernate' "$RPM_SPEC"; then
-        echo "    [detail] rpm spec does not install the suffix-free daemon name"
+    # Packaging must install the suffix-free daemon name ExecStart= needs, mode
+    # 755. Each packager renames via a loop that lists d330-auto-hibernate.py and
+    # chmods the whole /usr/local/bin dir (review CR-01; parity with installer).
+    if ! grep -qF 'd330-auto-hibernate.py' "$RPM_SPEC" \
+       || ! grep -qF 'chmod 755 %{buildroot}/usr/local/bin/*' "$RPM_SPEC"; then
+        echo "    [detail] rpm spec does not install the suffix-free daemon name / chmod 755"
         CASE_FAIL=1
     fi
-    if ! grep -qFx 'chmod 755 %{buildroot}/usr/local/bin/d330-auto-hibernate' "$RPM_SPEC"; then
-        echo "    [detail] rpm spec missing chmod 755 for the daemon"
+    if ! grep -qF 'd330-auto-hibernate.py' "$DEBIAN_RULES" \
+       || ! grep -qF 'chmod 755 debian/lenovo-d330-fix/usr/local/bin/*' "$DEBIAN_RULES"; then
+        echo "    [detail] debian rules do not install the suffix-free daemon name / chmod 755"
         CASE_FAIL=1
     fi
-    if ! grep -qFx $'\tmv debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate.py debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate' "$DEBIAN_RULES"; then
-        echo "    [detail] debian rules do not install the suffix-free daemon name"
-        CASE_FAIL=1
-    fi
-    if ! grep -qFx $'\tchmod 755 debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate' "$DEBIAN_RULES"; then
-        echo "    [detail] debian rules missing chmod 755 for the daemon"
+    if ! grep -qF 'd330-auto-hibernate.py' "$PKGBUILD" \
+       || ! grep -qF 'chmod 755 "${pkgdir}"/usr/local/bin/*' "$PKGBUILD"; then
+        echo "    [detail] PKGBUILD does not install the suffix-free daemon name / chmod 755"
         CASE_FAIL=1
     fi
 }

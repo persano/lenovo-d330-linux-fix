@@ -39,15 +39,16 @@ mkdir -p %{buildroot}/etc/systemd/system
 mkdir -p %{buildroot}/usr/lib/systemd/user
 
 cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/
+cp %{_builddir}/tools/lenovo-d330-power-tune.sh %{buildroot}/usr/local/bin/
 # d330-acpi-override.sh and d330-pen-config.sh are development-only helpers
 # (CHANGES_AUDIT.md 8.1) and must not ship in packages.
 rm -f %{buildroot}/usr/local/bin/d330-acpi-override.sh %{buildroot}/usr/local/bin/d330-pen-config.sh
-# d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
-# install the daemon as /usr/local/bin/d330-auto-hibernate, mode 755.
-mv %{buildroot}/usr/local/bin/d330-auto-hibernate.py %{buildroot}/usr/local/bin/d330-auto-hibernate
-chmod 755 %{buildroot}/usr/local/bin/d330-auto-hibernate
-# cp preserves 0644; make every other installed tool executable too.
-chmod 755 %{buildroot}/usr/local/bin/d330-*
+# Rename to the suffix-free names the shipped units Exec (parity with install_dkms.sh:485-523).
+for f in d330-tablet-daemon.py d330-sensor-filter.py d330-tray.py d330-auto-hibernate.py d330-refresh-screen.sh d330-microsd-setup.sh d330-thermal-tune.sh d330-fastboot-tune.sh d330-vaapi-check.sh lenovo-d330-power-tune.sh; do mv "%{buildroot}/usr/local/bin/$f" "%{buildroot}/usr/local/bin/${f%.*}"; done
+# cp preserves 0644; make every installed tool executable.
+chmod 755 %{buildroot}/usr/local/bin/*
+mkdir -p %{buildroot}/etc/xdg/autostart
+cp %{_builddir}/patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop %{buildroot}/etc/xdg/autostart/
 cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/
 cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/
 cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/
@@ -84,6 +85,7 @@ systemctl enable d330-swapfile.service 2>/dev/null || true
 /etc/systemd/system/*
 /usr/lib/systemd/user/*
 /etc/pipewire/pipewire.conf.d/*
+/etc/xdg/autostart/*
 
 %changelog
 * Wed Oct 07 2026 Antigravity Community <community@example.com> - 5.0.0-1

@@ -3,20 +3,31 @@
 	dh $@
 
 override_dh_auto_install:
-	# Install tools
+	# Install tools under the SAME suffix-free basenames install_dkms.sh uses in
+	# /usr/local/bin, because the shipped systemd units' ExecStart= reference
+	# those names (parity with install_dkms.sh:485-523).
 	mkdir -p debian/lenovo-d330-fix/usr/local/bin
 	cp tools/d330-* debian/lenovo-d330-fix/usr/local/bin/
+	cp tools/lenovo-d330-power-tune.sh debian/lenovo-d330-fix/usr/local/bin/
 	# d330-acpi-override.sh and d330-pen-config.sh are development-only helpers
 	# (CHANGES_AUDIT.md 8.1) and must not ship in packages.
 	rm -f debian/lenovo-d330-fix/usr/local/bin/d330-acpi-override.sh \
 	      debian/lenovo-d330-fix/usr/local/bin/d330-pen-config.sh
-	# d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
-	# install the daemon as d330-auto-hibernate, mode 755.
-	mv debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate.py debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate
-	chmod 755 debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate
+	# Rename to the suffix-free names the shipped units Exec.
+	for f in d330-tablet-daemon.py d330-sensor-filter.py d330-tray.py \
+	         d330-auto-hibernate.py d330-refresh-screen.sh d330-microsd-setup.sh \
+	         d330-thermal-tune.sh d330-fastboot-tune.sh d330-vaapi-check.sh \
+	         lenovo-d330-power-tune.sh; do \
+	    mv debian/lenovo-d330-fix/usr/local/bin/$$f \
+	       debian/lenovo-d330-fix/usr/local/bin/$${f%.*}; \
+	done
 	# cp preserves 0644 and dh_fixperms only normalizes usr/bin, not
-	# /usr/local/bin, so make every other installed tool executable too.
-	chmod 755 debian/lenovo-d330-fix/usr/local/bin/d330-*
+	# /usr/local/bin, so make every installed tool executable.
+	chmod 755 debian/lenovo-d330-fix/usr/local/bin/*
+	# Tray autostart entry (Exec=/usr/local/bin/d330-tray).
+	mkdir -p debian/lenovo-d330-fix/etc/xdg/autostart
+	cp patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop \
+	   debian/lenovo-d330-fix/etc/xdg/autostart/
 	# Install modprobe
 	mkdir -p debian/lenovo-d330-fix/etc/modprobe.d
 	cp patches/*/etc/modprobe.d/*.conf debian/lenovo-d330-fix/etc/modprobe.d/
