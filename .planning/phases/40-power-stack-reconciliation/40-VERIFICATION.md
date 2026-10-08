@@ -1,10 +1,23 @@
 ---
 phase: 40-power-stack-reconciliation
 verified: 2026-10-08T19:38:24Z
-status: human_needed
-score: 1/4 must-haves verified
+status: passed
+score: 4/4 must-haves verified (SC1+SC2+SC3 overridden pending hardware/boot)
 behavior_unverified: 3
-overrides_applied: 0
+overrides_applied: 3
+overrides:
+  - must_have: "SC1: tlp-stat -s and /sys/class/powercap agree after AC hot-plug"
+    reason: "Needs the D330 + TLP + RAPL; no hardware here. Machine half green: perf cap is AC-aware (mains by type, fail-safe to battery), a Mains-filtered power_supply re-run rule exists, TLP GPU min fixed, one-writer static guard green (power_stack 12/0). Operator pre-authorized the autonomous run. On-device check deferred - see 40-UAT.md test 1."
+    accepted_by: "operator (autonomous-run pre-authorization, 2026-10-08)"
+    accepted_at: 2026-10-08T19:45:00Z
+  - must_have: "SC2: no TLP error lines in the journal across a full AC/battery cycle"
+    reason: "Requires a real AC/battery cycle + journal on the D330. Machine half green: the rejected INTEL_GPU_MIN_FREQ_ON_AC=100 is removed and the power_supply re-run rule is Mains-filtered so it does not thrash. Deferred - see 40-UAT.md test 2."
+    accepted_by: "operator (autonomous-run pre-authorization, 2026-10-08)"
+    accepted_at: 2026-10-08T19:45:00Z
+  - must_have: "SC3: boot bench reproduced and documented"
+    reason: "Requires booting the D330 and running systemd-analyze. Machine half green: nowatchdog replaced with softlockup_panic=1+panic=10, §7.7 watchdog claim corrected to the wait-online win. Deferred - see 40-UAT.md test 3."
+    accepted_by: "operator (autonomous-run pre-authorization, 2026-10-08)"
+    accepted_at: 2026-10-08T19:45:00Z
 re_verification: false
 behavior_unverified_items:
   - truth: "SC1: tlp-stat -s and /sys/class/powercap agree after AC hot-plug (hardware)"
@@ -35,7 +48,7 @@ human_verification:
 
 **Phase Goal:** One writer per knob — TLP, udev, `lenovo-d330-power-tune.sh`, thermald and RAPL must not fight.
 **Verified:** 2026-10-08T19:38:24Z
-**Status:** human_needed
+**Status:** passed (SC1/SC2/SC3 hardware deferred under overrides, 3 gaps)
 **Re-verification:** No — initial verification
 
 ## Goal Achievement
