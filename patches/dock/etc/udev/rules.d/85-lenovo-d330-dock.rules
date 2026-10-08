@@ -1,14 +1,10 @@
 # Lenovo IdeaPad D330 Detachable Keyboard Dock udev rules
 # Detects pogo-pin dock insertion and removal events
 
-# Dock keyboard / touchpad USB attachment (Lenovo Vendor ID 17ef)
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="17ef", \
-    TAG+="systemd", ENV{SYSTEMD_WANTS}="d330-tablet-daemon.service", \
-    RUN+="/usr/local/bin/d330-tablet-daemon --simulate-dock"
-
-# Dock detachment
-ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="17ef/*", \
-    RUN+="/usr/local/bin/d330-tablet-daemon --simulate-undock"
+# Hotplug (dock attach/detach) is handled by the tablet daemon USER unit's 3 s
+# USB polling inside the graphical session. The system udev manager ignores
+# ENV{SYSTEMD_USER_WANTS}, and RUN+= would run as root with no session env, so
+# neither can drive the user-session daemon.
 
 # Intel HID Event Filter (INT33D5) tablet switch event binding
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Intel HID switches|Intel Virtual Button*", \
