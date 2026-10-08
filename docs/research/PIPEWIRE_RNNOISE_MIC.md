@@ -9,5 +9,6 @@ Because of the thin plastic chassis:
 ## 2. RNNoise Neural Network Filter
 `RNNoise` is a lightweight recurrent neural network (RNN / GRU) trained specifically to distinguish human voice from non-stationary background noise.
 - Integrated natively into PipeWire via `libpipewire-module-filter-chain` and `librnnoise_ladspa.so`.
+- The LADSPA plugin `librnnoise_ladspa.so` is not distro-packaged (Debian/Ubuntu `librnnoise0`, Arch `rnnoise` ship only the base library); build/install it manually into a LADSPA directory. The load is optional: the module carries `flags = [ nofail ]`, so PipeWire keeps running without it.
 - CPU consumption is less than **0.8%** on Gemini Lake.
 - Produces a virtual input source (`Lenovo D330 Clean Microphone (RNNoise AI)`) usable directly in Zoom, Teams, Discord, Google Meet, and browser calls.
