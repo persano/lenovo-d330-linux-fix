@@ -156,10 +156,17 @@ if [[ "$MODE" == "dry-run" ]]; then
         if [ -s "$f" ]; then
             echo "[OK] ModemManager FCC unlock hook: $f"
         else
-            echo "[INFO] ModemManager FCC unlock hook present but empty: $f"
+            echo "[FAIL] ModemManager FCC unlock hook present but empty (non-functional): $f" >&2
+            exit 1
         fi
     done
-    echo "[OK] Cellular Rules: patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"
+    cellular_rules="patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"
+    if [ -s "$cellular_rules" ]; then
+        echo "[OK] Cellular Rules: $cellular_rules"
+    else
+        echo "[FAIL] Cellular Rules file missing or empty: $cellular_rules" >&2
+        exit 1
+    fi
     echo "[OK] dry-run verification complete"
     exit 0
 fi
