@@ -51,19 +51,32 @@ echo "=========================================================="
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Exercising the sensor filter against a fake IIO tree (no hardware touched)..."
     echo "  - Accelerometer: BOSC0200 (15 deg deadband, 500ms debounce)"
-    echo "  - Light Sensor: in_illuminance_input fallback (Exponential Moving Average alpha=0.15)"
+    echo "  - Light Sensor: ACPI0008 in_illuminance_input fallback (Exponential Moving Average alpha=0.15)"
     iio_tmp="$(mktemp -d "${TMPDIR:-/tmp}/d330-als.XXXXXX")"
     trap 'rm -rf "$iio_tmp"' EXIT
-    dev="${iio_tmp}/iio:device0"
-    mkdir -p "$dev"
-    printf 'bosc0200\n' > "$dev/name"
-    printf '100\n' > "$dev/in_accel_x_raw"
-    printf '0\n' > "$dev/in_accel_y_raw"
-    printf '0\n' > "$dev/in_accel_z_raw"
-    # Only in_illuminance_input (no _raw) so the ALS fallback path is exercised.
-    printf '200\n' > "$dev/in_illuminance_input"
-    D330_IIO_BASE="$iio_tmp" python3 tools/d330-sensor-filter.py --cycles 3
-    echo "[DRY-RUN] Sensor filter ran 3 cycles against the fake IIO tree and exited 0."
+    accel="${iio_tmp}/iio:device0"
+    mkdir -p "$accel"
+    printf 'bosc0200\n' > "$accel/name"
+    printf '100\n' > "$accel/in_accel_x_raw"
+    printf '0\n' > "$accel/in_accel_y_raw"
+    printf '0\n' > "$accel/in_accel_z_raw"
+    # A separate ACPI0008 device so the ALS fallback path is actually exercised;
+    # only in_illuminance_input (no _raw) so find_als_node falls through to it.
+    als="${iio_tmp}/iio:device1"
+    mkdir -p "$als"
+    printf 'acpi0008\n' > "$als/name"
+    printf '200\n' > "$als/in_illuminance_input"
+    out="$(D330_IIO_BASE="$iio_tmp" python3 tools/d330-sensor-filter.py --cycles 3 2>&1)"
+    printf '%s\n' "$out"
+    if ! printf '%s' "$out" | grep -q 'rotation decision'; then
+        echo "[FAIL] sensor filter emitted no rotation decision" >&2
+        exit 1
+    fi
+    if ! printf '%s' "$out" | grep -q 'ALS: Raw='; then
+        echo "[FAIL] sensor filter exercised no ALS (in_illuminance_input) path" >&2
+        exit 1
+    fi
+    echo "[DRY-RUN] Sensor filter ran 3 cycles: rotation decision + ALS smoothing both observed."
     exit 0
 fi
 
