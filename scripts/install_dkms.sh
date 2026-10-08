@@ -903,10 +903,10 @@ do_uninstall() {
         rm -f /etc/systemd/system/lenovo-d330-camera-loopback.service
         rm -f /etc/systemd/system/d330-hardware-state.service
         # Phase 37 migration: the no-op PWM boot unit was retired (it only
-        # reported success without a register write). Remove any stale copy left
-        # by an older install, pattern-based so no manifest/unit reference
-        # remains in this script.
-        find /etc/systemd/system -maxdepth 2 -name '*backlight-pwm*.service' -delete 2>/dev/null || true
+        # reported success without a register write). Remove only our own stale
+        # unit by exact basename -- never a wildcard that could hit a foreign
+        # unit.
+        find /etc/systemd/system -maxdepth 2 -name 'lenovo-d330-backlight-pwm.service' -delete 2>/dev/null || true
         rm -f /etc/systemd/system/d330-sensor-filter.service
         rm -f /etc/systemd/system/d330-auto-hibernate.service
         rm -f /etc/systemd/system/d330-thermal.service
@@ -958,7 +958,7 @@ do_uninstall() {
 # install legitimately omits them (runtime state, or a target dir that did not
 # exist). Required entries are the only ones that count as drift. unit-enabled
 # additionally requires systemd to be PID 1 ([ -d /run/systemd/system ]), so a
-# chroot/container/WSL reports SKIP rather than 9 false DRIFTs (WR-05).
+# chroot/container/WSL reports SKIP rather than 8 false DRIFTs (WR-05).
 #
 # optional $2 (default false): `--removed` mode inverts the contract -- every
 # manifest path must be ABSENT (present => DRIFT), proving SC1 "install then
