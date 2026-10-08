@@ -43,11 +43,11 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 ### 2.2 Native Display Orientation Quirks
 * **Why**: The D330 panel is physically manufactured for portrait tablets (native 800x1280 or 1200x1920). Linux DRM by default renders boot screens, TTY consoles, and display servers rotated 90 degrees counter-clockwise (sideways).
 * **How Decided**: Fixed at the lowest hardware abstraction layer possible:
-  1. Kernel cmdline `video=eDP-1:panel_orientation=right_side_up` / `fbcon=rotate:1`.
+  1. Kernel cmdline `fbcon=rotate:1 video=efifb:nobgrt video=DSI-1:panel_orientation=right_side_up video=eDP-1:panel_orientation=right_side_up`.
   2. DRM driver internal DMI table matching D330 DMI strings.
   3. `systemd-hwdb` sensor matrix for desktop environment auto-rotation.
 * **What Done**:
-  - `patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg`: Injects `fbcon=rotate:1 video=DSI-1:panel_orientation=right_side_up video=eDP-1:panel_orientation=right_side_up`.
+  - `patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg`: Injects `fbcon=rotate:1 video=efifb:nobgrt video=DSI-1:panel_orientation=right_side_up video=eDP-1:panel_orientation=right_side_up i915.enable_psr=0 i915.enable_fbc=0` (exact shipped string). `video=efifb:nobgrt` is a real efifb option (parsed in `efifb_setup()`), kept deliberately. DSI-1/eDP-1 are alternatives: only the present connector claims its token; an absent connector is silently ignored by drm-core.
   - `patches/dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb`: Injects `ACCEL_MOUNT_MATRIX` for BOSC0200 sensor (`0, 1, 0; 1, 0, 0; 0, 0, -1`).
 * **Auditor Verification Points**:
   - Check DMI string globbing: `sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:pn81H3*:*` and `82H0*`. Must match both Type 81H3 and Type 82H0 boards.
