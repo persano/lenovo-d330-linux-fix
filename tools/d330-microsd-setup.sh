@@ -395,7 +395,15 @@ if [ "$ACTION" = "mount-data" ]; then
         exit 1
     fi
 
-    if grep -Fq "UUID=$UUID" "$FSTAB_FILE"; then
+    # Duplicate detection must use the SAME exact first-field match as the
+    # options lookup below: a substring grep matched commented-out or embedded
+    # "UUID=$UUID" text, then refused with a sed hint anchored on ^UUID= that
+    # could never fix the comment it matched (WR-01).
+    EXISTING_LINE=$(awk -v u="UUID=$UUID" '$1==u {print; exit}' "$FSTAB_FILE") || {
+        log_err "Could not read $FSTAB_FILE while checking for an existing UUID=$UUID entry."
+        exit 1
+    }
+    if [ -n "$EXISTING_LINE" ]; then
         EXISTING_OPTS=$(awk -v u="UUID=$UUID" '$1==u {print $4; exit}' "$FSTAB_FILE")
         case "$EXISTING_OPTS" in
             *nofail*)
