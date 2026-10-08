@@ -32,7 +32,7 @@ def read_sysfs(path):
     try:
         with open(path, "r") as f:
             return f.read().strip()
-    except Exception as e:
+    except Exception:
         return None
 
 def write_sysfs(path, val):

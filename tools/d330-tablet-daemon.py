@@ -23,7 +23,6 @@ import subprocess
 EV_SYN = 0x00
 EV_SW  = 0x05
 SW_TABLET_MODE = 0x01
-SW_LID = 0x00
 
 # input_event format: time_sec (ulong), time_usec (ulong), type (ushort), code (ushort), value (int)
 # In 64-bit Linux: 'qqHHi' (16 + 8 bytes = 24 bytes)
