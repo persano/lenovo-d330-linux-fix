@@ -79,6 +79,17 @@ sc1_case() {
     local pre_dirty=0
     git -C "$REPO_ROOT" diff --quiet -- "$rel" || pre_dirty=1
 
+    # SC1 is non-vacuous only if the subject is GREEN before mutation. Without
+    # this baseline a script that already exits non-zero (unrelated tooling, a
+    # latent bug, or a permanently-failing harness) would ``pass'' SC1 by
+    # failing for the wrong reason. Run the intact command first, require rc 0.
+    local baseline_rc=0
+    ( cd "$REPO_ROOT" && eval "$cmd" ) >/dev/null 2>&1 || baseline_rc=$?
+    if [ "$baseline_rc" -ne 0 ]; then
+        bad "SC1 $label: baseline '$cmd' already exits $baseline_rc on the intact subject"
+        return 0
+    fi
+
     if ! sed -i "$sedexpr" "$abs"; then
         bad "SC1 $label: sed mutation failed on $rel"
         cp -p "$backup" "$abs"
@@ -148,40 +159,118 @@ echo ""
 echo "--- SC2: no system mutation without an --apply gate ---"
 
 sc2_scan_one() {
-    local script="$1" base stripped hits
+    local script="$1" base out
     base="$(basename "$script")"
     [ "$base" = "test_harness_trust.sh" ] && return 0
 
-    stripped="$(sed -e 's/^[[:space:]]*#.*$//' -e "s/'[^']*'//g" -e 's/"[^"]*"//g' "$script")"
+    # code_c: comments stripped, quoted strings KEPT. Gate detection, redirect
+    #         targets, and sysfs-taint tracking need the real arguments.
+    # code_q: comments AND quoted strings stripped. Command-position mutation
+    #         detection runs on this so assertion literals such as
+    #         `grep -q "systemctl enable foo"` are not mistaken for calls.
+    local code_c code_q
+    code_c="$(sed -e 's/^[[:space:]]*#.*$//' "$script")"
+    code_q="$(printf '%s\n' "$code_c" | sed -e "s/'[^']*'//g" -e 's/"[^"]*"//g')"
 
-    # Match only command-position invocations (start of line, after a command
-    # separator, or after a shell keyword). Help-text/heredoc prose such as
-    # "Validate the modprobe conf" is not a command and must not trip the scan.
+    # Command position: start of line, after a command separator, or after a
+    # shell keyword (so `if systemctl ...` counts, `grep -q "..."` does not).
     local cmdpos='(^[[:space:]]*|[;&|][[:space:]]*|(if|then|do|else|elif|while|until|!)[[:space:]]+)'
 
-    hits=""
-    if printf '%s\n' "$stripped" | grep -Eq "${cmdpos}systemctl[[:space:]]+(start|stop|restart|reload|try-restart|reload-or-restart|enable|disable|mask|unmask|set-default|reset-failed|daemon-reload|kill|isolate|freeze|thaw)([[:space:]]|$)"; then
-        hits="$hits systemctl"
-    fi
-    if printf '%s\n' "$stripped" | grep -Eq "${cmdpos}fstrim([[:space:]]|$)"; then
-        hits="$hits fstrim"
-    fi
-    if printf '%s\n' "$stripped" | grep -Eq "${cmdpos}modprobe[[:space:]]"; then
-        hits="$hits modprobe"
-    fi
-    if printf '%s\n' "$stripped" | grep -Eq '(>|>>|tee)[[:space:]]*/sys/|(>|>>|tee)[[:space:]]*/proc/sys/'; then
+    local hits="" mut_lines="" deleg_lines=""
+
+    scan_mut() { # scan_mut LABEL REGEX  (matched on quote-stripped source)
+        local label="$1" re="$2" found
+        found="$(printf '%s\n' "$code_q" | grep -nE "$re" || true)"
+        [ -n "$found" ] || return 0
+        hits="$hits $label"
+        mut_lines="$mut_lines $(printf '%s\n' "$found" | cut -d: -f1 | tr '\n' ' ')"
+    }
+
+    scan_mut systemctl "${cmdpos}systemctl[[:space:]]+(start|stop|restart|reload|try-restart|reload-or-restart|enable|disable|mask|unmask|set-default|reset-failed|daemon-reload|kill|isolate|freeze|thaw)([[:space:]]|$)"
+    scan_mut fstrim "${cmdpos}fstrim([[:space:]]|$)"
+    scan_mut modprobe "${cmdpos}modprobe[[:space:]]"
+    scan_mut insmod "${cmdpos}insmod[[:space:]]"
+    scan_mut rmmod "${cmdpos}rmmod[[:space:]]"
+    scan_mut sysctl-w "${cmdpos}sysctl[[:space:]]+(-w|--write)([[:space:]]|$)"
+    scan_mut rfkill "${cmdpos}rfkill[[:space:]]"
+    scan_mut ip-link "${cmdpos}ip[[:space:]]+(link|addr|address|route|rule)([[:space:]]|$)"
+    scan_mut mount "${cmdpos}(mount|umount)[[:space:]]"
+    scan_mut mkfs "${cmdpos}mkfs([.[:space:]]|$)"
+    scan_mut dd "${cmdpos}dd[[:space:]][^;&|]*if="
+    scan_mut nmcli-radio "${cmdpos}nmcli[[:space:]]+radio"
+
+    # --- Writes into /sys or /proc: a literal/quoted target, or a variable
+    #     whose value derives from a /sys or /proc path. ------------------------
+    out="$(printf '%s\n' "$code_c" | grep -nE "(>|>>|tee)[[:space:]]*[\"']?(/sys|/proc)/" || true)"
+    if [ -n "$out" ]; then
         hits="$hits sysfs-write"
-    fi
-    if printf '%s\n' "$stripped" | grep -Eq "${cmdpos}nmcli[[:space:]]+radio"; then
-        hits="$hits nmcli-radio"
+        mut_lines="$mut_lines $(printf '%s\n' "$out" | cut -d: -f1 | tr '\n' ' ')"
     fi
 
-    if [ -n "$hits" ]; then
-        if grep -Fq -- '--apply' "$script"; then
-            ok "SC2 $base: mutation(s)$hits gated by --apply"
-        else
-            bad "SC2 $base: mutation(s)$hits present with no --apply gate"
+    # Collect variables whose value derives from a /sys or /proc path (iterative
+    # to a fixpoint, so `node="$d/conservation_mode"` inherits `d`'s taint from
+    # `for d in /sys/...`).
+    local tainted=" " changed=1 var rhs line t
+    while [ "$changed" -eq 1 ]; do
+        changed=0
+        while IFS= read -r line; do
+            var="$(printf '%s' "$line" | sed -nE 's/^[[:space:]]*for[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)[[:space:]]+in[[:space:]].*/\1/p')"
+            if [ -z "$var" ]; then
+                var="$(printf '%s' "$line" | sed -nE 's/^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p')"
+            fi
+            [ -n "$var" ] || continue
+            case " $tainted " in *" $var "*) continue ;; esac
+            rhs="$(printf '%s' "$line" | sed -E 's/^[[:space:]]*for[[:space:]]+[A-Za-z_][A-Za-z0-9_]*[[:space:]]+in[[:space:]]?//; s/^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*=//')"
+            rhs="${rhs%\\}"
+            if printf '%s' "$rhs" | grep -Eq '/sys|/proc'; then
+                tainted="$tainted$var "; changed=1; continue
+            fi
+            for t in $tainted; do
+                if printf '%s' "$rhs" | grep -qE "\\\$\{?$t\}?([^A-Za-z0-9_]|$)"; then
+                    tainted="$tainted$var "; changed=1; break
+                fi
+            done
+        done < <(printf '%s\n' "$code_c")
+    done
+
+    for t in $tainted; do
+        out="$(printf '%s\n' "$code_c" | grep -nE "(^|[[:space:];])(>|>>)[[:space:]]*[\"']?\\\$\{?$t\}?[\"']?([[:space:];]|$)" || true)"
+        if [ -n "$out" ]; then
+            hits="$hits sysfs-write(\$$t)"
+            mut_lines="$mut_lines $(printf '%s\n' "$out" | cut -d: -f1 | tr '\n' ' ')"
         fi
+    done
+
+    # --- Delegated mutations: a `tools/*` helper invoked WITH --apply carries
+    #     its own gate on the invocation line. Flagged so the scan is not blind
+    #     to thermals/boot_speed-style delegation. ----------------------------
+    out="$(printf '%s\n' "$code_c" | grep -nE "${cmdpos}(bash|sh)[[:space:]][^;&|]*tools/[A-Za-z0-9._-]+[\"']?[[:space:]][^;&|]*--apply([[:space:]]|\$)" || true)"
+    if [ -n "$out" ]; then
+        hits="$hits delegated-apply"
+        deleg_lines="$(printf '%s\n' "$out" | cut -d: -f1 | tr '\n' ' ')"
+    fi
+
+    [ -n "$hits" ] || return 0
+
+    # --- Gate decision. A command-position mutator or sysfs write must sit in a
+    #     branch that actually gates on the parsed --apply flag: the script must
+    #     parse `--apply` (the `--apply)` case arm) AND branch on the APPLY
+    #     variable before the mutation. A mention in --help or a comment no
+    #     longer satisfies it. Delegated calls self-gate via --apply on the line.
+    local mut_min="" guard_line handler_line gated=1
+    if [ -n "${mut_lines// /}" ]; then
+        mut_min="$(printf '%s\n' $mut_lines | sort -n | head -n1)"
+        guard_line="$(printf '%s\n' "$code_c" | grep -nE '\[\[.*APPLY.*\]\]|\[[[:space:]]+[^]]*APPLY[^]]*\][[:space:]]' | head -n1 | cut -d: -f1)"
+        handler_line="$(printf '%s\n' "$code_c" | grep -nE '(^|[[:space:]])--apply\)' | head -n1 | cut -d: -f1)"
+        if [ -z "$guard_line" ] || [ -z "$handler_line" ] || [ "$guard_line" -ge "$mut_min" ]; then
+            gated=0
+        fi
+    fi
+
+    if [ "$gated" -eq 1 ]; then
+        ok "SC2 $base: mutation(s)$hits gated by --apply"
+    else
+        bad "SC2 $base: mutation(s)$hits present with no --apply gate"
     fi
     return 0
 }
