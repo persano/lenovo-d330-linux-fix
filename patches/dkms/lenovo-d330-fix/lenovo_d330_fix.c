@@ -15,9 +15,15 @@
  * This module:
  * 1. Verifies DMI platform match (Lenovo IdeaPad D330-10IGL / 82H0).
  * 2. Hooks kernel power management notifications via register_pm_notifier().
- * 3. Enforces a guaranteed 600ms safe panel power cycle discharge delay upon wake.
- * 4. Interacts with the Intel HD Graphics PCI subsystem (0000:00:02.0) to ensure
- *    clean transmitter handoff.
+ * 3. Prints honest suspend/resume breadcrumbs so `dmesg | grep lenovo_d330_fix`
+ *    confirms the DMI-matched module is loaded.
+ *
+ * NOTE: this out-of-tree module does NOT enforce the 600 ms panel power-cycle
+ * discharge delay, and never did. There is no PM notifier event between panel
+ * power-off and panel power-on (kernel/power/suspend.c), so a sleep in a
+ * notifier callback adds zero TCON discharge time. The real clamp is delivered
+ * only by patches/d330_display_resume_fix.patch, applied to a kernel source
+ * tree via `scripts/install_dkms.sh --kernel-src` (Option 2).
  */
 
 #include <linux/module.h>
@@ -98,22 +104,16 @@ static int d330_pm_callback(struct notifier_block *nb, unsigned long action, voi
 	case PM_POST_HIBERNATION: {
 		ktime_t now = ktime_get();
 		s64 elapsed_ms = ktime_to_ms(ktime_sub(now, last_suspend_time));
-		d330_dbg("System waking up. Sleep duration: %lld ms\n", elapsed_ms);
 
 		/*
-		 * If sleep was very brief (< power_cycle_delay_ms), guarantee that
-		 * the panel TCON has completed its mandatory power cycle discharge
-		 * before subsequent userspace/DRM modeset sequences re-energize VDD.
+		 * Honest breadcrumb only. This module does not hold the panel and
+		 * does not clamp the TCON power-cycle delay: no PM notifier event
+		 * runs between panel power-off and panel power-on, so a delay here
+		 * would contribute no discharge time. The 600 ms clamp is shipped
+		 * by patches/d330_display_resume_fix.patch (Option 2), not here.
 		 */
-		if (elapsed_ms < (s64)power_cycle_delay_ms) {
-			s64 remaining_ms = (s64)power_cycle_delay_ms - elapsed_ms;
-			d330_info("Enforcing TCON discharge delay: holding %lld ms (target %d ms)\n",
-				  remaining_ms, power_cycle_delay_ms);
-			msleep((unsigned int)remaining_ms);
-		} else {
-			d330_dbg("Discharge threshold satisfied (%lld ms >= %d ms)\n",
-				 elapsed_ms, power_cycle_delay_ms);
-		}
+		d330_info("System resumed after %lld ms; TCON timing is not enforced by this module (see Option 2 kernel patch).\n",
+			  elapsed_ms);
 		break;
 	}
 
@@ -139,8 +139,7 @@ static int __init lenovo_d330_fix_init(void)
 	else
 		d330_info("Forced load on unmatched platform.\n");
 
-	d330_info("Initializing Display Resume Fix (Enforced PPS Cycle Delay: %d ms)\n",
-		  power_cycle_delay_ms);
+	d330_info("Initializing DMI banner module; PPS clamp is delivered by the Option 2 kernel patch, not this module.\n");
 
 	d330_pm_notifier.notifier_call = d330_pm_callback;
 	d330_pm_notifier.priority = 100; /* High priority to run early in wake sequence */
