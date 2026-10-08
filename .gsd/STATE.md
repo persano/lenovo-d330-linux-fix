@@ -4,18 +4,18 @@ milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
 current_phase: 40
 current_phase_name: Power Stack Reconciliation
-status: planning
-stopped_at: Phase 39 complete, ready to plan Phase 40
-last_updated: "2026-10-08T18:54:19.620Z"
+status: executing
+stopped_at: Completed 40-01-PLAN.md
+last_updated: "2026-10-08T19:10:46.514Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 39 complete, transitioned to Phase 40
-state_head: 99075f90905d2a11a6323d6e76a7b20808c1718c
+last_activity_desc: Phase 40 complete, transitioned to Phase 41
+state_head: 657282544cc9ad4a5b8cf35dc1c6ce926debe098
 progress:
   total_phases: 11
-  completed_phases: 8
-  total_plans: 12
-  completed_plans: 12
-  percent: 73
+  completed_phases: 9
+  total_plans: 14
+  completed_plans: 14
+  percent: 82
 ---
 
 # STATE: Project Execution State
@@ -33,6 +33,7 @@ progress:
   * [RESOLVED — Phase 37] M4/M5/M17 — two tools reported success for writes they never performed: `d330-backlight-pwm.py --apply` printed `[OK]` after merely checking the sysfs dir existed (a `Type=oneshot` boot service faked a 1000 Hz PWM apply), and `d330-sensor-filter` exited after a fixed ~1 s loop so its `Restart=on-failure` unit died permanently with the accelerometer claim (15° deadband) unimplemented. Fixed: honest PWM apply (intel_reg read-back delta required before `[OK]`, else `[SKIP]`/`[FAIL]` non-zero; parser reads the value after the last `:`, targets `BXT_BLC_PWM_FREQ1`/`0xC8254` only), no-op PWM boot service deleted (enabled units 9→8) across manifest/install/uninstall/packagers + CHANGES_AUDIT §4.5 corrected; sensor filter is now a `while True` daemon (SIGTERM/SIGINT clean, `--cycles`/`--once` test hook, `D330_IIO_BASE` seam) with real accel deadband/hysteresis + `in_illuminance_raw`→`in_illuminance_input` fallback; false-success test masks removed and `scripts/test_noop_guards.sh` (5/0, wired into the aggregate runner) proves no-false-success + a 62 s liveness run. Suites 5/0 + 17/0 + 21/0 + 10/0 + 26/0. No hardware override needed.
   * [RESOLVED — Phase 38] M7 — PipeWire DSP confs were dead config: deployed to `filter-chain.conf.d/` (only read by `pipewire -c filter-chain.conf`, never by the running server), with invalid `label = biquad`, invalid `"Type"` controls, nonexistent `label = limiter`, no `links`, and a shared `filter_chain.nodes` var clobbered between the two files. Fixed: both fragments moved to `etc/pipewire/pipewire.conf.d/` (manifest/install/uninstall/packagers) and rewritten as valid inlined graphs (`bq_highpass`/`bq_peaking`/builtin `clamp`, explicit links naming declared nodes), RNNoise module carries `flags = [ nofail ]` + installer `log_warn` for the optional `librnnoise-ladspa` package, false-success test masks removed (`test_audio_dsp.sh --dry-run` structural 17/0, `test_mic_rnnoise.sh` fails closed when the plugin is absent — SC2 — via a `D330_LADSPA_DIRS` seam), shared `scripts/lib_conf_check.sh` helper, §4.3 "colors only the speakers" claim downgraded to the honest virtual-sink/route-it description. Suites 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + storage rc0. Live `pw-dump` deferred (see PENDING DEPLOY).
   * [RESOLVED — Phase 39] M8/M9/M10/M15/M16 — udev/hwdb rules and modprobe options did not match the target: hwdb DMI patterns used a space-stripped `pvrLenovoideapadD330-*` form that can never match the real `pvrLenovo ideapad D330-*` modalias; sensor udev globs were case-sensitive against `BOSC0200`/`ACPI0008`; `MODE`/`GROUP` were set on read-only sysfs platform attrs (no-op); `ENV{SOUND_INITIALIZED}`/`ENV{WL_OUTPUT}` were dead properties; the wifi-resume hook bounced the radio unconditionally (dropping VPN/ssh on every wake); refresh-screen force-rotated 90° and reported success while changing nothing; and `options rtl8821ce/iwlwifi/pcie_aspm` targeted absent modules/non-module params. Fixed: space-free `pn82H0`/`pn81MD`/`pn81H3` hwdb keys (+ `evdev:` touchscreen keys), case-insensitive `[Bb][Oo][Ss][Cc]0200`/`[Aa][Cc][Pp][Ii]0008` globs, no-op/dead properties removed with root/`pkexec` documented, resume hook bounces only an enabled-but-wedged link, refresh-screen preserves current rotation and exits non-zero when no display path ran, wireless conf targets only real modules (rtw88_core/rtw88_pci; `ant_sel` only on out-of-tree rtl8821ce; Intel + pcie_aspm removed). New `scripts/test_udev_hwdb_match.sh` (10/0) scans all 22 modprobe options + asserts all product codes; SC3 mutation-proven. Suites 10/0 + 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + audio 17/0 + rnnoise 7/0. Hardware `udevadm test`/`modprobe -s` deferred (see PENDING DEPLOY).
+  * [RESOLVED — Phase 40] M13/M14 — the power stack had multiple writers per knob: `lenovo-d330-power-tune.sh` wrote a boot-only CPU cap *and* a broad `power/control=auto` loop racing TLP; the udev rule forced `power/control` on PCI/USB/I2C/sound that TLP already manages; TLP set a sub-minimum `INTEL_GPU_MIN_FREQ_ON_AC=100` (rejected every AC event); `nowatchdog` disabled lockup detection; thermald's zone `<Type>cpu</Type>` did not match the sysfs zone and `d330-thermal-tune.sh` did `$((pl1 / 1000000))` on a non-numeric `N/A`. Fixed: AC-aware cap (`max_perf_pct` 100/75) re-applied on power-source change by a `SUBSYSTEM=="power_supply"` `ACTION=="change"` udev rule (the script no longer writes runtime PM); udev reduced to the eMMC host + dock (2 `power/control` lines) with TLP the sole runtime-PM owner via `RUNTIME_PM_ON_AC/ON_BAT`; sub-minimum GPU min dropped and MAX 650/BOOST 700 documented (Intel ARK/`gt_max_freq_mhz`); `nowatchdog` → `softlockup_panic=1`, CHANGES_AUDIT §7.7 watchdog claim corrected; thermald zone `<Type>` → `x86_pkg_temp`, numeric regex guards in `d330-thermal-tune.sh`, thermald declared in debian Recommends. New `scripts/test_power_stack.sh` (12/0) wired into the aggregate. Hardware SC1/SC2/SC3 deferred (see PENDING DEPLOY).
   * [PENDING DEPLOY] Phase 38 UAT test 1 — live `pw-dump | grep -E 'd330_speaker_dsp|rnnoise_source_d330'` after a PipeWire daemon restart (both virtual nodes load) — deferred under a documented VERIFICATION override (no PipeWire daemon on this host). Machine-checked equivalents green (valid graphs under pipewire.conf.d + install/packager deploy + SC2 fail-closed; dsp 17/0, rnnoise 7/0). Re-run at sign-off: `/gsd-verify-work 38`.
   * [PENDING DEPLOY] Phase 32 UAT items 1–2 — physical mounted-target abort on a real MicroSD and on-target `/etc/fstab` + absent-card boot on the D330 — were deferred under documented VERIFICATION overrides (no hardware in this environment). Machine-checked equivalents are green (suite 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 32`.
   * [PENDING DEPLOY] Phase 33 UAT tests 1–2 — `systemctl hibernate` → power-cycle → resume round trip, and on-device `systemctl is-enabled` ×2 after a real install — deferred under documented VERIFICATION overrides (no hardware). Machine-checked equivalents green (probe: dry-run report, zram-only refusal, ready-path hibernate invocation; suites 21/0 + 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 33` (7-step sequence in `33-03-SUMMARY.md`).
@@ -40,7 +41,7 @@ progress:
   * [PENDING DEPLOY] Phase 35 UAT tests 1–2 — real install→`find /etc /usr/local/bin /usr/share/alsa` empty sweep and `systemctl is-enabled` ×9 after a real install — deferred under documented VERIFICATION overrides (no systemd target). Machine-checked equivalents green (`--verify --removed` round trip, 9-unit enable parity; suites 16/0 + 21/0 + 10/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 35`.
   * [PENDING DEPLOY] Phase 36 UAT test 1 — live GNOME dock/undock on the D330 (panel auto-rotate + OSK on detach, landscape + OSK hide on attach; `systemctl --user` unit active) — deferred under a documented VERIFICATION override (no hardware/live session). Machine-checked equivalents green (user-unit shape + packager deploy + enable parity; tray harness 9/0 with SC1 mutation catch; suites 17/0 + 21/0 + 10/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 36`.
   * [PENDING DEPLOY] Phase 39 UAT tests 1–2 — on-device `udevadm test`/`udevadm hwdb --test` (rules + `pn82H0` keys resolve) and `modprobe -s rtw88_8821ce`/`rtw88_core`/`rtw88_pci` reflecting the intended params — deferred under documented VERIFICATION overrides (no udev/D330 or rtw88 module here). Machine-checked equivalents green (`test_udev_hwdb_match.sh` 10/0 scanning all 22 options; SC3 mutation-proven). Re-run at sign-off: `/gsd-verify-work 39`.
-- **Next Immediate Action**: Plan/execute Phase 40 (power stack reconciliation: conflicting thermald/TLP/earlyoom/power-profiles-daemon stack and claim conflicts, per Audit M13/M14) before 41–42.
+- **Next Immediate Action**: Plan/execute Phase 41 (remaining audit cleanup: cwd-relative tool paths / residual claim conflicts) before 42.
 
 ## Archived Milestones
 
@@ -58,9 +59,9 @@ progress:
 ## Current Position
 
 Phase: 40 — Power Stack Reconciliation
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-08 — Phase 39 complete, transitioned to Phase 40
+Plan: 40-01 complete (1/1)
+Status: Executing (Phase 40 complete; ready to plan Phase 41)
+Last activity: 2026-10-08 — Phase 40 complete (power-stack single-writer reconciliation)
 
 ## Performance Metrics
 
@@ -69,6 +70,7 @@ Last activity: 2026-10-08 — Phase 39 complete, transitioned to Phase 40
 | Phase 33 P33-03 | 20min | 1 tasks | 3 files |
 | Phase 34 P34-01 | 25min | 7 tasks | 13 files |
 | Phase 39 P01 | 12min | 5 tasks | 14 files |
+| Phase 40 P01 | ~2m | 6 tasks | 12 files |
 
 ## Decisions
 
@@ -82,9 +84,12 @@ Last activity: 2026-10-08 — Phase 39 complete, transitioned to Phase 40
 - [Phase 39]: 39-01: emit both rtl8821ce + rtw88_8821ce module spellings; keep only real in-tree rtw88 params (disable_lps_deep/disable_aspm); drop fwlps/ips and all Intel options
 - [Phase 39]: 39-01: match hwdb/udev on DMI pn82H0/pn81MD/pn81H3; the pvr product string has a space and never matched
 - [Phase 39]: 39-01: udev cannot chmod sysfs platform attrs (drop MODE/GROUP); wifi resume only bounces a wedged link; refresh-screen preserves rotation and drops the no-op dpms branch
+- [Phase 40]: 40-01: AC-aware CPU perf cap re-applied on power_supply change; removed the script's broad runtime-PM writer
+- [Phase 40]: 40-01: TLP is the sole runtime-PM owner (PCI/USB/I2C/sound); udev scoped to eMMC host + dock
+- [Phase 40]: 40-01: dropped sub-minimum INTEL_GPU_MIN_FREQ=100; nowatchdog -> softlockup_panic=1; thermald owns RAPL
 
 ## Session
 
-**Last session:** 2026-10-08T18:19:45.942Z
-**Stopped at:** Phase 39 complete, ready to plan Phase 40
+**Last session:** 2026-10-08T19:10:45.949Z
+**Stopped at:** Completed 40-01-PLAN.md
 **Resume file:** None
