@@ -398,6 +398,9 @@ case_installer_activation_step() {
     expect_file_out "systemctl start d330-swapfile.service" "$INSTALLER"
     expect_file_out "stat -f -c %S" "$INSTALLER"
     expect_file_out "getconf PAGESIZE" "$INSTALLER"
+    # Fail-closed positive-number check on both values (review IN-03):
+    # 0=0 from two failed commands must not satisfy the guard.
+    expect_file_out '^[1-9][0-9]*$' "$INSTALLER"
     # The invalid swapon OFFSET-column variant must never appear (Q1.4).
     if grep -q "show=OFFSET" "$INSTALLER"; then
         echo "    [detail] invalid offset column referenced"

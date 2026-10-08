@@ -339,10 +339,15 @@ do_install() {
             FS_BLOCK_SIZE="$(stat -f -c %S / 2>/dev/null || echo 0)"
             PAGE_SIZE="$(getconf PAGESIZE 2>/dev/null || echo 0)"
             OFFSET_UNITS_OK=false
-            if [ "$FS_BLOCK_SIZE" = "$PAGE_SIZE" ] && [ -n "$FS_BLOCK_SIZE" ]; then
+            # Fail closed (review IN-03): both values must be positive before
+            # equality means anything -- 0=0 (stat and getconf both failed)
+            # must NOT pass the guard.
+            if echo "$FS_BLOCK_SIZE" | grep -qE '^[1-9][0-9]*$' && \
+               echo "$PAGE_SIZE" | grep -qE '^[1-9][0-9]*$' && \
+               [ "$FS_BLOCK_SIZE" = "$PAGE_SIZE" ]; then
                 OFFSET_UNITS_OK=true
             else
-                log_warn "[WARN] fs block size ($FS_BLOCK_SIZE) != page size ($PAGE_SIZE); resume_offset units would be wrong."
+                log_warn "[WARN] fs block size ($FS_BLOCK_SIZE) / page size ($PAGE_SIZE) is invalid or unequal; resume_offset units would be wrong."
             fi
 
             # 4. Offset EXCLUSIVELY from filefrag -v first extent physical
