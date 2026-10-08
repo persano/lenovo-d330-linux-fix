@@ -113,7 +113,7 @@ deploy_manifest() {
 /etc/default/grub.d/51-lenovo-d330-acpi-override.cfg	grub-snippet
 /etc/default/grub.d/52-lenovo-d330-fastboot.cfg	grub-snippet
 /etc/default/grub.d/53-lenovo-d330-resume.cfg	grub-snippet-optional
-/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth	exec
+/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth	exec-optional
 /etc/environment.d/50-lenovo-d330-vaapi.conf	file
 /etc/default/earlyoom	file
 /etc/systemd/system/earlyoom.service.d/d330-override.conf	file
@@ -141,7 +141,7 @@ deploy_manifest() {
 /etc/systemd/system/d330-auto-hibernate.service	unit
 /etc/systemd/system/d330-thermal.service	unit
 /etc/systemd/system/d330-swapfile.service	unit
-/usr/share/alsa/ucm2/sof-essx8336	dir
+/usr/share/alsa/ucm2/sof-essx8336	dir-optional
 /etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf	file-optional
 /etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf	file-optional
 /etc/tlp.d/50-lenovo-d330.conf	file-optional
@@ -763,7 +763,10 @@ do_uninstall() {
         fi
         rm -rf "${DEST_SRC}"
 
-        # Clean configs
+        # Clean configs (best-effort). A rescue/non-root uninstall must continue
+        # past an EPERM removal and report residue honestly instead of aborting
+        # on the first failure under set -e (review: non-root honesty).
+        set +e
         rm -f /etc/modprobe.d/lenovo-d330-i915.conf
         rm -f /etc/modprobe.d/lenovo-d330-audio.conf
         rm -f /etc/modprobe.d/lenovo-d330-power.conf
@@ -842,6 +845,7 @@ do_uninstall() {
         # N6/I34: runtime state file written by d330-hardware-state.service
         # ExecStop (manifest kind 'state'); never removed before Phase 35.
         rm -f /etc/d330-hardware-state.json
+        set -e
 
         systemctl disable --now d330-tablet-daemon.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
@@ -1028,7 +1032,7 @@ do_verify() {
                     drift=$((drift + 1))
                 fi
                 ;;
-            state|file-optional|exec-optional|grub-snippet-optional)
+            state|file-optional|exec-optional|dir-optional|grub-snippet-optional)
                 # CR-01: conditional/runtime artifacts must not fail a legit
                 # install. Present => OK, absent => SKIP.
                 if [ -e "$full" ]; then

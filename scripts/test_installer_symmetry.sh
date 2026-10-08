@@ -88,7 +88,7 @@ contains() { case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac; }
 # is filtered out by the NF==2 + known-kind guard.
 dump_manifest() {
     bash "$S" --dump-manifest 2>/dev/null | \
-        awk -F'\t' 'NF==2 && $2 ~ /^(dir|file|exec|unit|unit-enabled|grub-snippet|fstab-line|state|file-optional|exec-optional|grub-snippet-optional)$/ {print}'
+        awk -F'\t' 'NF==2 && $2 ~ /^(dir|dir-optional|file|exec|unit|unit-enabled|grub-snippet|fstab-line|state|file-optional|exec-optional|grub-snippet-optional)$/ {print}'
 }
 
 # The install_dkms.sh body with the deploy_manifest() heredoc removed, so a
@@ -105,8 +105,8 @@ populate_root() {
         [ -n "$p" ] || continue
         case "$k" in
             unit-enabled|fstab-line) continue ;;
-            dir) mkdir -p "${R}${p}" ;;
-            exec) mkdir -p "$(dirname "${R}${p}")"; : > "${R}${p}"; chmod +x "${R}${p}" ;;
+            dir|dir-optional) mkdir -p "${R}${p}" ;;
+            exec|exec-optional) mkdir -p "$(dirname "${R}${p}")"; : > "${R}${p}"; chmod +x "${R}${p}" ;;
             *) mkdir -p "$(dirname "${R}${p}")"; : > "${R}${p}" ;;
         esac
     done < <(dump_manifest)
@@ -257,7 +257,7 @@ case_verify_conditional_absent() {
     while IFS=$'\t' read -r p k; do
         [ -n "$p" ] || continue
         case "$k" in
-            unit-enabled|fstab-line|state|file-optional|exec-optional|grub-snippet-optional) continue ;;
+            unit-enabled|fstab-line|state|file-optional|exec-optional|dir-optional|grub-snippet-optional) continue ;;
         esac
         case "$k" in
             dir) mkdir -p "${R}${p}" ;;
