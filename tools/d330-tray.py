@@ -19,17 +19,17 @@ def run_cmd(cmd):
         return ""
 
 def get_battery_conservation_state():
-    out = run_cmd("python3 tools/d330-ctl battery status 2>/dev/null || d330-ctl battery status 2>/dev/null")
+    out = run_cmd("d330-ctl battery status 2>/dev/null")
     return "ENABLED" in out
 
 def toggle_conservation_mode():
     cur = get_battery_conservation_state()
     target = "disable" if cur else "enable"
-    run_cmd(f"pkexec tools/d330-ctl battery {target} 2>/dev/null || pkexec d330-ctl battery {target} 2>/dev/null")
+    run_cmd(f"pkexec d330-ctl battery {target} 2>/dev/null")
     print(f"[Tray] Toggled conservation mode -> {target}")
 
 def emergency_refresh():
-    run_cmd("tools/d330-refresh-screen.sh 2>/dev/null || d330-refresh-screen 2>/dev/null")
+    run_cmd("d330-refresh-screen 2>/dev/null")
     print("[Tray] Executed emergency screen refresh.")
 
 def main():
