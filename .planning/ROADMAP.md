@@ -300,6 +300,8 @@ Plans:
 
 **Plans**: TBD
 
+- [x] 40-01-PLAN.md
+
 - **Audit Ref**: M13, M14.
 - **Components**:
   * `tools/lenovo-d330-power-tune.sh:43-45` — writes `intel_pstate/max_perf_pct=75` on battery from a boot-time oneshot, so a 75% CPU cap survives plugging in AC until reboot. Re-run on AC change (udev rule or TLP hook) or remove the cap.
