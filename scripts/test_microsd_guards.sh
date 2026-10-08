@@ -9,9 +9,11 @@
 # mkfs canary file proves abort-before-write: if it exists after a must-abort
 # case, a guard failed open.
 #
-# Cases (12): missing-device hard errors, mounted-target abort, bidirectional
+# Cases (22): missing-device hard errors, mounted-target abort, bidirectional
 # root refusal, guards-pass-but-write-blocked, dry-run PASS/FAIL guard report,
-# both parser orders, probe regression.
+# both parser orders, probe regression, nine mount-data cases (append, rollback,
+# duplicates, confirmation, verify failure, empty UUID) and the fstab parse
+# proof against the real findmnt/systemd-analyze.
 # ==============================================================================
 
 set -euo pipefail
@@ -26,7 +28,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 32 microsd guard suite (12 cases, PATH shims, no real disk IO).
+Runs the Phase 32 microsd guard suite (22 cases, PATH shims, no real disk IO).
 
 Options:
   -h, --help    Show this help message
@@ -127,10 +129,12 @@ EOF
 done
 
 # Remaining tool dependencies: log invocation, env-driven behavior (32-02 reuse)
+# blkid: log args; honors an explicitly EMPTY D330_SHIM_UUID (unset-only
+# default expansion, so D330_SHIM_UUID="" really yields an empty UUID).
 cat > "$SHIM_DIR/blkid" <<'EOF'
 #!/usr/bin/env bash
 printf 'blkid %s\n' "$*" >> "${D330_SHIM_LOG:-/dev/null}"
-printf '%s\n' "${D330_SHIM_UUID:-11111111-2222-3333-4444-555555555555}"
+printf '%s\n' "${D330_SHIM_UUID-1111-2222}"
 exit 0
 EOF
 
@@ -198,6 +202,24 @@ expect_out_re() {
 expect_no_canary() {
     if [ -e "$CANARY" ]; then
         echo "    [detail] parted/mkfs canary was created - guard failed open!"
+        CASE_FAIL=1
+    fi
+}
+
+# Count lines matching UUID=1111-2222 in a temp fstab ($1 = file, $2 = expected)
+expect_fstab_count() {
+    local n
+    n=$(grep -c "UUID=1111-2222" "$1" 2>/dev/null || true)
+    if [ "${n:-0}" -ne "$2" ]; then
+        echo "    [detail] expected $2 fstab line(s) matching UUID=1111-2222, got ${n:-0}"
+        CASE_FAIL=1
+    fi
+}
+
+# Assert the exact locked fstab line is present ($1 = exact line, $2 = file)
+expect_fstab_line() {
+    if ! grep -Fq -- "$1" "$2"; then
+        echo "    [detail] fstab missing exact line: $1"
         CASE_FAIL=1
     fi
 }
@@ -338,6 +360,248 @@ case_probe_regression() {
     expect_rc_eq "$rc" 0
 }
 
+# ------------------------------------------------------------------------------
+# mount-data cases (Plan 32-02): locked options, verify-before-append,
+# rollback trap, duplicate/legacy refusal, confirmation, UUID-empty.
+# Every case writes through D330_FSTAB into TAB_DIR - never /etc/fstab.
+# ------------------------------------------------------------------------------
+fresh_fstab() {
+    CASE_FSTAB=$(mktemp "$TAB_DIR/fstab_XXXXXX")
+    printf '# d330 guard-suite temp fstab\n' > "$CASE_FSTAB"
+}
+
+case_mount_data_missing_device() {
+    local rc=0
+    bash "$TOOL" --mount-data > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 1
+    expect_out "requires an explicit --device"
+}
+
+case_mount_data_dry_run_options() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    D330_SHIM_UUID=1111-2222 \
+    D330_SHIM_LSBLK_MOUNTPOINTS= \
+    D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+    D330_FSTAB="$CASE_FSTAB" \
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV" --dry-run > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_out "[DRY-RUN] mkdir -p /data"
+    expect_out "[DRY-RUN] Append to $CASE_FSTAB: UUID=1111-2222 /data ext4 noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s 0 2"
+    expect_no_out "Storage expansion task complete."
+    expect_fstab_count "$CASE_FSTAB" 0
+    expect_no_canary
+}
+
+case_mount_data_append_success() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'yes\n' | {
+        D330_SHIM_UUID=1111-2222 \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_fstab_line "UUID=1111-2222 /data ext4 noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s 0 2" "$CASE_FSTAB"
+    expect_fstab_count "$CASE_FSTAB" 1
+    expect_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+case_mount_data_mount_fail_rollback() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'yes\n' | {
+        D330_SHIM_UUID=1111-2222 \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_SHIM_MOUNT_RC=32 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_fstab_count "$CASE_FSTAB" 0
+    expect_out "Mount of /data failed; fstab entry rolled back."
+    expect_out "Rolled back fstab entry after failed mount."
+    expect_no_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+case_mount_data_duplicate_legacy_refuses() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'UUID=1111-2222 /data ext4 noatime,lazytime,commit=60 0 2\n' >> "$CASE_FSTAB"
+    printf 'yes\n' | {
+        D330_SHIM_UUID=1111-2222 \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_fstab_count "$CASE_FSTAB" 1
+    expect_out "nofail,x-systemd.device-timeout=10s"
+    expect_no_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+case_mount_data_duplicate_good_noop() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'UUID=1111-2222 /data ext4 noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s 0 2\n' >> "$CASE_FSTAB"
+    printf 'yes\n' | {
+        D330_SHIM_UUID=1111-2222 \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_fstab_count "$CASE_FSTAB" 1
+    expect_out "already present"
+    expect_no_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+case_mount_data_confirm_refusal() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'no\n' | {
+        D330_SHIM_UUID=1111-2222 \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_out "Confirmation not given; aborting."
+    expect_fstab_count "$CASE_FSTAB" 0
+    expect_no_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+case_mount_data_verify_fails_aborts() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'yes\n' | {
+        D330_SHIM_UUID=1111-2222 \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_SHIM_VERIFY_RC=1 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_out "failed verification"
+    expect_fstab_count "$CASE_FSTAB" 0
+    expect_no_canary
+}
+
+case_mount_data_uuid_empty() {
+    local rc=0
+    rm -f "$CANARY"
+    fresh_fstab
+    printf 'yes\n' | {
+        D330_SHIM_UUID="" \
+        D330_SHIM_LSBLK_MOUNTPOINTS= \
+        D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        D330_FSTAB="$CASE_FSTAB" \
+            PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV"
+    } > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_out "Could not resolve UUID"
+    expect_fstab_count "$CASE_FSTAB" 0
+    expect_no_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+# ------------------------------------------------------------------------------
+# fstab-parse-proof: runs WITHOUT the shim PATH so the REAL findmnt and
+# systemd-analyze exercise the locked-options line and a generated .mount unit.
+# ------------------------------------------------------------------------------
+case_fstab_parse_proof() {
+    local LOCKED="noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s"
+    local CASE_DIR rc
+    CASE_DIR=$(mktemp -d "$TAB_DIR/proof_XXXXXX")
+
+    if ! grep -Fq -- "$LOCKED" "$TOOL"; then
+        echo "    [detail] tool source no longer carries the locked options string"
+        CASE_FAIL=1
+        rm -rf "$CASE_DIR"
+        return 0
+    fi
+
+    if command -v findmnt >/dev/null 2>&1; then
+        printf 'UUID=1111-2222 /data ext4 %s 0 2\n' "$LOCKED" > "$CASE_DIR/candidate.fstab"
+        rc=0
+        findmnt --verify --tab-file "$CASE_DIR/candidate.fstab" > "$CASE_DIR/verify.out" 2>&1 || rc=$?
+        if ! grep -Fq "0 parse errors" "$CASE_DIR/verify.out"; then
+            echo "    [detail] findmnt reported parse errors:"
+            sed 's/^/      /' "$CASE_DIR/verify.out"
+            CASE_FAIL=1
+        fi
+        if grep -E "\[E\]" "$CASE_DIR/verify.out" | grep -vE "unreachable on boot required (source|target)" | grep -q .; then
+            echo "    [detail] non-environmental [E] line in findmnt verify:"
+            grep -E "\[E\]" "$CASE_DIR/verify.out" | sed 's/^/      /'
+            CASE_FAIL=1
+        elif ! grep -qE "\[E\]" "$CASE_DIR/verify.out"; then
+            if [ "$rc" -ne 0 ]; then
+                echo "    [detail] findmnt --verify rc=$rc with zero [E] lines"
+                CASE_FAIL=1
+            fi
+        else
+            echo "    [WARN] fstab-parse-proof: environmental - unreachable source/target on this machine"
+            sed 's/^/      /' "$CASE_DIR/verify.out"
+        fi
+        printf '%s %s ext4 defaults 0 2\n' "$TEST_DEV" "$CASE_DIR" > "$CASE_DIR/resolved.fstab"
+        rc=0
+        findmnt --verify --tab-file "$CASE_DIR/resolved.fstab" > "$CASE_DIR/resolved.out" 2>&1 || rc=$?
+        if [ "$rc" -ne 0 ] || grep -qE "\[E\]" "$CASE_DIR/resolved.out"; then
+            echo "    [detail] resolved-source findmnt verify failed rc=$rc:"
+            sed 's/^/      /' "$CASE_DIR/resolved.out"
+            CASE_FAIL=1
+        fi
+    else
+        echo "  [SKIP] fstab-parse-proof: findmnt not available"
+    fi
+
+    {
+        printf '[Unit]\n'
+        printf 'Description=D330 storage expansion data mount\n'
+        printf '[Mount]\n'
+        printf 'What=UUID=1111-2222\n'
+        printf 'Where=/data\n'
+        printf 'Type=ext4\n'
+        printf 'Options=%s\n' "$LOCKED"
+    } > "$CASE_DIR/data.mount"
+    chmod 644 "$CASE_DIR/data.mount"
+    if command -v systemd-analyze >/dev/null 2>&1; then
+        rc=0
+        if systemd-analyze --help 2>/dev/null | grep -q -- "--recursive-errors"; then
+            (cd "$CASE_DIR" && systemd-analyze verify ./data.mount --recursive-errors=yes > "$CASE_DIR/sa.out" 2>&1) || rc=$?
+        else
+            (cd "$CASE_DIR" && systemd-analyze verify ./data.mount > "$CASE_DIR/sa.out" 2>&1) || rc=$?
+        fi
+        if [ "$rc" -ne 0 ] || grep -Eq "Unknown|Invalid|Failed to parse" "$CASE_DIR/sa.out"; then
+            echo "    [detail] systemd-analyze verify failed rc=$rc:"
+            sed 's/^/      /' "$CASE_DIR/sa.out"
+            CASE_FAIL=1
+        fi
+    else
+        echo "  [SKIP] fstab-parse-proof: systemd-analyze not available"
+    fi
+    rm -rf "$CASE_DIR"
+}
+
 CASE_NAMES=(
     case_missing_device_format
     case_missing_device_value
@@ -351,6 +615,16 @@ CASE_NAMES=(
     case_parser_order_device_first
     case_parser_order_action_first
     case_probe_regression
+    case_mount_data_missing_device
+    case_mount_data_dry_run_options
+    case_mount_data_append_success
+    case_mount_data_mount_fail_rollback
+    case_mount_data_duplicate_legacy_refuses
+    case_mount_data_duplicate_good_noop
+    case_mount_data_confirm_refusal
+    case_mount_data_verify_fails_aborts
+    case_mount_data_uuid_empty
+    case_fstab_parse_proof
 )
 
 for fn in "${CASE_NAMES[@]}"; do
