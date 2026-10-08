@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
-current_phase: 42
-status: completed
+status: Awaiting next milestone
 stopped_at: Phase 42 complete — all phases complete
-last_updated: "2026-10-08T22:40:28.922Z"
+last_updated: "2026-10-08T23:14:51.241Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 42 complete
-state_head: 05ba6edeed10dee93e530b26452d0f5f511c9c7a
+last_activity_desc: Milestone v7.0 completed and archived
+state_head: 0c787f0bc642be1bb374be3e655fa0b9429fefe0
 progress:
   total_phases: 11
   completed_phases: 11
   total_plans: 15
   completed_plans: 15
   percent: 100
+current_phase: 42
 ---
 
 # STATE: Project Execution State
 
-- **Active Milestone**: Milestone 7 — Pre-Deployment Audit Remediation (v7.0), Phases 32–42
-- **Active Phase**: Milestone 7 close-out — audit / complete / cleanup (Phases 32–42 all done)
-- **Status**: All phases complete (11/11: 32–42). Milestone 7 remediation implemented. Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — all remediated; final milestone audit pending.
+- **Active Milestone**: none — Milestone 7 (v7.0) shipped and archived
+- **Active Phase**: —
+- **Status**: Milestone 7 complete (11/11 phases, 32–42). All 4 Critical / 17 Moderate / 11 Minor audit findings plus one cross-phase packaging gap remediated. Awaiting next milestone.
 - **Blockers**:
   * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
   * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
@@ -46,7 +46,35 @@ progress:
   * [RESOLVED — Phase 42] M17/N1–N5/N7/N9/N10 — repo/docs were not release-clean: 50 shell scripts tracked `100644` though README says `sudo ./scripts/install_dkms.sh`; the FCC-unlock hook was an empty blob whose colon name never matched; CHANGES_AUDIT carried wrong values (fbc, swappiness/BFQ, touch-mode, PWM, earlyoom, PL2 window, `--avoid`, wireless, tray, test count, power_cycle_delay_ms 500-vs-600); dead code + unclosed handles; packagers piped every `cp` into `|| true`. Fixed: all `scripts/*.sh`+`tools/*.sh` (and `tools/d330-ctl`) tracked `100755` with packager `chmod 755`; FCC hook shipped as target `/etc/ModemManager/fcc-unlock.d/8086:7360` with warn-on-missing; every CHANGES_AUDIT contradiction reconciled to code; dead code (`SW_LID`, except shadow) removed + handles closed; packagers fail loudly (no `cp || true`) + optional deps declared (thermald/earlyoom/zram-generator/rnnoise/vainfo/desktop); README tree + `.desktop` hygiene; new `scripts/test_doc_parity.sh` (19/0). Suites all green. Only the real package build is host-bound (see PENDING DEPLOY).
   * [PENDING DEPLOY] Phase 42 UAT test 1 — real `dpkg-buildpackage -b` / `makepkg -f` / `rpmbuild -bb` failing on a deliberately broken copy step — deferred under a documented VERIFICATION override (no debhelper-13/makepkg/rpmbuild here). Machine half green (no `cp ... || true` remains in any packager; doc-parity guard 19/0). Re-run on a Linux/POSIX host at sign-off: `/gsd-verify-work 42`.
   * [RESOLVED — Milestone audit] Cross-phase packaging gap found by the integration checker: the 3 packagers + CI deb installed `tools/d330-*` with their `.py`/`.sh` suffixes while shipping `ExecStart=` units that reference suffix-free names, so packaged installs enabled units that could not start. Fixed in `5e4948b` (all 3 packagers + `.github/workflows/build-packages.yml` rename to the installer's suffix-free names, ship `lenovo-d330-power-tune` + tray autostart, chmod 755; CI no longer `cp ... || true`); `scripts/test_hibernate_guards.sh` updated to assert it. Gates: hibernate 21/0, doc-parity 19/0, installer-symmetry 17/0, aggregate rc 0.
-- **Next Immediate Action**: Complete + cleanup Milestone 7 (audit done: `.planning/v7.0-MILESTONE-AUDIT.md`, verdict `tech_debt`, one integration gap found and fixed in `5e4948b`). All 11 phases verified; hardware/daemon/packaging-build SCs covered by documented per-phase VERIFICATION overrides to re-run on the D330 at sign-off.
+- **Next Immediate Action**: none — start the next milestone with `/gsd-new-milestone`. Known non-blocking tech debt is in `.planning/v7.0-MILESTONE-AUDIT.md`.
+
+## Project Reference
+
+See `.planning/PROJECT.md` (updated 2026-10-08 after v7.0).
+
+**Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
+**Current focus:** deployment sign-off on a physical D330 (the PENDING DEPLOY items above).
+
+## Deferred Items
+
+Items acknowledged/deferred at milestone close (v7.0), most recent first:
+
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| uat_gaps | 32/32-UAT.md | testing (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 33/33-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 34/34-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 35/35-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 36/36-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 37/37-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 38/38-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 39/39-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 40/40-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 41/41-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| uat_gaps | 42/42-UAT.md | passed (scenarios=0) | 2026-10-08 | v7.0 |
+| deferred_items | 39/deferred-items.md: Wireless Intel options | resolved in place | 2026-10-08 | v7.0 |
+
+Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps` + 1 `deferred_items` resolved in place), 0 carried forward from a prior close.
 
 ## Archived Milestones
 
@@ -59,14 +87,14 @@ progress:
 
 ## Active Milestone
 
-- [ ] **Milestone 7: Pre-Deployment Audit Remediation (v7.0)** - Phases 32-42 Not Started (see `.gsd/milestones/v7.0-ROADMAP.md`)
+- [x] **Milestone 7: Pre-Deployment Audit Remediation (v7.0)** - Phases 32-42 Completed & Shipped (archived to `.gsd/milestones/v7.0-ROADMAP.md`)
 
 ## Current Position
 
-Phase: 42
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-10-08 — Phase 42 complete
+Phase: Milestone v7.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-10-08 — Milestone v7.0 completed and archived
 
 ## Performance Metrics
 
@@ -95,6 +123,10 @@ Last activity: 2026-10-08 — Phase 42 complete
 
 ## Session
 
-**Last session:** 2026-10-08T19:10:45.949Z
-**Stopped at:** Phase 42 complete — all phases complete
+**Last session:** 2026-10-08T23:14:51.241Z
+**Stopped at:** Milestone v7.0 complete — archived; awaiting next milestone
 **Resume file:** None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
