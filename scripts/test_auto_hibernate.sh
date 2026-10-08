@@ -5,6 +5,7 @@
 set -euo pipefail
 
 MODE="probe"
+FAILED=0
 
 show_help() {
     cat << 'EOF'
@@ -52,7 +53,14 @@ if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying auto-hibernate daemon..."
     echo "  - Critical threshold: <= 5% capacity"
     echo "  - Trigger: Discharging state"
-    python3 tools/d330-auto-hibernate.py --dry-run || true
+    if ! python3 tools/d330-auto-hibernate.py --dry-run; then
+        echo "[FAIL] auto-hibernate dry-run validation failed." >&2
+        FAILED=$((FAILED + 1))
+    fi
+    if [ "$FAILED" -gt 0 ]; then
+        echo "[FAIL] ${FAILED} check(s) failed." >&2
+        exit 1
+    fi
     echo "[DRY-RUN] Logic verified successfully."
     exit 0
 fi
@@ -69,13 +77,24 @@ case "$MODE" in
 
         echo ""
         echo "--- 2. Battery Monitoring ---"
-        python3 tools/d330-auto-hibernate.py --dry-run
+        if ! python3 tools/d330-auto-hibernate.py --dry-run; then
+            echo "[FAIL] auto-hibernate battery monitor failed." >&2
+            FAILED=$((FAILED + 1))
+        fi
         ;;
     simulate)
         echo "Simulating low-battery auto-hibernate..."
-        python3 tools/d330-auto-hibernate.py --dry-run
+        if ! python3 tools/d330-auto-hibernate.py --dry-run; then
+            echo "[FAIL] auto-hibernate simulation failed." >&2
+            FAILED=$((FAILED + 1))
+        fi
         ;;
 esac
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "[FAIL] ${FAILED} check(s) failed." >&2
+    exit 1
+fi
 
 echo "=========================================================="
 echo " Verification completed.                                  "

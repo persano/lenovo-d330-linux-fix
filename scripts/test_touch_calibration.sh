@@ -34,6 +34,7 @@ EOF
 DRY_RUN=0
 TEST_UNBIND=0
 MONITOR=0
+FAILED=0
 
 for arg in "$@"; do
     case "$arg" in
@@ -46,6 +47,31 @@ for arg in "$@"; do
 done
 
 log_info "=== Lenovo D330 Touchscreen & Active Pen Diagnostic ==="
+
+if [ $DRY_RUN -eq 1 ]; then
+    log_info "[DRY-RUN] Auditing shipped touchscreen configuration (no hardware touched)..."
+    for f in \
+        patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf \
+        patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules \
+        patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb \
+        patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh; do
+        if [ -f "$f" ]; then
+            log_ok "Shipped config present: $f"
+        else
+            log_err "Shipped config missing: $f"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+    if [ "$FAILED" -gt 0 ]; then
+        log_err "${FAILED} shipped touchscreen config(s) missing."
+        exit 1
+    fi
+    if [ $TEST_UNBIND -eq 1 ]; then
+        log_info "[DRY-RUN] Would cycle /sys/bus/i2c/drivers/goodix/unbind -> bind"
+    fi
+    log_ok "[DRY-RUN] Touchscreen configuration audit complete."
+    exit 0
+fi
 
 # 1. Check DMI Identification
 if [ -f /sys/class/dmi/id/product_version ]; then
@@ -66,7 +92,8 @@ for dev in /sys/bus/i2c/devices/*GDIX1001*; do
 done
 
 if [ $FOUND_DEV -eq 0 ]; then
-    log_warn "No physical GDIX1001 node detected in /sys/bus/i2c/devices/ (running on VM or host)"
+    log_err "No physical GDIX1001 node detected in /sys/bus/i2c/devices/"
+    FAILED=$((FAILED + 1))
 fi
 
 # 3. Check Input Subsystem
@@ -76,10 +103,12 @@ if [ -f /proc/bus/input/devices ]; then
         log_ok "Goodix input device detected in /proc/bus/input/devices"
         grep -E "Name=|Handlers=" /proc/bus/input/devices | grep -B1 -i "Goodix" || true
     else
-        log_warn "No Goodix input handlers in /proc/bus/input/devices"
+        log_err "No Goodix input handlers in /proc/bus/input/devices"
+        FAILED=$((FAILED + 1))
     fi
 else
-    log_warn "/proc/bus/input/devices missing"
+    log_err "/proc/bus/input/devices missing"
+    FAILED=$((FAILED + 1))
 fi
 
 # 4. Check libinput / udev Calibration
@@ -90,13 +119,15 @@ HWDB_FILE="/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb"
 if [ -f "$RULES_FILE" ]; then
     log_ok "Installed udev rule: $RULES_FILE"
 else
-    log_warn "Udev rule not installed at $RULES_FILE"
+    log_err "Udev rule not installed at $RULES_FILE"
+    FAILED=$((FAILED + 1))
 fi
 
 if [ -f "$HWDB_FILE" ]; then
     log_ok "Installed hwdb rule: $HWDB_FILE"
 else
-    log_warn "Hwdb rule not installed at $HWDB_FILE"
+    log_err "Hwdb rule not installed at $HWDB_FILE"
+    FAILED=$((FAILED + 1))
 fi
 
 # 5. Check sleep hook
@@ -104,24 +135,27 @@ SLEEP_HOOK="/usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh"
 if [ -f "$SLEEP_HOOK" ]; then
     log_ok "Installed systemd sleep hook: $SLEEP_HOOK"
 else
-    log_warn "System-sleep hook not installed at $SLEEP_HOOK"
+    log_err "System-sleep hook not installed at $SLEEP_HOOK"
+    FAILED=$((FAILED + 1))
 fi
 
 # 6. Unbind/bind test if requested
 if [ $TEST_UNBIND -eq 1 ]; then
-    if [ $DRY_RUN -eq 1 ]; then
-        log_info "[DRY-RUN] Would cycle /sys/bus/i2c/drivers/goodix/unbind -> bind"
+    if [ $EUID -ne 0 ]; then
+        log_err "Root privileges required to trigger I2C rebind"
+        FAILED=$((FAILED + 1))
     else
-        if [ "$EUID" -ne 0 ]; then
-            log_err "Root privileges required to trigger I2C rebind"
-            exit 1
-        fi
         log_info "Testing Goodix controller unbind/rebind cycle..."
         if [ -f "$SLEEP_HOOK" ]; then
-            bash "$SLEEP_HOOK" post suspend
-            log_ok "Touch controller reset executed via sleep hook"
+            if bash "$SLEEP_HOOK" post suspend; then
+                log_ok "Touch controller reset executed via sleep hook"
+            else
+                log_err "Sleep hook failed to reset the touch controller"
+                FAILED=$((FAILED + 1))
+            fi
         else
             log_err "Sleep hook not found, cannot test unbind"
+            FAILED=$((FAILED + 1))
         fi
     fi
 fi
@@ -130,12 +164,23 @@ fi
 if [ $MONITOR -eq 1 ]; then
     log_info "Starting input monitor (Press Ctrl+C to stop)..."
     if command -v libinput >/dev/null 2>&1; then
-        libinput debug-events --device /dev/input/event* || true
+        if ! libinput debug-events --device /dev/input/event*; then
+            log_err "libinput debug-events failed"
+            FAILED=$((FAILED + 1))
+        fi
     elif command -v evtest >/dev/null 2>&1; then
-        evtest || true
+        if ! evtest; then
+            log_err "evtest failed"
+            FAILED=$((FAILED + 1))
+        fi
     else
         log_err "Neither libinput nor evtest found in PATH"
+        FAILED=$((FAILED + 1))
     fi
 fi
 
+if [ "$FAILED" -gt 0 ]; then
+    log_err "${FAILED} touchscreen check(s) failed."
+    exit 1
+fi
 log_ok "Touchscreen and pen diagnostic check completed."

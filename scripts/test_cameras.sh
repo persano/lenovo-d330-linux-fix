@@ -5,6 +5,7 @@
 set -euo pipefail
 
 MODE="probe"
+FAILED=0
 OUTPUT_DIR="/tmp/d330_cam_test"
 CAPTURE_FRAMES=10
 
@@ -73,7 +74,8 @@ check_modules() {
         if lsmod | grep -q "^$mod"; then
             echo "  [OK] $mod loaded"
         else
-            echo "  [WARN] $mod not currently loaded"
+            echo "  [FAIL] $mod not currently loaded" >&2
+            FAILED=$((FAILED + 1))
         fi
     done
 }
@@ -89,7 +91,8 @@ check_media_graph() {
             echo "  [INFO] media-ctl not installed. Install v4l-utils for topology graphs."
         fi
     else
-        echo "  [FAIL] /dev/media0 not found. Check IPU3 CIO2 driver and ACPI INT3472 state."
+        echo "  [FAIL] /dev/media0 not found. Check IPU3 CIO2 driver and ACPI INT3472 state." >&2
+        FAILED=$((FAILED + 1))
     fi
 }
 
@@ -112,14 +115,23 @@ run_capture() {
     mkdir -p "$OUTPUT_DIR"
     if command -v cam >/dev/null 2>&1; then
         echo "  Capturing $CAPTURE_FRAMES frames from camera 0 to $OUTPUT_DIR/frame_%04d.raw..."
-        cam -c 0 --capture="$CAPTURE_FRAMES" --file="$OUTPUT_DIR/frame_#_0.raw" || true
-        echo "  [OK] Capture complete. Inspect $OUTPUT_DIR"
+        if cam -c 0 --capture="$CAPTURE_FRAMES" --file="$OUTPUT_DIR/frame_#_0.raw"; then
+            echo "  [OK] Capture complete. Inspect $OUTPUT_DIR"
+        else
+            echo "  [FAIL] libcamera capture failed." >&2
+            FAILED=$((FAILED + 1))
+        fi
     elif [[ -e /dev/video10 ]] && command -v v4l2-ctl >/dev/null 2>&1; then
         echo "  Testing /dev/video10 loopback capture..."
-        v4l2-ctl -d /dev/video10 --stream-mmap --stream-count="$CAPTURE_FRAMES" --stream-to="$OUTPUT_DIR/loopback.raw" || true
-        echo "  [OK] Loopback stream test complete."
+        if v4l2-ctl -d /dev/video10 --stream-mmap --stream-count="$CAPTURE_FRAMES" --stream-to="$OUTPUT_DIR/loopback.raw"; then
+            echo "  [OK] Loopback stream test complete."
+        else
+            echo "  [FAIL] v4l2loopback capture failed." >&2
+            FAILED=$((FAILED + 1))
+        fi
     else
-        echo "  [INFO] No active camera stream available for capture."
+        echo "  [FAIL] No active camera stream available for capture." >&2
+        FAILED=$((FAILED + 1))
     fi
 }
 
@@ -138,12 +150,21 @@ case "$MODE" in
         echo "Running sensor frame rate benchmark..."
         check_modules
         if [[ -e /dev/video10 ]] && command -v v4l2-ctl >/dev/null 2>&1; then
-            v4l2-ctl -d /dev/video10 --stream-mmap --stream-count=100
+            if ! v4l2-ctl -d /dev/video10 --stream-mmap --stream-count=100; then
+                echo "[FAIL] frame rate benchmark stream failed." >&2
+                FAILED=$((FAILED + 1))
+            fi
         else
-            echo "v4l2loopback or v4l2-ctl not ready for benchmark."
+            echo "[FAIL] v4l2loopback or v4l2-ctl not ready for benchmark." >&2
+            FAILED=$((FAILED + 1))
         fi
         ;;
 esac
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "[FAIL] ${FAILED} camera check(s) failed." >&2
+    exit 1
+fi
 
 echo "=========================================================="
 echo " Camera pipeline verification finished.                   "

@@ -5,6 +5,7 @@
 set -euo pipefail
 
 MODE="probe"
+FAILED=0
 
 show_help() {
     cat << 'EOF'
@@ -59,12 +60,21 @@ if systemctl is-active earlyoom >/dev/null 2>&1; then
 elif systemctl is-active systemd-oomd >/dev/null 2>&1; then
     echo "[OK] systemd-oomd active"
 else
-    echo "[INFO] Neither earlyoom nor systemd-oomd is running. Install earlyoom package."
+    echo "[FAIL] Neither earlyoom nor systemd-oomd is running." >&2
+    FAILED=$((FAILED + 1))
 fi
 
 echo ""
 echo "--- 2. Active Memory & Swap Headroom ---"
-free -h || true
+if ! free -h; then
+    echo "[FAIL] free -h failed." >&2
+    FAILED=$((FAILED + 1))
+fi
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "[FAIL] ${FAILED} OOM check(s) failed." >&2
+    exit 1
+fi
 
 echo "=========================================================="
 echo " OOM verification completed.                              "

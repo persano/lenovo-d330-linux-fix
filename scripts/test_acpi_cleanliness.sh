@@ -5,6 +5,7 @@
 set -euo pipefail
 
 MODE="probe"
+FAILED=0
 
 show_help() {
     cat << 'EOF'
@@ -63,8 +64,9 @@ case "$MODE" in
         if command -v dmesg >/dev/null 2>&1; then
             acpi_errors=$(dmesg 2>/dev/null | grep -iE "(ACPI Error|AE_ALREADY_EXISTS)" || true)
             if [[ -n "$acpi_errors" ]]; then
-                echo "[WARN] Found ACPI namespace errors:"
+                echo "[FAIL] Found ACPI namespace errors:" >&2
                 echo "$acpi_errors" | head -n 10
+                FAILED=$((FAILED + 1))
             else
                 echo "[OK] Clean dmesg: No ACPI namespace collisions detected."
             fi
@@ -82,11 +84,20 @@ case "$MODE" in
         ;;
     build-cpio)
         echo "Building ACPI CPIO archive..."
-        bash tools/d330-acpi-override.sh /tmp/acpi-override-test.cpio
-        echo "[OK] Test CPIO created at /tmp/acpi-override-test.cpio"
+        if bash tools/d330-acpi-override.sh /tmp/acpi-override-test.cpio; then
+            echo "[OK] Test CPIO created at /tmp/acpi-override-test.cpio"
+        else
+            echo "[FAIL] d330-acpi-override.sh failed to build the CPIO." >&2
+            FAILED=$((FAILED + 1))
+        fi
         rm -f /tmp/acpi-override-test.cpio
         ;;
 esac
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "[FAIL] ${FAILED} ACPI check(s) failed." >&2
+    exit 1
+fi
 
 echo "=========================================================="
 echo " ACPI verification completed.                             "

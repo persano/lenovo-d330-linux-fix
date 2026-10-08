@@ -5,6 +5,7 @@
 set -euo pipefail
 
 MODE="probe"
+FAILED=0
 ISO_IMAGE="${1:-lenovo-d330-linux-remastered.iso}"
 
 show_help() {
@@ -62,23 +63,32 @@ case "$MODE" in
             if command -v "$t" >/dev/null 2>&1; then
                 echo "  [OK] $t installed"
             else
-                echo "  [INFO] $t not found in current environment."
+                echo "  [FAIL] $t not found in current environment." >&2
+                FAILED=$((FAILED + 1))
             fi
         done
         ;;
     verify)
         if [[ ! -f "$ISO_IMAGE" ]]; then
-            echo "[ERR] Target ISO file not found: $ISO_IMAGE"
+            echo "[ERR] Target ISO file not found: $ISO_IMAGE" >&2
             exit 1
         fi
         echo "Verifying ISO image: $ISO_IMAGE ($(stat -c%s "$ISO_IMAGE") bytes)..."
-        if command -v xorriso >/dev/null 2>&1; then
-            xorriso -indev "$ISO_IMAGE" -report_el_torito plain || true
-        else
-            echo "[OK] File present. Install xorriso for detailed El Torito validation."
+        if ! command -v xorriso >/dev/null 2>&1; then
+            echo "[FAIL] xorriso not installed; cannot validate El Torito catalog." >&2
+            exit 1
+        fi
+        if ! xorriso -indev "$ISO_IMAGE" -report_el_torito plain; then
+            echo "[FAIL] xorriso could not validate $ISO_IMAGE." >&2
+            exit 1
         fi
         ;;
 esac
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "[FAIL] ${FAILED} check(s) failed." >&2
+    exit 1
+fi
 
 echo "=========================================================="
 echo " ISO verification complete.                               "
