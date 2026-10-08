@@ -407,7 +407,8 @@ do_install() {
                 else
                     "$MKCONFIG_TOOL" -o "$GRUB_CFG" || true
                 fi
-                if grep -q "resume_offset=" "$GRUB_CFG" 2>/dev/null; then
+                if grep -qF "resume=UUID=${ROOT_UUID}" "$GRUB_CFG" 2>/dev/null && \
+                   grep -qF "resume_offset=${RESUME_OFFSET}" "$GRUB_CFG" 2>/dev/null; then
                     ACTIVATION_OK=true
                     # R1: hooks must pick up resume parameters.
                     if command -v update-initramfs >/dev/null 2>&1; then
@@ -415,7 +416,7 @@ do_install() {
                     fi
                     log_ok "Resume cmdline verified in ${GRUB_CFG}: resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET}"
                 else
-                    log_warn "[WARN] ${GRUB_CFG} does not contain resume_offset= after regeneration."
+                    log_warn "[WARN] ${GRUB_CFG} does not contain the rendered resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET} after regeneration."
                 fi
             else
                 log_warn "[WARN] Resume activation prerequisites missing (mkconfig tool / root UUID / offset / snippet)."
