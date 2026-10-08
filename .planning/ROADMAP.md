@@ -273,6 +273,8 @@ Plans:
 
 **Plans**: TBD
 
+- [x] 39-01-PLAN.md
+
 - **Audit Ref**: M8, M9, M10, M15, M16.
 - **Components**:
   * `patches/wireless/etc/modprobe.d/lenovo-d330-wireless.conf:6` — `options rtl8821ce ...` matches neither in-tree `rtw88_8821ce` nor out-of-tree `8821ce` (both names listed in `CHANGES_AUDIT.md` §7.6). Emit both spellings; drop `fwlps`/`ips` unless confirmed as in-tree params.
