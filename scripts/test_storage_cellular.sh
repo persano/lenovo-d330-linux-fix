@@ -50,10 +50,29 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying MicroSD tool and Cellular configurations..."
-    echo "  - MicroSD Setup: tools/d330-microsd-setup.sh"
-    echo "  - ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
-    echo "  - Cellular Rules: patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"
-    echo "[DRY-RUN] All configurations verified."
+    # New lines anchor via SCRIPT_DIR/REPO_ROOT (test_resume_loop.sh pattern);
+    # existing cwd-relative lines elsewhere are left alone (Phase 41 owns that).
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+    cd "$REPO_ROOT"
+
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_storage_cellular.sh; do
+        if bash -n "$f"; then
+            echo "[OK] bash -n $f"
+        else
+            echo "[FAIL] bash -n $f" >&2
+            exit 1
+        fi
+    done
+
+    # Guard suite: its non-zero exit propagates under set -e, so any failing
+    # case fails this mode; its passed=N failed=M summary flows into this output.
+    bash scripts/test_microsd_guards.sh
+
+    # Inventory context only - these paths are not checks.
+    echo "[INFO] ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
+    echo "[INFO] Cellular Rules: patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"
+    echo "[OK] dry-run verification complete"
     exit 0
 fi
 
