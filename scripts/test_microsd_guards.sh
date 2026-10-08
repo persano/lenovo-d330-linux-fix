@@ -9,11 +9,13 @@
 # mkfs canary file proves abort-before-write: if it exists after a must-abort
 # case, a guard failed open.
 #
-# Cases (22): missing-device hard errors, mounted-target abort, bidirectional
+# Cases (26): missing-device hard errors, mounted-target abort, bidirectional
 # root refusal, guards-pass-but-write-blocked, dry-run PASS/FAIL guard report,
 # both parser orders, probe regression, nine mount-data cases (append, rollback,
-# duplicates, confirmation, verify failure, empty UUID) and the fstab parse
-# proof against the real findmnt/systemd-analyze.
+# duplicates, confirmation, verify failure, empty UUID), the fstab parse
+# proof against the real findmnt/systemd-analyze, and the Plan 32-03 honesty
+# cases (mount-home-missing-device, mount-home-not-implemented,
+# help-marked-unsupported, completion-honesty).
 # ==============================================================================
 
 set -euo pipefail
@@ -28,7 +30,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 32 microsd guard suite (22 cases, PATH shims, no real disk IO).
+Runs the Phase 32 microsd guard suite (26 cases, PATH shims, no real disk IO).
 
 Options:
   -h, --help    Show this help message
@@ -602,6 +604,72 @@ case_fstab_parse_proof() {
     rm -rf "$CASE_DIR"
 }
 
+# ------------------------------------------------------------------------------
+# Plan 32-03 honesty cases: mount-home stub behavior, help text, and the
+# single-trigger completion message (locked CONTEXT.md decisions).
+# ------------------------------------------------------------------------------
+case_mount_home_missing_device() {
+    local rc=0
+    bash "$TOOL" --mount-home > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 1
+    expect_out "requires an explicit --device"
+}
+
+case_mount_home_not_implemented() {
+    local rc=0
+    rm -f "$CANARY"
+    # Device string is arbitrary: the stub branch fires before any existence
+    # check, so no real block device is required for this case.
+    bash "$TOOL" --mount-home --device /dev/loop0 > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_out "not implemented"
+    expect_no_out "Storage expansion task complete."
+    expect_no_canary
+}
+
+case_help_marked_unsupported() {
+    local rc=0
+    bash "$TOOL" --help > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_out "--device"
+    expect_out_re "mount-home.*unsupported|unsupported.*mount-home"
+}
+
+case_completion_honesty() {
+    local rc=0
+    rm -f "$CANARY"
+
+    # Negative path 1: format dry-run with guard-passing shims (exits 0 in its
+    # own branch) must not claim completion.
+    D330_SHIM_LSBLK_MOUNTPOINTS= \
+    D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --format --dry-run --device "$TEST_DEV" > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_no_out "Storage expansion task complete."
+
+    # Negative path 2: mount-data dry-run with guard-passing shims.
+    rc=0
+    fresh_fstab
+    D330_SHIM_UUID=1111-2222 \
+    D330_SHIM_LSBLK_MOUNTPOINTS= \
+    D330_SHIM_ROOT_SOURCE=/dev/mmcblk0p3 \
+    D330_FSTAB="$CASE_FSTAB" \
+        PATH="$SHIM_DIR:$PATH" bash "$TOOL" --mount-data --device "$TEST_DEV" --dry-run > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_no_out "Storage expansion task complete."
+
+    # Negative path 3: the mount-home stub itself.
+    rc=0
+    bash "$TOOL" --mount-home --device /dev/loop0 > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_ne_zero "$rc"
+    expect_out "not implemented"
+    expect_no_out "Storage expansion task complete."
+
+    # Positive direction stays covered by mount-data-append-success above,
+    # which still asserts the closing message IS printed on genuine completion.
+    expect_no_canary
+}
+
 CASE_NAMES=(
     case_missing_device_format
     case_missing_device_value
@@ -625,6 +693,10 @@ CASE_NAMES=(
     case_mount_data_verify_fails_aborts
     case_mount_data_uuid_empty
     case_fstab_parse_proof
+    case_mount_home_missing_device
+    case_mount_home_not_implemented
+    case_help_marked_unsupported
+    case_completion_honesty
 )
 
 for fn in "${CASE_NAMES[@]}"; do
