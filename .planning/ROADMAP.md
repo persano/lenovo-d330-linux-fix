@@ -1,7 +1,9 @@
 # ROADMAP: Lenovo D330-10IGL Linux Parity Project
 
 ## Milestone 1: Display & Power Parity (v1.0) - [COMPLETED]
+
 *Archived to [`.gsd/milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)*
+
 - [x] Phase 0: Project & Repository Setup (`7e4b76e`)
 - [x] Phase 1: Community Research & Prior Art Ingestion (`a60bdf1`)
 - [x] Phase 2: Official Lenovo Windows Driver Baseline Acquisition (`c489f88`)
@@ -12,7 +14,9 @@
 ---
 
 ## Milestone 2: Peripheral Parity & Tablet Usability (v2.0) - [COMPLETED]
+
 *Archived to [`.gsd/milestones/v2.0-ROADMAP.md`](milestones/v2.0-ROADMAP.md)*
+
 - [x] Phase 6: Touchscreen & Active Pen Calibration (`4126a9a`)
 - [x] Phase 7: Detachable Dock & Tablet Mode Daemon (`bb7b4c5`)
 - [x] Phase 8: Audio & Microphone UCM Profiles (`b2cb1e7`)
@@ -21,7 +25,9 @@
 ---
 
 ## Milestone 3: Vision, Ergonomics & Multimedia (v3.0) - [COMPLETED]
+
 *Archived to [`.gsd/milestones/v3.0-ROADMAP.md`](milestones/v3.0-ROADMAP.md)*
+
 - [x] Phase 10: Intel IPU3 Dual Camera Pipeline
 - [x] Phase 11: 4GB RAM & 64GB eMMC Storage Optimization
 - [x] Phase 12: Audio Refinements (Dolby DSP Curve & Anti-Pop Jack Delay)
@@ -31,7 +37,9 @@
 ---
 
 ## Milestone 4: Connectivity, Firmware & System Boot (v4.0) - [COMPLETED]
+
 *Archived to [`.gsd/milestones/v4.0-ROADMAP.md`](milestones/v4.0-ROADMAP.md)*
+
 - [x] Phase 15: Early Bootloader, Console & Plymouth Orientation
 - [x] Phase 16: ACPI DSDT Clean Initrd Override
 - [x] Phase 17: Sensor Hysteresis & Ambient Light Sensor (ALS) Auto-Dimming
@@ -42,7 +50,9 @@
 ---
 
 ## Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0) - [COMPLETED]
+
 *Archived to [`.gsd/milestones/v5.0-ROADMAP.md`](milestones/v5.0-ROADMAP.md)*
+
 - [x] Phase 21: Native Distribution Packaging (.deb, .rpm, PKGBUILD)
 - [x] Phase 22: Automated Live ISO Remaster Build Harness
 - [x] Phase 23: GitHub Actions CI/CD Release Pipeline
@@ -50,7 +60,9 @@
 ---
 
 ## Milestone 6: System Resilience, Performance & Usability Polish (v6.0) - [COMPLETED]
+
 *Archived to [`.gsd/milestones/v6.0-ROADMAP.md`](milestones/v6.0-ROADMAP.md)*
+
 - [x] Phase 24: Intel VA-API Hardware Video Acceleration (iHD / Firefox / Chromium)
 - [x] Phase 25: Fanless Thermal Tuning & RAPL Power Limits (PL1 5.0W, PL2 8.0W, thermald)
 - [x] Phase 26: Out-Of-Memory Prevention (earlyoom on 4GB RAM)
@@ -63,6 +75,7 @@
 ---
 
 ## [ACTIVE] Milestone 7: v7.0 Pre-Deployment Audit Remediation
+
 - [ ] Phase 32: Data-Loss & Boot Safety Guards (Audit C1, C2)
 - [ ] Phase 33: Low-Battery Hibernate Feasibility (Audit C3)
 - [ ] Phase 34: Deliver the Actual PPS / Display Resume Fix (Audit C4)
@@ -76,17 +89,28 @@
 - [ ] Phase 42: Documentation Parity & Repository Polish (Audit M17, N1–N5, N7, N9, N10)
 
 ### Phase 32: Data-Loss & Boot Safety Guards
+
 **Goal**: Eliminate the two paths that can destroy the eMMC root filesystem or hang systemd at boot.
 **Depends on**: Nothing (first phase of Milestone 7)
 **Success Criteria** (what must be TRUE):
+
   1. `--format` on a device with a mounted partition aborts before any write
   2. fstab line parses under `systemd-analyze verify`
   3. `--dry-run` prints the guard outcomes.
+
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 32-01-PLAN.md — Explicit device selection and the pre-write guard chain (audit C1), plus the PATH-shim guard suite
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 32-02-PLAN.md — fstab boot safety: locked nofail options, verify-before-append, rollback trap, duplicate refusal (audit C2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 32-03-PLAN.md — Honest `--mount-home` stub, success-line gating, harness Wave 0 integration
 
 - **Audit Ref**: C1, C2.
@@ -98,12 +122,15 @@ Plans:
   * `tools/d330-microsd-setup.sh:124-127` — `--mount-home` is a stub that prints "Storage expansion task complete"; either implement or exit non-zero with a clear "not implemented".
 
 ### Phase 33: Low-Battery Hibernate Feasibility
+
 **Goal**: Make the 5% emergency hibernate actually able to complete, or degrade safely instead of silently failing.
 **Depends on**: Phase 32
 **Success Criteria** (what must be TRUE):
+
   1. `systemctl hibernate` on the target returns 0 with a resume device present
   2. `d330-auto-hibernate --dry-run` reports the swap situation
   3. service is `enabled` after `--install`.
+
 **Plans**: TBD
 
 - **Audit Ref**: C3, M2 (partial).
@@ -115,12 +142,15 @@ Plans:
   * `patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules:4` — `ATTR{capacity}=="[0-5]"` is a udev glob (single char 0-5) and is correct; add a comment so it is not "fixed" into a regex later.
 
 ### Phase 34: Deliver the Actual PPS / Display Resume Fix
+
 **Goal**: The recommended install path must produce the 600 ms panel power-cycle clamp and the DMI orientation quirk it advertises, or stop advertising them.
 **Depends on**: Phase 33
 **Success Criteria** (what must be TRUE):
+
   1. `dmesg | grep lenovo_d330_fix` shows a DMI match on hardware
   2. `scripts/test_resume_loop.sh` passes 5 cycles
   3. README claims match observed behaviour.
+
 **Plans**: TBD
 
 - **Audit Ref**: C4, N3, M17 (partial).
@@ -133,11 +163,14 @@ Plans:
   * `patches/dkms/lenovo-d330-fix/Makefile`, `dkms.conf` — add `BUILT_MODULE_LOCATION[0]="."` and a `MAKE_MATCH[0]` guard.
 
 ### Phase 35: Installer & Uninstaller Symmetry
+
 **Goal**: `--install` and `--uninstall` must be exact inverses, and deployed configuration must actually take effect.
 **Depends on**: Phase 34
 **Success Criteria** (what must be TRUE):
+
   1. install → uninstall → `find /etc /usr/local/bin /usr/share/alsa -name '*d330*' -o -name 'lenovo-d330*'` returns empty
   2. `systemctl is-enabled` on all 9 units returns `enabled` after install.
+
 **Plans**: TBD
 
 - **Audit Ref**: M1, M2, M11, N6.
@@ -151,11 +184,14 @@ Plans:
   * `scripts/install_dkms.sh` — add a `--verify` mode that diffs deployed paths against the manifest so symmetry is machine-checked, not eyeballed.
 
 ### Phase 36: Desktop Session Wiring — Tray Applet & Tablet Daemon
+
 **Goal**: Both user-facing helpers must run in the user's graphical session, not as a context-less root system service.
 **Depends on**: Phase 35
 **Success Criteria** (what must be TRUE):
+
   1. `scripts/test_tray_applet.sh` fails when the binary name is wrong
   2. dock/undock visibly toggles orientation + OSK in a live GNOME session.
+
 **Plans**: TBD
 
 - **Audit Ref**: M3, M6, N7.
@@ -168,11 +204,14 @@ Plans:
   * `patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop` — generic `Icon=preferences-system`, redundant `X-GNOME-Autostart-enabled` (N7).
 
 ### Phase 37: No-Op Tools Made Real or Removed — PWM & Sensor Filter
+
 **Goal**: Stop reporting success for operations that perform no write.
 **Depends on**: Phase 36
 **Success Criteria** (what must be TRUE):
+
   1. `systemctl status d330-sensor-filter` stays `active (running)` for > 60 s
   2. `--apply` for PWM reports a verifiable register delta or is removed.
+
 **Plans**: TBD
 
 - **Audit Ref**: M4, M5, M17 (partial).
@@ -184,11 +223,14 @@ Plans:
   * `scripts/test_display_ergonomics.sh:67,89` and `scripts/test_sensor_als.sh:55-56` — currently `\|\| true` + unconditional `log_ok`; must assert on real state.
 
 ### Phase 38: PipeWire DSP Activation
+
 **Goal**: Speaker EQ and RNNoise mic must load in the running PipeWire daemon with valid graph definitions.
 **Depends on**: Phase 37
 **Success Criteria** (what must be TRUE):
+
   1. `pw-dump | grep -E 'd330_speaker_dsp|rnnoise_source_d330'` shows both nodes loaded after a daemon restart
   2. removing `librnnoise_ladspa.so` produces a non-zero test result.
+
 **Plans**: TBD
 
 - **Audit Ref**: M7.
@@ -202,12 +244,15 @@ Plans:
   * `scripts/test_mic_rnnoise.sh:46,65` — `--dry-run` is echo-only and the missing-plugin path only prints `[INFO]` then exits 0; must fail.
 
 ### Phase 39: udev / hwdb / Wireless Match Correctness
+
 **Goal**: Every udev rule and hwdb entry must match real device strings on the target, and every modprobe option must land on a module that exists.
 **Depends on**: Phase 38
 **Success Criteria** (what must be TRUE):
+
   1. `udevadm test` output on hardware shows each rule matching
   2. `modprobe -s rtw88_8821ce` reflects the intended parameters
   3. `scripts/test_wireless_coex.sh` fails when the module name is wrong.
+
 **Plans**: TBD
 
 - **Audit Ref**: M8, M9, M10, M15, M16.
@@ -224,12 +269,15 @@ Plans:
   * `patches/touchscreen/etc/udev/rules.d/90-...rules:12,18` — `ENV{WL_OUTPUT}="eDP-1"` is not a libinput or udev property; remove.
 
 ### Phase 40: Power Stack Reconciliation
+
 **Goal**: One writer per knob — TLP, udev, `lenovo-d330-power-tune.sh`, thermald and RAPL must not fight.
 **Depends on**: Phase 39
 **Success Criteria** (what must be TRUE):
+
   1. `tlp-stat -s` and `/sys/class/powercap` agree after AC hot-plug
   2. no TLP error lines in the journal across a full AC/battery cycle
   3. boot bench reproduced and documented.
+
 **Plans**: TBD
 
 - **Audit Ref**: M13, M14.
@@ -244,11 +292,14 @@ Plans:
   * `tools/d330-thermal-tune.sh:21-22` — `$((pl1 / 1000000))` with `pl1="N/A"` silently evaluates to `0`; guard with a numeric regex (N11).
 
 ### Phase 41: Test Harness Trustworthiness
+
 **Goal**: A failing check must be able to fail the run. Today 23 of 27 `test_*.sh` exit 0 no matter what, and 22 of 23 `--dry-run` modes validate nothing.
 **Depends on**: Phase 40
 **Success Criteria** (what must be TRUE):
+
   1. `scripts/test_*.sh` returns non-zero when its subject is deliberately broken (mutation test on at least 5 scripts)
   2. no `test_*` mutates the system without `--apply`.
+
 **Plans**: TBD
 
 - **Audit Ref**: M12, N8.
@@ -266,12 +317,15 @@ Plans:
   * `scripts/build_live_iso.sh:62-76` — `--dry-run` echoes a hardcoded manifest and prints "validated successfully" without checking xorriso/ISO/paths; `test_iso_integrity.sh:54` inherits the no-op.
 
 ### Phase 42: Documentation Parity & Repository Polish
+
 **Goal**: Every claim in `CHANGES_AUDIT.md`, `README.md` and the packaging recipes matches the code, and the repo is clean for release.
 **Depends on**: Phase 41
 **Success Criteria** (what must be TRUE):
+
   1. `grep -n` audit of `CHANGES_AUDIT.md` vs code returns zero mismatches for the list above
   2. `dpkg-buildpackage`/`makepkg`/`rpmbuild` fail on a deliberately broken copy step
   3. repo has no 0-byte tracked files and no `100644` shell scripts.
+
 **Plans**: TBD
 
 - **Audit Ref**: M17, N1, N2, N4, N5, N7, N9, N10.
@@ -291,4 +345,5 @@ Plans:
 ---
 
 ## Project Status: Phases 0–31 Complete, Milestone 7 (Phases 32–42) Active
+
 Milestones 1–6 (Phases 0–31) executed, tested, and archived. External pre-deployment audit verdict was `BLOCKED BY CRITICAL DEFECTS`; Milestone 7 remediates all 4 Critical, 17 Moderate and 11 Minor findings before any hardware deployment.
