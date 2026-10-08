@@ -203,11 +203,11 @@ run_kernel_src_step() {
     local patch_file="${REPO_ROOT}/patches/d330_display_resume_fix.patch"
 
     if [ ! -d "$kernel_src" ]; then
-        log_warn "[WARN] --kernel-src '$kernel_src' is not a directory; skipping clamp patch."
+        log_warn "--kernel-src '$kernel_src' is not a directory; skipping clamp patch."
         return 0
     fi
     if [ ! -f "$patch_file" ]; then
-        log_warn "[WARN] clamp patch not found at '$patch_file'; skipping."
+        log_warn "clamp patch not found at '$patch_file'; skipping."
         return 0
     fi
 
@@ -220,12 +220,12 @@ run_kernel_src_step() {
         looks_like_kernel=true
     fi
     if [ "$looks_like_kernel" != true ]; then
-        log_warn "[WARN] '$kernel_src' does not look like a kernel source tree (no Kconfig / VERSION Makefile); skipping clamp patch."
+        log_warn "'$kernel_src' does not look like a kernel source tree (no Kconfig / VERSION Makefile); skipping clamp patch."
         return 0
     fi
 
     if ! command -v patch >/dev/null 2>&1; then
-        log_warn "[WARN] 'patch' is not installed; skipping clamp patch."
+        log_warn "'patch' is not installed; skipping clamp patch."
         return 0
     fi
 
@@ -237,9 +237,9 @@ run_kernel_src_step() {
     patch -p1 -d "$kernel_src" --dry-run --batch < "$patch_file" >/dev/null 2>&1 || dry_rc=$?
 
     if [ "$dry_rc" -ne 0 ]; then
-        log_warn "[WARN] Clamp patch does NOT apply to '$kernel_src' (context mismatch; rc=$dry_rc)."
-        log_warn "[WARN] The running kernel does not match the patch context, so the 600 ms PPS clamp is NOT delivered."
-        log_warn "[WARN] Option 2 must be applied manually after adapting the hunks to your kernel tree; install continues."
+        log_warn "Clamp patch does NOT apply to '$kernel_src' (context mismatch; rc=$dry_rc)."
+        log_warn "The running kernel does not match the patch context, so the 600 ms PPS clamp is NOT delivered."
+        log_warn "Option 2 must be applied manually after adapting the hunks to your kernel tree; install continues."
         return 0
     fi
 
@@ -252,11 +252,11 @@ run_kernel_src_step() {
     local apply_rc=0
     patch -p1 -d "$kernel_src" --forward --batch < "$patch_file" >/dev/null 2>&1 || apply_rc=$?
     if [ "$apply_rc" -ne 0 ]; then
-        log_warn "[WARN] Clamp patch real apply failed (rc=$apply_rc); skipping. Install continues."
+        log_warn "Clamp patch real apply failed (rc=$apply_rc); skipping. Install continues."
         return 0
     fi
     log_ok "Applied clamp patch to '$kernel_src'."
-    log_warn "[WARN] The running kernel is unaffected until you rebuild and reinstall it, then reboot."
+    log_warn "The running kernel is unaffected until you rebuild and reinstall it, then reboot."
     return 0
 }
 
@@ -282,7 +282,7 @@ run_grub_regen() {
         log_info "Regenerating GRUB config via grub-mkconfig${suffix}..."
         grub-mkconfig -o /boot/grub/grub.cfg || true
     else
-        log_warn "[WARN] grub config changed but no mkconfig tool found; GRUB not regenerated -- reboot/bootloader may not pick it up."
+        log_warn "grub config changed but no mkconfig tool found; GRUB not regenerated -- reboot/bootloader may not pick it up."
         return 1
     fi
     return 0
@@ -443,7 +443,7 @@ do_install() {
                 cp "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" /etc/thermald/
             fi
         else
-            log_warn "[WARN] /etc/thermald not found (thermald not installed?); skipping thermal-conf.xml deployment."
+            log_warn "/etc/thermald not found (thermald not installed?); skipping thermal-conf.xml deployment."
         fi
     fi
 
@@ -548,8 +548,8 @@ do_install() {
         if systemctl start d330-swapfile.service; then
             SWAPFILE_READY=true
         else
-            log_warn "[WARN] d330-swapfile.service failed to create /var/swapfile (free space or dd/mkswap failure)."
-            log_warn "[WARN] hibernate stays unavailable; skipping resume activation. Install continues (daemon degrades to suspend)."
+            log_warn "d330-swapfile.service failed to create /var/swapfile (free space or dd/mkswap failure)."
+            log_warn "hibernate stays unavailable; skipping resume activation. Install continues (daemon degrades to suspend)."
         fi
 
         if [ "$SWAPFILE_READY" = true ]; then
@@ -582,7 +582,7 @@ do_install() {
                [ "$FS_BLOCK_SIZE" = "$PAGE_SIZE" ]; then
                 OFFSET_UNITS_OK=true
             else
-                log_warn "[WARN] fs block size ($FS_BLOCK_SIZE) / page size ($PAGE_SIZE) is invalid or unequal; resume_offset units would be wrong."
+                log_warn "fs block size ($FS_BLOCK_SIZE) / page size ($PAGE_SIZE) is invalid or unequal; resume_offset units would be wrong."
             fi
 
             # 4. Offset EXCLUSIVELY from filefrag -v first extent physical
@@ -594,7 +594,7 @@ do_install() {
                 RESUME_OFFSET="${RESUME_OFFSET:-}"
             fi
             if ! echo "$RESUME_OFFSET" | grep -qE '^[0-9]+$'; then
-                log_warn "[WARN] could not compute resume_offset via filefrag -v for /var/swapfile."
+                log_warn "could not compute resume_offset via filefrag -v for /var/swapfile."
                 RESUME_OFFSET=""
             fi
 
@@ -606,7 +606,7 @@ do_install() {
                 ROOT_UUID="$(blkid -s UUID -o value "$ROOT_SRC" 2>/dev/null || true)"
             fi
             if [ -z "$ROOT_UUID" ]; then
-                log_warn "[WARN] could not read root UUID from '${ROOT_SRC:-unknown}'."
+                log_warn "could not read root UUID from '${ROOT_SRC:-unknown}'."
             fi
 
             # 6. Render the snippet: substitute the two placeholder tokens in
@@ -625,7 +625,7 @@ do_install() {
                         log_ok "Rendered /etc/default/grub.d/53-lenovo-d330-resume.cfg (resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET})."
                     fi
                 else
-                    log_warn "[WARN] /etc/default/grub.d does not exist; cannot deploy resume snippet."
+                    log_warn "/etc/default/grub.d does not exist; cannot deploy resume snippet."
                 fi
             fi
 
@@ -662,10 +662,10 @@ do_install() {
                     fi
                     log_ok "Resume cmdline verified in ${GRUB_CFG}: resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET}"
                 else
-                    log_warn "[WARN] ${GRUB_CFG} does not contain the rendered resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET} after regeneration."
+                    log_warn "${GRUB_CFG} does not contain the rendered resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET} after regeneration."
                 fi
             else
-                log_warn "[WARN] Resume activation prerequisites missing (mkconfig tool / root UUID / offset / snippet)."
+                log_warn "Resume activation prerequisites missing (mkconfig tool / root UUID / offset / snippet)."
             fi
 
             if [ "$ACTIVATION_OK" != true ]; then
@@ -708,7 +708,7 @@ do_install() {
                 log_ok "Deployed TLP power configuration."
             fi
         else
-            log_warn "[WARN] /etc/tlp.d not found (tlp not installed?); skipping TLP power configuration."
+            log_warn "/etc/tlp.d not found (tlp not installed?); skipping TLP power configuration."
         fi
         if [ -d "/usr/share/color/icc" ]; then
             if [ -f "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" ]; then
@@ -716,7 +716,7 @@ do_install() {
                 log_ok "Installed calibrated D330 ICC color profile."
             fi
         else
-            log_warn "[WARN] /usr/share/color/icc not found (colord/ICC profile dir missing?); skipping D330 ICC profile deployment."
+            log_warn "/usr/share/color/icc not found (colord/ICC profile dir missing?); skipping D330 ICC profile deployment."
         fi
     fi
 
