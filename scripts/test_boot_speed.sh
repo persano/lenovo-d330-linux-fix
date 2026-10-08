@@ -50,7 +50,7 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying fast boot settings..."
-    echo "  - Kernel cmdline: nowatchdog no_timer_check quiet loglevel=3"
+    echo "  - Kernel cmdline: softlockup_panic=1 no_timer_check quiet loglevel=3"
     echo "  - Services masked: systemd-networkd-wait-online, NetworkManager-wait-online"
     echo "[DRY-RUN] Verification complete."
     exit 0

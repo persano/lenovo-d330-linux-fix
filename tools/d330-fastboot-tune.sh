@@ -27,7 +27,10 @@ apply_optimizations() {
         log "[WARN] Root privileges required to mask systemd services."
         return
     fi
-    # Mask network wait-online services that delay graphical desktop startup
+    # Mask network wait-online services that delay graphical desktop startup.
+    # This is the real boot-time win. The kernel watchdog parameter is owned by
+    # patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg, which now
+    # sets softlockup_panic=1 instead of disabling detection.
     systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
     systemctl mask NetworkManager-wait-online.service 2>/dev/null || true
     log "Masked wait-online services (shaves 3-5 seconds off eMMC boot time)."

@@ -353,15 +353,16 @@ This document catalogs every single configuration, patch, script, daemon, and dr
   - Verify no Intel Wi-Fi driver option is present (the D330 has no Intel wireless module).
 
 ### 7.7 Phase 30: eMMC Fast Boot Optimization
-* **Why**: Cold boot from the internal 64GB SanDisk eMMC took 28–35 seconds on stock installations. `systemd-networkd-wait-online.service` and software watchdog drivers accounted for ~12 seconds of delay.
+* **Why**: Cold boot from the internal 64GB SanDisk eMMC took 28–35 seconds on stock installations. `systemd-networkd-wait-online.service` and `NetworkManager-wait-online.service` block the graphical login target until an IP is negotiated, wasting several seconds of cold-boot time.
 * **How Decided**:
-  - Kernel parameters: `nowatchdog` (disables iTCO_wdt hardware watchdog timer), `tsc=reliable` (skips lengthy boot-time clocksource calibration), `split_lock_mitigate=0` (eliminates atomic penalty on Celeron).
-  - Mask `systemd-networkd-wait-online.service` (non-blocking network startup).
+  - Mask `systemd-networkd-wait-online.service` and `NetworkManager-wait-online.service` (non-blocking network startup). This is the real boot-time win.
+  - Keep `tsc=reliable` (skips lengthy boot-time clocksource calibration) and `split_lock_mitigate=0` (eliminates atomic penalty on Celeron). Phase 40 removed `nowatchdog` and replaced it with `softlockup_panic=1`, so a lockup self-recovers instead of being silenced.
 * **What Done**:
   - `patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg`: GRUB boot options.
   - `tools/d330-fastboot-tune.sh`: Optimization script masking slow services.
   - `scripts/test_boot_speed.sh`: Verification harness.
 * **Auditor Verification Points**:
+  - The boot-time saving comes from masking `wait-online`, not from any watchdog change; the exact figure is not quantified here (measure `systemd-analyze critical-chain` on hardware).
   - Verify that masking `wait-online` does not break network mounts (e.g. NFS/Samba). D330 is an offline mobile device; standard desktop networking is unaffected.
 
 ### 7.8 Phase 31: Desktop Hardware Notification Helper
