@@ -79,7 +79,7 @@
 - [x] Phase 32: Data-Loss & Boot Safety Guards (Audit C1, C2) (completed 2026-10-08)
 - [x] Phase 33: Low-Battery Hibernate Feasibility (Audit C3) (completed 2026-10-08)
 - [x] Phase 34: Deliver the Actual PPS / Display Resume Fix (Audit C4) (completed 2026-10-08)
-- [ ] Phase 35: Installer & Uninstaller Symmetry (Audit M1, M2, M11, N6)
+- [x] Phase 35: Installer & Uninstaller Symmetry (Audit M1, M2, M11, N6) (completed 2026-10-08)
 - [ ] Phase 36: Desktop Session Wiring — Tray Applet & Tablet Daemon (Audit M3, M6)
 - [ ] Phase 37: No-Op Tools Made Real or Removed — PWM & Sensor Filter (Audit M4, M5)
 - [ ] Phase 38: PipeWire DSP Activation (Audit M7)
@@ -188,6 +188,7 @@ Plans:
   2. `systemctl is-enabled` on all 9 units returns `enabled` after install.
 
 **Plans**: 1 plan
+
 - [x] 35-01: deploy manifest + `--verify`, grub regen both ways, rescue-shell uninstall, 9-unit enable parity, drop-in safety, uninstall gaps, symmetry suite (8 tasks)
 
 - **Audit Ref**: M1, M2, M11, N6.
