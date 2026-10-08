@@ -248,7 +248,7 @@ Locked options verbatim from CONTEXT: `noatime,lazytime,commit=60,nofail,x-syste
 | Telling kernel about new partition table | fixed `sleep 1` | `partprobe "$TARGET_DEV"; udevadm settle` | deterministic, event-driven; endorsed by lsblk(8) |
 | Validating an fstab line | hand-written regexes for fstab grammar | `findmnt --verify --tab-file <file>` | util-linux implements full fstab parse/usability rules |
 | Validating a `.mount` unit | bespoke unit-syntax linter | `systemd-analyze verify <file>.mount --recursive-errors=yes` | authoritative systemd parser |
-| Deriving `p1` partition name | string concat `"${dev}p1"` | `lsblk -lnpo NAME,TYPE "$TARGET_DEV" \| awk '$2=="part"'` (first partition) after settle | correct for `sdX`/`mmcblk`/`nvme` naming alike |
+| Deriving `p1` partition name | string concat `"${dev}p1"` | `lsblk -lnpo NAME,TYPE "$TARGET_DEV" \| awk '$2=="part"{print $1; exit}'` (first partition, field 1 only — a bare `awk` action prints the whole line and would yield `/dev/xxx1 part`) after settle | correct for `sdX`/`mmcblk`/`nvme` naming alike |
 
 **Key insight:** every guard delegates to the same five util-linux/systemd binaries the OS itself uses; hand-rolled equivalents diverge exactly at the edge cases (naming schemes, udev lag, mountinfo formats) where this tool's audit failures originated.
 
