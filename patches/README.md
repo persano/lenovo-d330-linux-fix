@@ -21,7 +21,7 @@ This directory contains the patches, out-of-tree DKMS module, and configuration 
 3. **System Configuration Profiles**:
    - `dkms/etc/modprobe.d/lenovo-d330-i915.conf`: Disables PSR and FBC on Gemini Lake Refresh UHD 600 to prevent package C-state pipe lockups.
    - `dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb`: Calibrates Bosch `BOSC0200` accelerometer mount matrix (`0, 1, 0; -1, 0, 0; 0, 0, 1`) to match logical orientation.
-   - `dkms/etc/systemd/system/lenovo-d330-resume.service`: Post-wake connector validation service.
+   - `dkms/etc/systemd/system/lenovo-d330-resume.service`: removed in phase 34 (echo-only unit, no real recovery; display resume is handled by i915 params + the optional kernel clamp patch).
 
 4. **Automation Scripts**:
    - `scripts/install_dkms.sh`: Automated installer and uninstaller (`--install`, `--uninstall`, `--dry-run`).
