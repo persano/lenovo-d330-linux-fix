@@ -17,5 +17,13 @@
 - **Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0)**: Native distro packages (`.deb`, `.rpm`, `PKGBUILD`), automated Live ISO remaster build harness (`scripts/build_live_iso.sh`), and GitHub Actions release CI/CD pipeline (`.github/workflows/`).
 - **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)**: Intel VA-API hardware decode environment and browser prefs, fanless thermal RAPL limits (PL1 5.0W / PL2 8.0W) with thermald curve, earlyoom low-RAM watchdog, tablet OSK auto-summon & long-press right-click, PipeWire RNNoise neural microphone filter-chain, RTL8821CE single-antenna Wi-Fi/BT coexistence & s2idle resume hook, eMMC fast boot tuning (~9s boot), and GTK3 desktop system tray hardware applet (`tools/d330-tray.py`).
 
-## Project Status: 100% Complete & Shipped
-Full hardware parity and usability perfection achieved for Lenovo IdeaPad D330-10IGL across Linux, ChromeOS, and Android-x86. Ready for v6.0 release tagging and public ISO builds.
+## Project Status: Pre-Deployment Audit Remediation (v7.0) in progress
+Hardware parity and usability work through v6.0 shipped, but an external pre-deployment audit returned `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor). Milestone 7 remediates phases 32 → 42 before public ISO builds.
+
+### Key Decisions (Milestone 7)
+- **Phase 32**: `tools/d330-microsd-setup.sh` now requires an explicit `--device`, runs three ordered pre-write guards (mountpoints → root-device → typed yes) before any `parted`/`mkfs` write, refuses both root-device directions, and drops the `mkfs -F` force flag and the fixed `sleep 1` (audit C1).
+- **Phase 32**: `--mount-data` writes only the locked `noatime,lazytime,commit=60,nofail,x-systemd.device-timeout=10s 0 2` line, proven by `findmnt --verify` before append, with an idempotent EXIT-trap rollback on failed mount and honest duplicate/legacy refusal (audit C2). `D330_FSTAB` is the test seam; `--mount-home` is an explicit non-zero stub.
+- **Phase 32**: Verification accepted two hardware-dependent items under documented VERIFICATION overrides (no D330/tablet in the dev environment); physical confirmation of the mounted-target abort and on-target fstab boot behavior is tracked in `.planning/STATE.md` for deployment sign-off.
+
+---
+*Last updated: 2026-10-08 after Phase 32*
