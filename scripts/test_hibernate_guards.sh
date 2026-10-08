@@ -354,6 +354,10 @@ case_swapfile_unit_static() {
     expect_file_out "8192" "$SWAPFILE_UNIT"
     expect_file_out "df --output=avail" "$SWAPFILE_UNIT"
     expect_file_out "[WARN]" "$SWAPFILE_UNIT"
+    # systemd expands ${...} inside ExecStart (undefined -> empty), so the WARN
+    # numbers must be doubled for /bin/sh to see them (review WR-01).
+    expect_file_out '$${NEED}' "$SWAPFILE_UNIT"
+    expect_file_out '$${AVAIL}' "$SWAPFILE_UNIT"
     # Creation sequence appears exactly once, only in the file-absent branch.
     local dd_count
     dd_count=$(grep -c "dd if=/dev/zero" "$SWAPFILE_UNIT" || true)
