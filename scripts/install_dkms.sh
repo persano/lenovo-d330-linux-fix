@@ -251,6 +251,34 @@ run_kernel_src_step() {
     return 0
 }
 
+# ------------------------------------------------------------------------------
+# run_grub_regen: regenerate the bootloader config after ANY /etc/default/grub.d
+# mutation, in BOTH do_install and do_uninstall (M1). Tool ladder is the phase-
+# 33/34 one (update-grub -> grub2-mkconfig -> grub-mkconfig). Warn-not-fail: a
+# missing tool logs a named [WARN] and returns 1, but never aborts install or
+# uninstall (Threat T-35-04). Optional $1 is a context string for the log line.
+# ------------------------------------------------------------------------------
+run_grub_regen() {
+    local ctx="${1:-}"
+    local suffix=""
+    [ -n "$ctx" ] && suffix=" ($ctx)"
+
+    if command -v update-grub >/dev/null 2>&1; then
+        log_info "Regenerating GRUB config via update-grub${suffix}..."
+        update-grub || true
+    elif command -v grub2-mkconfig >/dev/null 2>&1; then
+        log_info "Regenerating GRUB config via grub2-mkconfig${suffix}..."
+        grub2-mkconfig -o /boot/grub2/grub.cfg || true
+    elif command -v grub-mkconfig >/dev/null 2>&1; then
+        log_info "Regenerating GRUB config via grub-mkconfig${suffix}..."
+        grub-mkconfig -o /boot/grub/grub.cfg || true
+    else
+        log_warn "[WARN] grub config changed but no mkconfig tool found; GRUB not regenerated -- reboot/bootloader may not pick it up."
+        return 1
+    fi
+    return 0
+}
+
 do_install() {
     log_info "Starting deployment of ${PKG_NAME} v${PKG_VERSION}..."
 
@@ -380,6 +408,8 @@ do_install() {
                 cp "${REPO_ROOT}/patches/acpi_override/etc/default/grub.d/51-lenovo-d330-acpi-override.cfg" /etc/default/grub.d/
             [ -f "${REPO_ROOT}/patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg" ] && \
                 cp "${REPO_ROOT}/patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg" /etc/default/grub.d/
+            # M1: without a regen the copied 50/51/52 snippets never take effect.
+            run_grub_regen "grub.d snippets deployed" || true
         fi
         if [ -d "/usr/share/initramfs-tools/hooks" ]; then
             [ -f "${REPO_ROOT}/patches/boot_orientation/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth" ] && \
@@ -732,17 +762,17 @@ do_uninstall() {
         rm -f /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh
         rm -f /etc/sysctl.d/99-lenovo-d330-zram.conf
         rm -f /etc/systemd/zram-generator.conf
+        # Track grub.d presence before removal (M1, review IN-05): a removed
+        # snippet leaves stale bootloader cmdline until GRUB regenerates, so the
+        # refresh block below re-runs mkconfig when any snippet was present.
+        GRUB_D_WAS_PRESENT=false
+        for _g in 50-lenovo-d330-boot.cfg 51-lenovo-d330-acpi-override.cfg \
+                  52-lenovo-d330-fastboot.cfg 53-lenovo-d330-resume.cfg; do
+            [ -f "/etc/default/grub.d/$_g" ] && GRUB_D_WAS_PRESENT=true
+        done
         rm -f /etc/default/grub.d/50-lenovo-d330-boot.cfg
         rm -f /etc/default/grub.d/51-lenovo-d330-acpi-override.cfg
         rm -f /etc/default/grub.d/52-lenovo-d330-fastboot.cfg
-        # Track resume-snippet presence before removal: a removed snippet
-        # leaves stale resume=/resume_offset= cmdline until GRUB regenerates,
-        # so the refresh block below re-runs mkconfig when it was there
-        # (review IN-05).
-        RESUME_SNIPPET_WAS_PRESENT=false
-        if [ -f /etc/default/grub.d/53-lenovo-d330-resume.cfg ]; then
-            RESUME_SNIPPET_WAS_PRESENT=true
-        fi
         rm -f /etc/default/grub.d/53-lenovo-d330-resume.cfg
         rm -f /usr/share/initramfs-tools/hooks/lenovo-d330-plymouth
         rm -f /etc/environment.d/50-lenovo-d330-vaapi.conf
@@ -813,23 +843,12 @@ do_uninstall() {
             systemd-hwdb update || true
             udevadm trigger || true
         fi
-        # IN-05: regenerate GRUB when the resume snippet was removed, using the
-        # same detection ladder as install so stale resume=/resume_offset=
-        # cmdline does not survive uninstall. Best-effort: uninstall must not
-        # abort on mkconfig failure, but a missing tool warns loudly.
-        if [ "$RESUME_SNIPPET_WAS_PRESENT" = true ]; then
-            if command -v update-grub >/dev/null 2>&1; then
-                log_info "Regenerating GRUB config via update-grub (resume snippet removed)..."
-                update-grub || true
-            elif command -v grub2-mkconfig >/dev/null 2>&1; then
-                log_info "Regenerating GRUB config via grub2-mkconfig (resume snippet removed)..."
-                grub2-mkconfig -o /boot/grub2/grub.cfg || true
-            elif command -v grub-mkconfig >/dev/null 2>&1; then
-                log_info "Regenerating GRUB config via grub-mkconfig (resume snippet removed)..."
-                grub-mkconfig -o /boot/grub/grub.cfg || true
-            else
-                log_warn "[WARN] no mkconfig tool found; stale resume= cmdline may persist until GRUB is regenerated manually."
-            fi
+        # M1/IN-05: regenerate GRUB when any grub.d snippet was removed, using
+        # the shared ladder so stale snippets/corresponding cmdline do not
+        # survive uninstall. Best-effort: uninstall must not abort on mkconfig
+        # failure, but a missing tool warns loudly (run_grub_regen).
+        if [ "$GRUB_D_WAS_PRESENT" = true ]; then
+            run_grub_regen "grub.d snippets removed" || true
         fi
         if command -v update-initramfs >/dev/null 2>&1; then
             update-initramfs -u || true
