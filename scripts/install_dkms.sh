@@ -36,6 +36,10 @@ Options:
   --install     Install DKMS module, modprobe configs, and udev hwdb rules (Default)
   --uninstall   Remove DKMS module, modprobe configs, and udev hwdb rules
   --dry-run     Check system prerequisites and show actions without applying changes
+  --kernel-src PATH
+                Option 2: apply patches/d330_display_resume_fix.patch to the
+                kernel source tree at PATH. Gated by `patch -p1 --dry-run`;
+                a context mismatch warns and never fails the install.
   -h, --help    Display this help message
 EOF
 }
@@ -69,6 +73,74 @@ check_prerequisites() {
     log_ok "Prerequisites satisfied."
 }
 
+# ------------------------------------------------------------------------------
+# run_kernel_src_step: optional Option 2 clamp-patch step (Phase 34).
+#
+# Applies patches/d330_display_resume_fix.patch to an operator-supplied kernel
+# source tree. Gated behind `patch -p1 --dry-run`: on stock kernels the hunk
+# context does not match, so the common path is a loud [WARN] + skip, never an
+# install failure (research Q2). Every expansion is quoted; no eval; the patch
+# runs only under the explicitly passed path.
+# ------------------------------------------------------------------------------
+run_kernel_src_step() {
+    local kernel_src="$1"
+    local patch_file="${REPO_ROOT}/patches/d330_display_resume_fix.patch"
+
+    if [ ! -d "$kernel_src" ]; then
+        log_warn "[WARN] --kernel-src '$kernel_src' is not a directory; skipping clamp patch."
+        return 0
+    fi
+    if [ ! -f "$patch_file" ]; then
+        log_warn "[WARN] clamp patch not found at '$patch_file'; skipping."
+        return 0
+    fi
+
+    # Sanity-check the path is a kernel tree before running patch as root.
+    local looks_like_kernel=false
+    if [ -f "${kernel_src}/Kconfig" ]; then
+        looks_like_kernel=true
+    elif [ -f "${kernel_src}/Makefile" ] && \
+         grep -Eq '^(VERSION|KERNELVERSION)' "${kernel_src}/Makefile" 2>/dev/null; then
+        looks_like_kernel=true
+    fi
+    if [ "$looks_like_kernel" != true ]; then
+        log_warn "[WARN] '$kernel_src' does not look like a kernel source tree (no Kconfig / VERSION Makefile); skipping clamp patch."
+        return 0
+    fi
+
+    if ! command -v patch >/dev/null 2>&1; then
+        log_warn "[WARN] 'patch' is not installed; skipping clamp patch."
+        return 0
+    fi
+
+    log_info "Probing clamp patch against kernel tree '$kernel_src' (patch -p1 --dry-run)..."
+    local dry_rc=0
+    patch -p1 -d "$kernel_src" --dry-run --forward --batch < "$patch_file" >/dev/null 2>&1 || dry_rc=$?
+
+    if [ "$dry_rc" -ne 0 ]; then
+        log_warn "[WARN] Clamp patch does NOT apply to '$kernel_src' (context mismatch; rc=$dry_rc)."
+        log_warn "[WARN] The running kernel does not match the patch context, so the 600 ms PPS clamp is NOT delivered."
+        log_warn "[WARN] Option 2 must be applied manually after adapting the hunks to your kernel tree; install continues."
+        return 0
+    fi
+
+    log_ok "Clamp patch dry-run succeeded against '$kernel_src'."
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY-RUN] Would apply clamp patch to '$kernel_src'; skipping real apply."
+        return 0
+    fi
+
+    local apply_rc=0
+    patch -p1 -d "$kernel_src" --forward --batch < "$patch_file" >/dev/null 2>&1 || apply_rc=$?
+    if [ "$apply_rc" -ne 0 ]; then
+        log_warn "[WARN] Clamp patch real apply failed (rc=$apply_rc); skipping. Install continues."
+        return 0
+    fi
+    log_ok "Applied clamp patch to '$kernel_src'."
+    log_warn "[WARN] The running kernel is unaffected until you rebuild and reinstall it, then reboot."
+    return 0
+}
+
 do_install() {
     log_info "Starting deployment of ${PKG_NAME} v${PKG_VERSION}..."
 
@@ -93,6 +165,13 @@ do_install() {
         dkms build -m "${PKG_NAME}" -v "${PKG_VERSION}"
         dkms install -m "${PKG_NAME}" -v "${PKG_VERSION}"
         log_ok "DKMS module installed successfully."
+    fi
+
+    # 2b. Optional Option 2 clamp patch (Phase 34): only when --kernel-src given.
+    if [ -n "${KERNEL_SRC:-}" ]; then
+        run_kernel_src_step "$KERNEL_SRC"
+    else
+        log_info "Clamp patch not applied (no --kernel-src given); Option 1 ships the DMI banner module only."
     fi
 
     # 3. Deploy modprobe configurations (graphics, audio, power)
@@ -651,12 +730,20 @@ do_uninstall() {
 
 ACTION="install"
 DRY_RUN=false
+KERNEL_SRC=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --install) ACTION="install"; shift ;;
         --uninstall) ACTION="uninstall"; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
+        --kernel-src)
+            if [ -z "${2:-}" ] || [ "${2#--}" != "$2" ]; then
+                log_err "--kernel-src requires a path argument."
+                usage
+                exit 1
+            fi
+            KERNEL_SRC="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) log_err "Unknown argument: $1"; usage; exit 1 ;;
     esac
