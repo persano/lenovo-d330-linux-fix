@@ -72,26 +72,48 @@ validate_dsp_structure() {
 
     local speaker_conf="patches/audio_dsp/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf"
     local legacy_conf="patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf"
+    # shellcheck source=scripts/lib_conf_check.sh
+    source "${SCRIPT_DIR}/lib_conf_check.sh"
+
     local pass=0 fail=0
 
-    ck() {
-        local desc="$1"; shift
-        if "$@" >/dev/null 2>&1; then
-            echo "  [PASS] $desc"; pass=$((pass + 1))
-        else
-            echo "  [FAIL] $desc"; fail=$((fail + 1))
-        fi
-    }
-    ckn() {
-        local desc="$1"; shift
-        if "$@" >/dev/null 2>&1; then
-            echo "  [FAIL] $desc (unexpected match)"; fail=$((fail + 1))
-        else
-            echo "  [PASS] $desc"; pass=$((pass + 1))
-        fi
-    }
     no_shared_var() {
         ! grep -qE '^[[:space:]]*filter_chain\.nodes' "$1"
+    }
+    # Braces and brackets must net to zero (a truncated/garbled graph would not).
+    conf_balanced() {
+        local f="$1" ob cb osb csb
+        ob=$(tr -cd '{' < "$f" | wc -c)
+        cb=$(tr -cd '}' < "$f" | wc -c)
+        osb=$(tr -cd '[' < "$f" | wc -c)
+        csb=$(tr -cd ']' < "$f" | wc -c)
+        [ "$ob" -eq "$cb" ] && [ "$osb" -eq "$csb" ]
+    }
+    # The clamp node must declare BOTH Min and Max controls, not merely exist.
+    clamp_controls_ok() {
+        local block
+        block="$(awk '
+            /label[[:space:]]*=[[:space:]]*clamp/ { inc = 1 }
+            inc { print }
+            inc && /}/ { exit }
+        ' "$1")"
+        printf '%s\n' "$block" | grep -q '"Min"' && \
+            printf '%s\n' "$block" | grep -q '"Max"'
+    }
+    # Every links "output"/"input" endpoint (node:Port) must name a declared
+    # node (`name = <node>`); catches a link to a node that was never defined.
+    links_nodes_declared() {
+        local f="$1" declared endpoints node
+        declared="$(grep -oE '^[[:space:]]*name[[:space:]]*=[[:space:]]*[A-Za-z0-9_]+' "$f" \
+            | sed -E 's/.*=[[:space:]]*//' | sort -u)"
+        endpoints="$(grep -oE '(output|input)[[:space:]]*=[[:space:]]*"[^"]+"' "$f" \
+            | sed -E 's/.*"([^":]+):[^"]*"/\1/' | sort -u)"
+        [ -n "$endpoints" ] || return 1
+        while IFS= read -r node; do
+            [ -n "$node" ] || continue
+            grep -qxF "$node" <<< "$declared" || return 1
+        done <<< "$endpoints"
+        return 0
     }
 
     echo "[DRY-RUN] Validating speaker DSP graph under pipewire.conf.d..."
@@ -106,6 +128,15 @@ validate_dsp_structure() {
     ckn "no nonexistent label = limiter"                    grep -qE 'label = limiter' "$speaker_conf"
     ckn "no invalid \"Type\" control"                       grep -qE '"Type"' "$speaker_conf"
     ck  "legacy filter-chain.conf.d copy removed"           test ! -e "$legacy_conf"
+
+    # Non-vacuous graph-shape checks (Phase 38 fix): the old substring-only
+    # dry-run could pass on a truncated or internally inconsistent graph.
+    ck  "declares context.modules array"                   grep -qF 'context.modules = [' "$speaker_conf"
+    ck  "declares filter.graph block"                      grep -qF 'filter.graph = {' "$speaker_conf"
+    ck  "braces and brackets balanced"                     conf_balanced "$speaker_conf"
+    ck  "exposes virtual sink effect_output.d330_speaker_dsp" grep -q 'effect_output.d330_speaker_dsp' "$speaker_conf"
+    ck  "clamp node declares Min and Max controls"         clamp_controls_ok "$speaker_conf"
+    ck  "every link endpoint names a declared node"        links_nodes_declared "$speaker_conf"
 
     echo ""
     echo "=========================================================="
