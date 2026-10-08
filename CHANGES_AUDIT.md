@@ -31,10 +31,10 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **How Decided**: Rather than maintaining an out-of-tree full `i915.ko` module rebuild (which breaks on every kernel update), we evaluated two approaches:
   1. Patching upstream kernel tree via `drm/i915/display/intel_pps.c`.
   2. Standalone DKMS module hooking module parameters or override via DRM DMI quirks.
-  * *Decision*: Deliver both: a standalone DKMS banner module (DMI match + honest suspend/resume breadcrumbs only) + modprobe parameter tuning (`patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` with `fastboot=1`, `enable_fbc=1`, `enable_psr=0`); the 600 ms TCON power-cycle clamp is delivered by the Option 2 kernel patch (`patches/d330_display_resume_fix.patch`), not by a systemd hook or the DKMS module.
+  * *Decision*: Deliver both: a standalone DKMS banner module (DMI match + honest suspend/resume breadcrumbs only) + modprobe parameter tuning (`patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` with `enable_psr=0`, `enable_fbc=0`); the 600 ms TCON power-cycle clamp is delivered by the Option 2 kernel patch (`patches/d330_display_resume_fix.patch`), not by a systemd hook or the DKMS module.
 * **What Done**:
   - `patches/dkms/`: DKMS banner module source tree and `dkms.conf` (DMI match + honest breadcrumbs; it does NOT clamp the PPS delay — the Option 2 kernel patch does).
-  - `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf`: Set stable DRM parameters.
+  - `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf`: Sets `enable_psr=0`, `enable_fbc=0`, plus the retained no-op `power_cycle_delay_ms=600` (this matches the module's C default; the module does not enforce any delay).
   - Echo-only post-resume systemd unit: **REMOVED in Phase 34** — it only logged eDP connector status and never restored display output, so the unit and every installer/postinst/spec reference were deleted. Display resume is handled by the i915 parameters plus the Option 2 kernel patch clamp.
 * **Auditor Verification Points**:
   - Verify that `enable_psr=0` does not cause unacceptable battery drain (PSR on GLK UHD 600 often causes panel flickering and FIFO underrun; disabling PSR is standard industry practice for Gemini Lake stability).
@@ -121,18 +121,18 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **Auditor Verification Points**:
   - Check kernel module dependency: requires `v4l2loopback-dkms` or kernel built-in module.
 
-### 4.2 4GB RAM & 64GB eMMC Storage Tuning (ZRAM + BFQ)
+### 4.2 4GB RAM & 64GB eMMC Storage Tuning (ZRAM + mq-deadline)
 * **Why**: 4GB LPDDR4 is shared with Intel UHD 600 graphics (taking up to 512MB–1GB for VRAM), leaving ~3GB for userspace. Heavy browsing causes severe disk thrashing. The internal 64GB eMMC storage has poor random I/O latency (~15–30 MB/s 4K random write), resulting in system freezes when swapping to disk.
 * **How Decided**:
   - Completely replace disk swap with a 3GB in-memory ZRAM swap device compressed via `zstd`.
-  - Set `vm.swappiness=150` (forces the kernel to aggressively evict anonymous pages into compressed RAM before dropping pagecache).
-  - Switch eMMC I/O scheduler from `mq-deadline` or `none` to `bfq` (Budget Fair Queueing) to prioritize interactive desktop UI events over background disk writes.
+  - Set `vm.swappiness=180` (forces the kernel to aggressively evict anonymous pages into compressed RAM before dropping pagecache).
+  - Pin the eMMC I/O scheduler to `mq-deadline` (deterministic flash read latency; eMMC has no seek cost for a fairness elevator to optimize).
 * **What Done**:
-  - `patches/storage_memory/etc/systemd/zram-generator.conf`: Standard systemd zram configuration (`zram-fraction = 0.75`, `compression-algorithm = zstd`).
-  - `patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf`: Sets `vm.swappiness=150`, `vm.watermark_boost_factor=0`, `vm.watermark_scale_factor=125`, `vm.page-cluster=0`.
-  - `patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules`: Forces `scheduler="bfq"` for `mmcblk*`.
+  - `patches/storage_memory/etc/systemd/zram-generator.conf`: Standard systemd zram configuration (`zram-size = min(ram * 0.75, 3072)`, `compression-algorithm = zstd`, `swap-priority = 100`).
+  - `patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf`: Sets `vm.swappiness=180`, `vm.vfs_cache_pressure=50`, `vm.watermark_boost_factor=0`, `vm.dirty_bytes=67108864`, `vm.dirty_background_bytes=33554432`, `vm.page-cluster=0`.
+  - `patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules`: Forces `scheduler="mq-deadline"` for `mmcblk*`.
 * **Auditor Verification Points**:
-  - Verify `zram-fraction=0.75`: On 4GB RAM, creates 3.0GB compressed swap. With `zstd` 3:1 compression, effective memory capacity reaches ~7GB.
+  - Verify `zram-size = min(ram * 0.75, 3072)`: On 4GB RAM the compressed swap pool is capped at 3.0GB. With `zstd` 3:1 compression, effective memory capacity reaches ~7GB.
 
 ### 4.3 Audio DSP Refinement (PipeWire Speaker EQ & Anti-Pop)
 * **Why**: The internal 1W stereo speakers in the D330 chassis sound thin, tinny, and distort heavily at >60% volume. Furthermore, the ES8336 codec produces an audible electric "pop/click" when entering and leaving low-power mode (`snd_soc_pm`).
@@ -153,7 +153,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
     * `/sys/bus/platform/drivers/ideapad_laptop/VPC2004:00/conservation_mode`
     * `/sys/bus/platform/drivers/ideapad_laptop/VPC2004:00/fn_lock`
 * **What Done**:
-  - `tools/d330-ctl`: Subcommands `status`, `battery-conservation on|off`, `fn-lock on|off`, `touch-mode on|off`.
+  - `tools/d330-ctl`: Subcommands `status`, `battery status|enable|disable`, `fnlock status|enable|disable`, `save`, `restore`.
   - `patches/hardware_controls/etc/systemd/system/d330-hardware-state.service`: Restores user's preferred settings on boot.
 * **Auditor Verification Points**:
   - Check file permissions and graceful error reporting when running without `root` or if `ideapad_laptop` driver is not bound.
@@ -214,7 +214,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
   - Created automated partition and mount helper (`tools/d330-microsd-setup.sh`) with `noatime,commit=60` to maximize flash lifespan.
   - Deployed official ModemManager FCC unlock script for `8086:7360`.
 * **What Done**:
-  - `patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360`: Executable unlock script.
+  - `patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086`: Executable unlock hook. It is tracked as `8086` because Windows cannot store a literal colon in a filename; the installer copies it to `/etc/ModemManager/fcc-unlock.d/8086:7360`, the ID ModemManager looks up.
   - `patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules`: Auto-probes LTE USB interface.
 * **Auditor Verification Points**:
   - Check permissions on `/etc/ModemManager/fcc-unlock.d/8086:7360`: Must be mode `0755` (executable). Handled in installer.
@@ -286,7 +286,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **How Decided**:
   - Clamp Intel Running Average Power Limit (RAPL) registers directly via sysfs:
     * Sustained limit (PL1): 5.0W (down from factory 6.0W).
-    * Burst limit (PL2): 8.0W (down from factory 15.0W) with a short 15-second time window.
+    * Burst limit (PL2): 8.0W (down from factory 15.0W); no time-window register is written.
   - Deploy custom `thermal-conf.xml` for `thermald` to ramp down P-states smoothly at 70°C, completely preventing the CPU from reaching the 75°C hard throttling cliff.
 * **What Done**:
   - `patches/thermal/etc/thermald/thermal-conf.xml`: Thermald configuration.
@@ -301,13 +301,13 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **How Decided**:
   - Deploy userspace OOM killer `earlyoom`.
   - Configured with `-m 4 -s 10`: Triggers when free RAM is $<4\%$ and free swap is $<10\%$.
-  - Target preference: Sacrifices browser renderer processes (`firefox`, `chromium`, `slack`, `code`), protecting desktop shells and user terminal sessions.
+  - Target preference (`--prefer`): Sacrifices browser renderer processes (`Web Content`, `chrome`, `firefox`, `brave`, `electron`, `slack`, `teams`), protecting desktop shells and system daemons via `--avoid`.
 * **What Done**:
   - `patches/oom_protection/etc/default/earlyoom`: Daemon options.
   - `patches/oom_protection/etc/systemd/system/earlyoom.service.d/d330-override.conf`: Memory & process priority override.
   - `scripts/test_oom_protection.sh`: Verification harness.
 * **Auditor Verification Points**:
-  - Verify that `earlyoom` does not kill critical system processes (`--avoid '^(systemd|sshd|Xorg|gnome-shell|kwin)'`). Checked and configured.
+  - Verify that `earlyoom` does not kill critical system processes (`--avoid '^(systemd|Xorg|Xwayland|gnome-shell|kwin|pipewire|d330-.*)$'`) and prefers flinging browser renderers (`--prefer '^(Web Content|chrome|firefox|brave|electron|slack|teams)$'`). Checked and configured.
 
 ### 7.4 Phase 27: Tablet Mode OSK Auto-Summon & Gestures
 * **Why**: In tablet mode, touching an input field on X11 or certain Wayland desktop environments did not reliably summon the virtual keyboard. Additionally, the touchscreen lacked right-click emulation via long-press.
@@ -408,8 +408,8 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/camera/etc/modprobe.d/lenovo-d330-camera.conf` | `/etc/modprobe.d/` | V4L2 loopback camera parameters |
 | `patches/camera/etc/udev/rules.d/92-lenovo-d330-camera.rules` | `/etc/udev/rules.d/` | IPU3 camera udev triggers |
 | `patches/camera/etc/systemd/system/lenovo-d330-camera-loopback.service` | `/etc/systemd/system/` | V4L2 virtual camera bridge service |
-| `patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules` | `/etc/udev/rules.d/` | eMMC BFQ I/O scheduler rule |
-| `patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf` | `/etc/sysctl.d/` | High swappiness (150) sysctl |
+| `patches/storage_memory/etc/udev/rules.d/60-lenovo-d330-emmc.rules` | `/etc/udev/rules.d/` | eMMC `mq-deadline` I/O scheduler rule |
+| `patches/storage_memory/etc/sysctl.d/99-lenovo-d330-zram.conf` | `/etc/sysctl.d/` | High swappiness (180) sysctl |
 | `patches/storage_memory/etc/systemd/zram-generator.conf` | `/etc/systemd/` | 3GB zstd ZRAM generator configuration |
 | `patches/hardware_controls/etc/udev/rules.d/88-lenovo-d330-hardware.rules` | `/etc/udev/rules.d/` | VPC2004 ACPI triggers |
 | `patches/hardware_controls/etc/systemd/system/d330-hardware-state.service` | `/etc/systemd/system/` | Restores conservation mode at boot |
@@ -423,7 +423,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/sensors/etc/systemd/system/d330-sensor-filter.service` | `/etc/systemd/system/` | Sensor hysteresis service |
 | `patches/cellular_storage/etc/modprobe.d/lenovo-d330-cellular.conf` | `/etc/modprobe.d/` | PCIe / USB cellular modprobe opts |
 | `patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules` | `/etc/udev/rules.d/` | Cellular modem udev rules |
-| `patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360` | `/etc/ModemManager/fcc-unlock.d/` | Intel XMM 7360 FCC unlock script |
+| `patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086` | `/etc/ModemManager/fcc-unlock.d/8086:7360` | Intel XMM 7360 FCC unlock script (installed under the colon-named device ID) |
 | `patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules` | `/etc/udev/rules.d/` | 5% battery emergency trigger rule |
 | `patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service` | `/etc/systemd/system/` | Emergency auto-hibernate daemon |
 | `patches/media_vaapi/etc/environment.d/50-lenovo-d330-vaapi.conf` | `/etc/environment.d/` | Intel iHD VA-API environment vars |
@@ -467,7 +467,7 @@ installer never compiles; only the archive-guarded
 
 ## 9. Comprehensive Verification Test Suite
 
-Every subsystem includes an automated bash verification test script supporting `--probe`, `--simulate`, and `--dry-run` modes:
+Every subsystem includes an automated bash verification test script supporting `--probe`, `--simulate`, and `--dry-run` modes. The suite currently ships 36 test guards (`scripts/test_*.sh`); the representative ones are:
 1. `scripts/test_vaapi.sh`: Validates `vainfo` profile availability, environment variable persistence, and browser preference file syntax.
 2. `scripts/test_thermals.sh`: Verifies RAPL sysfs nodes, verifies PL1/PL2 power values, tests `thermald` configuration XML parsing.
 3. `scripts/test_oom_protection.sh`: Validates `earlyoom` configuration file parameters, systemd drop-in override syntax, and process exclusion lists.
