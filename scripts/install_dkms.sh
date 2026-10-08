@@ -59,10 +59,16 @@ EOF
 #   file         deployed config/data file (existence + removal)
 #   exec         deployed executable (existence + exec bit + removal)
 #   unit         systemd unit file copied to /etc/systemd/system
-#   unit-enabled runtime enablement target (is-enabled; skipped for --root != /)
+#   unit-enabled runtime enablement target (is-enabled; skipped for --root != /,
+#                and skipped unless systemd is actually PID 1)
 #   grub-snippet /etc/default/grub.d snippet (GRUB must be regenerated both ways)
 #   fstab-line   exact /etc/fstab line (skipped for --root != /)
-#   state        runtime state file (written by a unit ExecStop, removed on uninstall)
+#   state        runtime state file (written by a unit ExecStop, removed on
+#                uninstall); verify reports SKIP when absent for --verify
+#   *-optional   conditionally-deployed artifact (file-optional, exec-optional,
+#                grub-snippet-optional): install only copies it when the target
+#                dir already exists or hibernate activation succeeded, so --verify
+#                reports SKIP (not DRIFT) when it is absent.
 #
 # Ordering, logged output and copy semantics of do_install()/do_uninstall() are
 # intentionally preserved (the phase-33 hibernate guard suite greps their exact
@@ -93,9 +99,9 @@ deploy_manifest() {
 /etc/udev/rules.d/87-lenovo-d330-sensors.rules	file
 /etc/udev/rules.d/78-lenovo-d330-cellular.rules	file
 /etc/udev/rules.d/99-lenovo-d330-battery-critical.rules	file
-/etc/ModemManager/fcc-unlock.d/8086:7360	exec
-/etc/X11/xorg.conf.d/50-touchscreen-d330.conf	file
-/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf	file
+/etc/ModemManager/fcc-unlock.d/8086:7360	exec-optional
+/etc/X11/xorg.conf.d/50-touchscreen-d330.conf	file-optional
+/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf	file-optional
 /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh	exec
 /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh	exec
 /etc/sysctl.d/99-lenovo-d330-zram.conf	file
@@ -103,13 +109,13 @@ deploy_manifest() {
 /etc/default/grub.d/50-lenovo-d330-boot.cfg	grub-snippet
 /etc/default/grub.d/51-lenovo-d330-acpi-override.cfg	grub-snippet
 /etc/default/grub.d/52-lenovo-d330-fastboot.cfg	grub-snippet
-/etc/default/grub.d/53-lenovo-d330-resume.cfg	grub-snippet
+/etc/default/grub.d/53-lenovo-d330-resume.cfg	grub-snippet-optional
 /usr/share/initramfs-tools/hooks/lenovo-d330-plymouth	exec
 /etc/environment.d/50-lenovo-d330-vaapi.conf	file
 /etc/default/earlyoom	file
 /etc/systemd/system/earlyoom.service.d/d330-override.conf	file
-/etc/thermald/thermal-conf.xml	file
-/etc/xdg/autostart/d330-tray.desktop	file
+/etc/thermald/thermal-conf.xml	file-optional
+/etc/xdg/autostart/d330-tray.desktop	file-optional
 /usr/local/bin/d330-tablet-daemon	exec
 /usr/local/bin/lenovo-d330-power-tune	exec
 /usr/local/bin/d330-ctl	exec
@@ -133,10 +139,10 @@ deploy_manifest() {
 /etc/systemd/system/d330-thermal.service	unit
 /etc/systemd/system/d330-swapfile.service	unit
 /usr/share/alsa/ucm2/sof-essx8336	dir
-/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf	file
-/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf	file
-/etc/tlp.d/50-lenovo-d330.conf	file
-/usr/share/color/icc/Lenovo-D330-sRGB-D65.icc	file
+/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf	file-optional
+/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf	file-optional
+/etc/tlp.d/50-lenovo-d330.conf	file-optional
+/usr/share/color/icc/Lenovo-D330-sRGB-D65.icc	file-optional
 /etc/d330-hardware-state.json	state
 d330-tablet-daemon.service	unit-enabled
 lenovo-d330-power.service	unit-enabled
@@ -891,6 +897,13 @@ do_uninstall() {
 # and skips the runtime-only kinds (unit-enabled, fstab-line) that need systemd
 # or the real /etc. Exits non-zero (and prints a DRIFT line per entry) on any
 # mismatch so install->uninstall symmetry is machine-checked, not eyeballed.
+#
+# CR-01: conditionally-deployed entries (state, file-optional, exec-optional,
+# grub-snippet-optional) are SKIPPED -- never DRIFT -- when absent, because
+# install legitimately omits them (runtime state, or a target dir that did not
+# exist). Required entries are the only ones that count as drift. unit-enabled
+# additionally requires systemd to be PID 1 ([ -d /run/systemd/system ]), so a
+# chroot/container/WSL reports SKIP rather than 9 false DRIFTs (WR-05).
 # ------------------------------------------------------------------------------
 do_verify() {
     local root="${1:-/}"
@@ -904,7 +917,7 @@ do_verify() {
 
         case "$kind" in
             unit-enabled)
-                if [ "$root" = "/" ] && command -v systemctl >/dev/null 2>&1; then
+                if [ "$root" = "/" ] && command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
                     if [ "$(systemctl is-enabled "$path" 2>/dev/null || true)" = "enabled" ]; then
                         echo "  [OK] $path ($kind)"
                     else
@@ -912,7 +925,7 @@ do_verify() {
                         drift=$((drift + 1))
                     fi
                 else
-                    echo "  [SKIP] $path ($kind): systemctl unavailable or non-root target"
+                    echo "  [SKIP] $path ($kind): systemctl unavailable, non-root target, or systemd not PID 1"
                 fi
                 continue
                 ;;
@@ -952,6 +965,15 @@ do_verify() {
                 else
                     echo "  [DRIFT] $path ($kind): missing or not executable"
                     drift=$((drift + 1))
+                fi
+                ;;
+            state|file-optional|exec-optional|grub-snippet-optional)
+                # CR-01: conditional/runtime artifacts must not fail a legit
+                # install. Present => OK, absent => SKIP.
+                if [ -e "$full" ]; then
+                    echo "  [OK] $path ($kind): present"
+                else
+                    echo "  [SKIP] $path ($kind): conditional/runtime artifact absent"
                 fi
                 ;;
             *)
