@@ -61,7 +61,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_doc_parity.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -142,6 +142,12 @@ if [[ "$MODE" == "dry-run" ]]; then
     # statically asserts no test script mutates the system without an --apply
     # gate (SC2). Restores every mutated file; same contract as the suites above.
     bash scripts/test_harness_trust.sh
+
+    # Doc<->code parity guard (Phase 42, SC1): asserts CHANGES_AUDIT.md and the
+    # shipping docs still match the code (swappiness, scheduler, FBC, watchdog,
+    # tray, wireless, test-count, touch-mode, modes, 0-byte files). Same contract
+    # as the suites above - its non-zero exit propagates under set -e.
+    bash scripts/test_doc_parity.sh
 
     # Cellular packaging inventory: resolve the real FCC-unlock hook instead of
     # printing a hardcoded path that does not exist.
