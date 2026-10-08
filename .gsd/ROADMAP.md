@@ -83,7 +83,7 @@
 - [x] Phase 36: Desktop Session Wiring — Tray Applet & Tablet Daemon (Audit M3, M6) (completed 2026-10-08)
 - [x] Phase 37: No-Op Tools Made Real or Removed — PWM & Sensor Filter (Audit M4, M5) (completed 2026-10-08)
 - [x] Phase 38: PipeWire DSP Activation (Audit M7) (completed 2026-10-08)
-- [ ] Phase 39: udev / hwdb / Wireless Match Correctness (Audit M8, M9, M10, M15, M16)
+- [x] Phase 39: udev / hwdb / Wireless Match Correctness (Audit M8, M9, M10, M15, M16) (completed 2026-10-08)
 - [ ] Phase 40: Power Stack Reconciliation (Audit M13, M14)
 - [ ] Phase 41: Test Harness Trustworthiness (Audit M12, N8)
 - [ ] Phase 42: Documentation Parity & Repository Polish (Audit M17, N1–N5, N7, N9, N10)
