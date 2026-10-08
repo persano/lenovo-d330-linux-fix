@@ -421,6 +421,9 @@ case_uninstall_symmetry() {
         echo "    [detail] fstab swap-line removal missing"
         CASE_FAIL=1
     fi
+    # Removal must be exact-match anchored (review IN-01), install-side style.
+    expect_file_out 'grep -v -xF "/var/swapfile none swap sw 0 0"' "$INSTALLER"
+    expect_file_out 'grep -qxF "/var/swapfile none swap sw 0 0" /etc/fstab' "$INSTALLER"
     expect_file_out "rm -f /usr/local/bin/d330-auto-hibernate" "$INSTALLER"
     expect_file_out "systemctl disable --now d330-auto-hibernate.service" "$INSTALLER"
     expect_file_out "rm -f /etc/systemd/system/d330-auto-hibernate.service" "$INSTALLER"

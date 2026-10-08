@@ -580,9 +580,16 @@ do_uninstall() {
         # Remove the fstab swap line only; /var/swapfile itself is left on
         # disk on purpose -- deleting a 4 GB file mid-uninstall is unnecessary
         # risk (RESEARCH section 4 recommendation).
-        if grep -q "/var/swapfile none swap sw 0 0" /etc/fstab 2>/dev/null; then
-            grep -v "/var/swapfile none swap sw 0 0" /etc/fstab > /etc/fstab.d330-tmp 2>/dev/null || true
-            if [ -s /etc/fstab.d330-tmp ]; then
+        if grep -qxF "/var/swapfile none swap sw 0 0" /etc/fstab 2>/dev/null; then
+            # Exact-match removal (review IN-01), mirroring the install-side
+            # guard: only the swap line itself can match, never a comment or
+            # longer line containing it. grep -v -xF exits 1 when every line
+            # was the swap line; that empty result is still a valid fstab, so
+            # it replaces the file instead of silently keeping the line. Any
+            # other failure (rc >= 2) leaves the original file untouched.
+            FSTAB_RM_RC=0
+            grep -v -xF "/var/swapfile none swap sw 0 0" /etc/fstab > /etc/fstab.d330-tmp 2>/dev/null || FSTAB_RM_RC=$?
+            if [ "$FSTAB_RM_RC" -le 1 ]; then
                 mv /etc/fstab.d330-tmp /etc/fstab || true
             else
                 rm -f /etc/fstab.d330-tmp
