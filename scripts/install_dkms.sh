@@ -864,7 +864,14 @@ do_uninstall() {
         set -e
 
         # M6: the tablet daemon is a global USER unit -> disable it globally.
-        systemctl --global disable d330-tablet-daemon.service >/dev/null 2>&1 || true
+        # Mirror the install/verify systemd-user guard for symmetry: without
+        # systemctl or a running systemd (PID 1), report honestly instead of
+        # running a command that cannot succeed.
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            systemctl --global disable d330-tablet-daemon.service >/dev/null 2>&1 || true
+        else
+            log_warn "systemd user manager unavailable (no systemctl or /run/systemd/system); tablet user unit not disabled."
+        fi
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-camera-loopback.service >/dev/null 2>&1 || true
         systemctl disable --now d330-hardware-state.service >/dev/null 2>&1 || true
