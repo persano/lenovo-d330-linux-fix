@@ -77,7 +77,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **What Done**:
   - `tools/d330-tablet-daemon.py`: Event loop monitoring dock attach/detach events.
   - `patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules`: Udev trigger for POGO dock plug/unplug.
-  - `patches/dock/etc/systemd/system/d330-tablet-daemon.service`: Systemd service running the daemon.
+  - `patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service`: systemd user unit running the daemon inside the graphical session.
 * **Auditor Verification Points**:
   - Check non-blocking execution in `d330-tablet-daemon.py` (ensure subprocess calls do not hang if desktop services are absent).
   - Check fallbacks: if `gsettings` or `qdbus` fails (e.g. running under minimal window managers), daemon suppresses errors and continues.
