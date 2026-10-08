@@ -187,7 +187,8 @@ Plans:
   1. install → uninstall → `find /etc /usr/local/bin /usr/share/alsa -name '*d330*' -o -name 'lenovo-d330*'` returns empty
   2. `systemctl is-enabled` on all 9 units returns `enabled` after install.
 
-**Plans**: TBD
+**Plans**: 1 plan
+- [x] 35-01: deploy manifest + `--verify`, grub regen both ways, rescue-shell uninstall, 9-unit enable parity, drop-in safety, uninstall gaps, symmetry suite (8 tasks)
 
 - **Audit Ref**: M1, M2, M11, N6.
 - **Components**:
