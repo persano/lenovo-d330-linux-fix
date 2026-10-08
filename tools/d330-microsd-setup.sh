@@ -29,42 +29,193 @@ Options:
     --format        Initialize MicroSD with GPT partition table and flash-optimized ext4
     --mount-data    Mount MicroSD to /data with flash-friendly fstab options
     --mount-home    Migrate and mount MicroSD as /home expansion
+    --device DEV    Target block device (e.g. /dev/mmcblk1). Required for destructive
+                    actions (--format, --mount-data, --mount-home); the default
+                    /dev/mmcblk1 applies only to --probe.
     --dry-run       Preview commands without modifying disk
     --help          Show this message
 EOF
 }
 
+# ------------------------------------------------------------------------------
+# require_device_for_action: destructive actions need an explicit --device.
+# Runs immediately after parsing, before any guard, prompt, or banner work.
+# ------------------------------------------------------------------------------
+require_device_for_action() {
+    case "$ACTION" in
+        format|mount-data|mount-home)
+            if [ "$DEVICE_SET" -ne 1 ]; then
+                log_err "Action '$ACTION' requires an explicit --device /dev/... argument."
+                show_help
+                exit 1
+            fi
+            ;;
+    esac
+}
+
+# ------------------------------------------------------------------------------
+# validate_device_path: ASVS V5 input validation. Destructive actions reject
+# anything that is not an absolute /dev/... path without '..' segments.
+# ------------------------------------------------------------------------------
+validate_device_path() {
+    local bad=0
+    case "$TARGET_DEV" in
+        /dev/*) ;;
+        *) bad=1 ;;
+    esac
+    case "$TARGET_DEV" in
+        *..*) bad=1 ;;
+    esac
+    if [ "$bad" -eq 1 ]; then
+        case "$ACTION" in
+            probe)
+                log_warn "Ignoring invalid --device value '$TARGET_DEV'; using default /dev/mmcblk1."
+                TARGET_DEV="/dev/mmcblk1"
+                ;;
+            *)
+                log_err "Invalid --device value: '$TARGET_DEV'. Must be an absolute /dev/... path with no '..' segments."
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# Guard (a): no partition of the target may be mounted (device-scoped lsblk).
+# Prints exactly one [GUARD] mountpoints: PASS|FAIL line; returns 0/1.
+# Explicit rc capture so lsblk exit 32 (device not found) is a FAIL, not an
+# abort under set -e and not a vacuous PASS.
+# ------------------------------------------------------------------------------
+guard_mountpoint_empty() {
+    local rc=0
+    local out=""
+    local line
+    out=$(lsblk -nr -o MOUNTPOINT "$TARGET_DEV" 2>/dev/null) || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        log_err "[GUARD] mountpoints: FAIL (lsblk rc=$rc while reading mountpoints of $TARGET_DEV)"
+        return 1
+    fi
+    while IFS= read -r line; do
+        if [ -n "$line" ]; then
+            log_err "[GUARD] mountpoints: FAIL (mounted at: $line)"
+            return 1
+        fi
+    done <<< "$out"
+    log_ok "[GUARD] mountpoints: PASS (no mounted partitions on $TARGET_DEV)"
+}
+
+# ------------------------------------------------------------------------------
+# Guard (b): the target must not be the root device or related to it, checked in
+# BOTH directions (root source longer than target AND root source shorter than
+# target). Root source resolution uses an explicit rc capture so a failing or
+# missing findmnt fails closed with its own message instead of aborting under
+# set -e before [GUARD] root-device: prints.
+# ------------------------------------------------------------------------------
+guard_not_root_device() {
+    local rc=0
+    local ROOT_SRC=""
+    ROOT_SRC=$(findmnt -n -o SOURCE / 2>/dev/null) || rc=$?
+    if [ "$rc" -ne 0 ] || [ -z "$ROOT_SRC" ]; then
+        log_err "[GUARD] root-device: FAIL (root source could not be resolved; findmnt rc=$rc)"
+        return 1
+    fi
+    case "$ROOT_SRC" in
+        "$TARGET_DEV"|"$TARGET_DEV"*)
+            log_err "[GUARD] root-device: FAIL (target is the root device or an ancestor of it: root=$ROOT_SRC target=$TARGET_DEV)"
+            return 1
+            ;;
+    esac
+    case "$TARGET_DEV" in
+        "$ROOT_SRC"*)
+            log_err "[GUARD] root-device: FAIL (target is a descendant of the root device: root=$ROOT_SRC target=$TARGET_DEV)"
+            return 1
+            ;;
+    esac
+    log_ok "[GUARD] root-device: PASS (root=$ROOT_SRC target=$TARGET_DEV)"
+}
+
+# ------------------------------------------------------------------------------
+# Guard (c): typed 'yes' confirmation. In dry-run it reports PASS (no prompt)
+# so all three [GUARD] lines always appear; in real mode EOF/piped stdin and
+# wrong answers both abort.
+# ------------------------------------------------------------------------------
+confirm_destructive() {
+    if [ "$DRY_RUN" -eq 1 ]; then
+        log_ok "[GUARD] confirm: PASS (dry-run: no confirmation required)"
+        return 0
+    fi
+    log_info "Type 'yes' to confirm the destructive write to $TARGET_DEV:"
+    local reply=""
+    if ! read -r reply || [ "$reply" != "yes" ]; then
+        log_err "[GUARD] confirm: FAIL"
+        log_err "Confirmation not given; aborting."
+        exit 1
+    fi
+    log_ok "[GUARD] confirm: PASS"
+}
+
+# ------------------------------------------------------------------------------
+# Preflight: the write path hard-requires these binaries. Real mode exits with
+# an actionable install hint; dry-run only warns.
+# ------------------------------------------------------------------------------
+preflight_tools() {
+    local missing=()
+    local bin
+    for bin in parted partprobe udevadm lsblk findmnt mkfs.ext4; do
+        if ! command -v "$bin" >/dev/null 2>&1; then
+            missing+=("$bin")
+        fi
+    done
+    if [ ${#missing[@]} -gt 0 ]; then
+        if [ "$DRY_RUN" -eq 1 ]; then
+            log_warn "Missing required tools (continuing dry-run): ${missing[*]}"
+        else
+            log_err "Missing required tools: ${missing[*]}"
+            log_err "On Debian/Ubuntu/Mint: sudo apt install parted util-linux e2fsprogs systemd"
+            exit 1
+        fi
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# Argument parsing (while/shift: supports the value-consuming --device option).
+# ------------------------------------------------------------------------------
 TARGET_DEV="/dev/mmcblk1"
 ACTION="probe"
 DRY_RUN=0
+DEVICE_SET=0
 
-for arg in "$@"; do
-    case "$arg" in
-        --probe) ACTION="probe" ;;
-        --format) ACTION="format" ;;
-        --mount-data) ACTION="mount-data" ;;
-        --mount-home) ACTION="mount-home" ;;
-        --dry-run) DRY_RUN=1 ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --probe) ACTION="probe"; shift ;;
+        --format) ACTION="format"; shift ;;
+        --mount-data) ACTION="mount-data"; shift ;;
+        --mount-home) ACTION="mount-home"; shift ;;
+        --dry-run) DRY_RUN=1; shift ;;
+        --device)
+            if [ "$#" -lt 2 ]; then
+                log_err "--device requires a value"
+                show_help
+                exit 1
+            fi
+            TARGET_DEV="$2"
+            DEVICE_SET=1
+            shift 2
+            ;;
         --help|-h) show_help; exit 0 ;;
-        *) log_err "Unknown option: $arg"; show_help; exit 1 ;;
+        *) log_err "Unknown option: $1"; show_help; exit 1 ;;
     esac
 done
 
+require_device_for_action
+validate_device_path
+
 log_info "=== Lenovo D330 MicroSD Storage Expansion Harness ==="
 
-if [ ! -b "$TARGET_DEV" ]; then
-    log_warn "Target MicroSD device $TARGET_DEV not found."
-    log_info "Scanning sysfs for alternative MMC/SD slots..."
-    for dev in /sys/block/mmcblk*; do
-        NAME=$(basename "$dev")
-        if [ "$NAME" != "mmcblk0" ]; then
-            log_ok "Found secondary SD card: /dev/$NAME"
-            TARGET_DEV="/dev/$NAME"
-            break
-        fi
-    done
-fi
-
+# ------------------------------------------------------------------------------
+# probe: read-only display, exits 0 with or without a card, no --device needed.
+# The sysfs scan is informational only — it NEVER reassigns TARGET_DEV.
+# ------------------------------------------------------------------------------
 if [ "$ACTION" = "probe" ]; then
     log_info "Probing storage configuration..."
     lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,LABEL "$TARGET_DEV" 2>/dev/null || true
@@ -75,27 +226,82 @@ if [ "$ACTION" = "probe" ]; then
     else
         log_warn "No MicroSD inserted in physical tablet slot."
     fi
+    log_info "Scanning sysfs for alternative MMC/SD slots..."
+    for dev in /sys/block/mmcblk*; do
+        if [ ! -d "$dev" ]; then
+            continue
+        fi
+        NAME=$(basename "$dev")
+        if [ "$NAME" != "mmcblk0" ]; then
+            log_info "Candidate MMC/SD slot: /dev/$NAME (informational only; pass --device to select it)"
+        fi
+    done
     exit 0
 fi
 
-if [ "$EUID" -ne 0 ] && [ $DRY_RUN -eq 0 ]; then
-    log_err "Root privileges required for disk operations. Run with sudo."
-    exit 1
+# ------------------------------------------------------------------------------
+# Existence precondition for destructive actions (Pitfall 4/10): real mode fails
+# fast; dry-run warns and still runs the guard report.
+# ------------------------------------------------------------------------------
+if [ ! -b "$TARGET_DEV" ]; then
+    if [ "$DRY_RUN" -eq 1 ]; then
+        log_warn "Target device $TARGET_DEV is not a block device (absent here); guards still report below."
+    else
+        log_err "Target device $TARGET_DEV is not a block device."
+        exit 1
+    fi
 fi
-
-PART_DEV="${TARGET_DEV}p1"
 
 if [ "$ACTION" = "format" ]; then
     log_info "Formatting MicroSD $TARGET_DEV with GPT and flash-optimized ext4..."
-    if [ $DRY_RUN -eq 1 ]; then
+    if [ "$DRY_RUN" -eq 1 ]; then
+        # Report mode: evaluate every guard without aborting, print PASS/FAIL
+        # per guard, then abort before any planned command if any guard failed.
+        guard_failures=0
+        guard_mountpoint_empty || guard_failures=$((guard_failures + 1))
+        guard_not_root_device || guard_failures=$((guard_failures + 1))
+        confirm_destructive || guard_failures=$((guard_failures + 1))
+        if [ "$guard_failures" -gt 0 ]; then
+            log_err "Dry-run aborted: $guard_failures guard(s) FAILED."
+            exit 1
+        fi
+        preflight_tools
+        PART_DEV=$(lsblk -lnpo NAME,TYPE "$TARGET_DEV" 2>/dev/null | awk '$2=="part"{print $1; exit}' || true)
+        if [ -z "$PART_DEV" ]; then
+            PART_DEV="<first partition of $TARGET_DEV>"
+        fi
         log_info "[DRY-RUN] parted -s $TARGET_DEV mklabel gpt mkpart primary ext4 1MiB 100%"
-        log_info "[DRY-RUN] mkfs.ext4 -F -O mmp,dir_index,sparse_super -m 1 -L D330_STORAGE $PART_DEV"
-    else
-        parted -s "$TARGET_DEV" mklabel gpt mkpart primary ext4 1MiB 100%
-        sleep 1
-        mkfs.ext4 -F -O mmp,dir_index,sparse_super -m 1 -L D330_STORAGE "$PART_DEV"
-        log_ok "MicroSD formatted successfully with volume label 'D330_STORAGE'."
+        log_info "[DRY-RUN] partprobe $TARGET_DEV"
+        log_info "[DRY-RUN] udevadm settle"
+        log_info "[DRY-RUN] mkfs.ext4 -O mmp,dir_index,sparse_super -m 1 -L D330_STORAGE $PART_DEV"
+        log_info "Dry-run complete: no changes were made."
+        exit 0
     fi
+
+    # Real mode: read-only guards fail fast, in locked order (a) mountpoints,
+    # (b) root-device — before the root gate so guard diagnostics reach the
+    # user first, and all before the first parted write.
+    guard_mountpoint_empty || exit 1
+    guard_not_root_device || exit 1
+
+    if [ "$EUID" -ne 0 ]; then
+        log_err "Root privileges required for disk operations. Run with sudo."
+        exit 1
+    fi
+
+    preflight_tools
+    confirm_destructive
+
+    parted -s "$TARGET_DEV" mklabel gpt mkpart primary ext4 1MiB 100%
+    partprobe "$TARGET_DEV"
+    udevadm settle
+    PART_DEV=$(lsblk -lnpo NAME,TYPE "$TARGET_DEV" | awk '$2=="part"{print $1; exit}' || true)
+    if [ -z "$PART_DEV" ]; then
+        log_err "Could not derive the new partition node for $TARGET_DEV after repartitioning."
+        exit 1
+    fi
+    mkfs.ext4 -O mmp,dir_index,sparse_super -m 1 -L D330_STORAGE "$PART_DEV"
+    log_ok "MicroSD formatted successfully with volume label 'D330_STORAGE'."
 fi
 
 if [ "$ACTION" = "mount-data" ]; then
@@ -104,6 +310,8 @@ if [ "$ACTION" = "mount-data" ]; then
     if [ $DRY_RUN -eq 1 ]; then
         log_info "[DRY-RUN] mkdir -p $MOUNT_POINT"
         log_info "[DRY-RUN] Append to /etc/fstab: UUID=... $MOUNT_POINT ext4 noatime,lazytime,commit=60 0 2"
+        log_info "Dry-run complete: no changes were made."
+        exit 0
     else
         mkdir -p "$MOUNT_POINT"
         UUID=$(blkid -s UUID -o value "$PART_DEV" 2>/dev/null || true)
