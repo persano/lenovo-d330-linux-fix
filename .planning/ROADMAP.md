@@ -76,7 +76,7 @@
 
 ## [ACTIVE] Milestone 7: v7.0 Pre-Deployment Audit Remediation
 
-- [ ] Phase 32: Data-Loss & Boot Safety Guards (Audit C1, C2)
+- [x] Phase 32: Data-Loss & Boot Safety Guards (Audit C1, C2) (completed 2026-10-08)
 - [ ] Phase 33: Low-Battery Hibernate Feasibility (Audit C3)
 - [ ] Phase 34: Deliver the Actual PPS / Display Resume Fix (Audit C4)
 - [ ] Phase 35: Installer & Uninstaller Symmetry (Audit M1, M2, M11, N6)

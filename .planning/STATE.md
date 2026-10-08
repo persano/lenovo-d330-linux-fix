@@ -2,32 +2,33 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
-current_phase: 32
-current_phase_name: Data-Loss & Boot Safety Guards
-status: executing
-last_updated: "2026-10-08T04:30:07.623Z"
+current_phase: 33
+current_phase_name: Low-Battery Hibernate Feasibility
+status: planning
+last_updated: "2026-10-08T07:11:03.182Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 32 execution started
-state_head: 037424d72bb94cd2809e8f8b2adff4a0e837f8be
+last_activity_desc: Phase 32 complete, transitioned to Phase 33
+state_head: bc01fc7927c005014866c19ffdfeb12c8586bbc5
 progress:
   total_phases: 11
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 9
 ---
 
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 7 — Pre-Deployment Audit Remediation (v7.0), Phases 32–42
-- **Active Phase**: Phase 32: Data-Loss & Boot Safety Guards
-- **Status**: Blocked for hardware deployment. External pre-deployment audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor). Remediation milestone created; execution not yet started.
+- **Active Phase**: Phase 33: Low-Battery Hibernate Feasibility
+- **Status**: Executing. Phase 32 complete (1/11 phases, 3/3 plans). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
 - **Blockers**:
-  * C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution).
-  * C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent.
-  * C3 — low-battery auto-hibernate has only a 3 GB zram swap → no valid resume device, safety net cannot work.
-  * C4 — the 600 ms PPS clamp (`patches/d330_display_resume_fix.patch`) is not applied by the recommended install path; the DKMS module delays *after* the panel is already re-energised.
-- **Next Immediate Action**: Plan Phase 32 (`/gsd-plan-phase`), then execute in order 32 → 33 → 34 (safety + core fix) before any of 35–42.
+  * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
+  * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
+  * C3 — low-battery auto-hibernate has only a 3 GB zram swap → no valid resume device, safety net cannot work. (Phase 33)
+  * C4 — the 600 ms PPS clamp (`patches/d330_display_resume_fix.patch`) is not applied by the recommended install path; the DKMS module delays *after* the panel is already re-energised. (Phase 34)
+  * [PENDING DEPLOY] Phase 32 UAT items 1–2 — physical mounted-target abort on a real MicroSD and on-target `/etc/fstab` + absent-card boot on the D330 — were deferred under documented VERIFICATION overrides (no hardware in this environment). Machine-checked equivalents are green (suite 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 32`.
+- **Next Immediate Action**: Plan Phase 33 (`/gsd-plan-phase`), then execute in order 33 → 34 (remaining safety fixes) before any of 35–42.
 
 ## Archived Milestones
 
@@ -44,7 +45,7 @@ progress:
 
 ## Current Position
 
-Phase: 32 (Data-Loss & Boot Safety Guards) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 32
-Last activity: 2026-10-08 — Phase 32 execution started
+Phase: 33 — Low-Battery Hibernate Feasibility
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-08 — Phase 32 complete, transitioned to Phase 33
