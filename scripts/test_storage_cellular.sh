@@ -90,6 +90,20 @@ if [[ "$MODE" == "dry-run" ]]; then
     # and sensor-filter liveness). Same contract as the suites above.
     bash scripts/test_noop_guards.sh
 
+    # Speaker DSP structural validator (Phase 38): validates the speaker graph
+    # under pipewire.conf.d non-vacuously. Same contract as the suites above -
+    # its non-zero exit propagates under set -e.
+    bash scripts/test_audio_dsp.sh --dry-run
+
+    # RNNoise SC2 (Phase 38): with the LADSPA plugin absent the probe MUST exit
+    # non-zero. Assert the fail-closed contract directly rather than trusting the
+    # code path by inspection.
+    if D330_LADSPA_DIRS="/nonexistent-empty-ladspa" bash scripts/test_mic_rnnoise.sh --probe >/dev/null 2>&1; then
+        echo "[FAIL] RNNoise probe passed with librnnoise_ladspa.so absent (SC2)" >&2
+        exit 1
+    fi
+    echo "[OK] RNNoise probe fails closed when librnnoise_ladspa.so is absent"
+
     # Inventory context only - these paths are not checks.
     echo "[INFO] ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
     echo "[INFO] Cellular Rules: patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"

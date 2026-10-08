@@ -140,10 +140,11 @@ This document catalogs every single configuration, patch, script, daemon, and dr
   - PipeWire Filter-Chain: Create a biquad equalizer preset that boosts midrange (200Hz–2kHz), rolls off distorted sub-bass (<120Hz), and limits high-end harshness.
   - Anti-Pop: Configure `options snd_hda_intel power_save=0` or set DAC sleep transition delay to 5 seconds.
 * **What Done**:
-  - `patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf`: PipeWire filter-chain configuration.
+  - `patches/audio_dsp/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf`: PipeWire speaker filter-chain graph (builtin `bq_highpass`/`bq_peaking`/`clamp` nodes with explicit links).
   - `patches/audio_dsp/etc/modprobe.d/lenovo-d330-audio-antipop.conf`: Audio antipop modprobe parameters.
 * **Auditor Verification Points**:
-  - Verify that the PipeWire filter-chain node only targets the internal speakers (`alsa_output.pci-0000_00_0e.0.HiFi__Speaker__sink`), leaving 3.5mm headphone jack uncolored.
+  - Honest routing: the filter-chain does NOT automatically color the speakers. It exposes a virtual sink (`effect_input.d330_speaker_dsp`) that must be explicitly selected or routed to reach the ES8336 speakers; the 3.5mm headphone path is left untouched. Likewise the RNNoise graph exposes `rnnoise_source_d330`, which must be selected as the default input.
+  - Both fragments are read by the running daemon from `/etc/pipewire/pipewire.conf.d/`; the legacy `filter-chain.conf.d/` directory is only consumed by `pipewire -c filter-chain.conf`.
 
 ### 4.4 Lenovo Hardware Controls (`d330-ctl` VPC2004 CLI)
 * **Why**: Lenovo IdeaPads have proprietary ACPI methods (`VPC2004` / `ideapad_laptop`) controlling hardware conservation mode (limits battery charging to 60% for prolonged lifespan) and Fn-lock behavior. There was no user-friendly CLI to inspect or toggle these features on Linux.
@@ -324,9 +325,9 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **Why**: The internal Everest ES8336 microphone captures significant chassis vibration, keyboard typing noise, and motherboard coil hum.
 * **How Decided**:
   - Integrated a PipeWire Filter-Chain plugin using the industry-standard RNNoise (Recurrent Neural Network Noise Suppression) LADSPA library (`librnnoise_ladspa.so`).
-  - Creates a virtual microphone node `lenovo_d330_clean_mic` that intercepts the raw ES8336 capture stream and outputs a denoised stream for conferencing apps.
+  - Creates a virtual microphone source `rnnoise_source_d330` that denoises the raw ES8336 capture stream; it must be selected as the default input to reach conferencing apps.
 * **What Done**:
-  - `patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf`: PipeWire configuration.
+  - `patches/audio_dsp/etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf`: PipeWire RNNoise filter-chain graph.
   - `scripts/test_mic_rnnoise.sh`: Verification harness.
 * **Auditor Verification Points**:
   - Verify PipeWire version requirement: Filter-chain syntax is compatible with PipeWire 0.3.30+.
@@ -391,8 +392,8 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service` | `/usr/lib/systemd/user/` | Tablet mode daemon (systemd user unit, `WantedBy=default.target`) |
 | `patches/audio/ucm2/sof-essx8336/` | `/usr/share/alsa/ucm2/sof-essx8336/` | ALSA UCM2 audio profiles for ES8336 |
 | `patches/audio/etc/modprobe.d/lenovo-d330-audio.conf` | `/etc/modprobe.d/` | ES8336 codec quirks |
-| `patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf` | `/etc/pipewire/filter-chain.conf.d/` | PipeWire speaker EQ filter-chain |
-| `patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf` | `/etc/pipewire/filter-chain.conf.d/` | PipeWire RNNoise AI mic filter |
+| `patches/audio_dsp/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf` | `/etc/pipewire/pipewire.conf.d/` | PipeWire speaker EQ filter-chain (virtual sink) |
+| `patches/audio_dsp/etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf` | `/etc/pipewire/pipewire.conf.d/` | PipeWire RNNoise AI mic filter (virtual source) |
 | `patches/audio_dsp/etc/modprobe.d/lenovo-d330-audio-antipop.conf` | `/etc/modprobe.d/` | Audio anti-pop power save parameter |
 | `patches/audio_dsp/etc/udev/rules.d/91-lenovo-d330-headset-jack.rules` | `/etc/udev/rules.d/` | Headset jack detection udev rule |
 | `patches/power/etc/tlp.d/50-lenovo-d330.conf` | `/etc/tlp.d/` | TLP battery optimization rules |
