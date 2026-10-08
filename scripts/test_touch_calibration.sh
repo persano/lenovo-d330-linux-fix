@@ -169,7 +169,7 @@ fi
 if [ $MONITOR -eq 1 ]; then
     log_info "Starting input monitor (Press Ctrl+C to stop)..."
     if command -v libinput >/dev/null 2>&1; then
-        if ! libinput debug-events --device /dev/input/event*; then
+        if ! libinput debug-events /dev/input/event*; then
             log_err "libinput debug-events failed"
             FAILED=$((FAILED + 1))
         fi
