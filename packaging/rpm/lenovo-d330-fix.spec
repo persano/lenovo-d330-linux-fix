@@ -45,7 +45,8 @@ rm -f %{buildroot}/usr/local/bin/d330-acpi-override.sh %{buildroot}/usr/local/bi
 # d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
 # install the daemon as /usr/local/bin/d330-auto-hibernate, mode 755.
 mv %{buildroot}/usr/local/bin/d330-auto-hibernate.py %{buildroot}/usr/local/bin/d330-auto-hibernate
-# cp preserves 0644; make every installed tool executable explicitly.
+chmod 755 %{buildroot}/usr/local/bin/d330-auto-hibernate
+# cp preserves 0644; make every other installed tool executable too.
 chmod 755 %{buildroot}/usr/local/bin/d330-*
 cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/
 cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/

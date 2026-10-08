@@ -13,8 +13,9 @@ override_dh_auto_install:
 	# d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
 	# install the daemon as d330-auto-hibernate, mode 755.
 	mv debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate.py debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate
+	chmod 755 debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate
 	# cp preserves 0644 and dh_fixperms only normalizes usr/bin, not
-	# /usr/local/bin, so make every installed tool executable explicitly.
+	# /usr/local/bin, so make every other installed tool executable too.
 	chmod 755 debian/lenovo-d330-fix/usr/local/bin/d330-*
 	# Install modprobe
 	mkdir -p debian/lenovo-d330-fix/etc/modprobe.d
