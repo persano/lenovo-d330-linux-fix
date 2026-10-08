@@ -38,9 +38,16 @@
 #define DRV_NAME    "lenovo_d330_fix"
 #define DRV_VERSION "1.0.0"
 
+/*
+ * No-op retained for backward compatibility with existing modprobe.d snippets
+ * and packaging references. This module does NOT enforce any panel delay: no PM
+ * notifier event runs between panel power-off and panel power-on, so this value
+ * changes nothing. The real 600 ms clamp is delivered by the Option 2 kernel
+ * patch (see the module NOTE above).
+ */
 static int power_cycle_delay_ms = 600;
 module_param(power_cycle_delay_ms, int, 0644);
-MODULE_PARM_DESC(power_cycle_delay_ms, "Enforced panel power cycle discharge delay in ms (default: 600)");
+MODULE_PARM_DESC(power_cycle_delay_ms, "No-op retained for compatibility; this module does NOT enforce TCON discharge delay (default: 600)");
 
 static bool force_load = false;
 module_param(force_load, bool, 0644);
