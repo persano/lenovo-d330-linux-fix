@@ -436,12 +436,23 @@ if [ "$ACTION" = "mount-data" ]; then
     LINE=$(build_fstab_line "$UUID")
     CAND=$(mktemp)
     printf '%s\n' "$LINE" > "$CAND"
-    if ! findmnt --verify --tab-file "$CAND" >/dev/null 2>&1; then
-        rm -f "$CAND"
+    # Capture findmnt's output so a rejected candidate prints WHICH error
+    # aborted the run before we exit (RESEARCH Risk 7). The gate stays rc-based
+    # and the locked rule remains "never append an unproven line"; full WARN
+    # classification belongs to the test suite, not here (WR-04).
+    VERIFY_OUT="$CAND.out"
+    verify_rc=0
+    findmnt --verify --tab-file "$CAND" > "$VERIFY_OUT" 2>&1 || verify_rc=$?
+    if [ "$verify_rc" -ne 0 ]; then
+        log_err "findmnt --verify rejected the candidate fstab line (rc=$verify_rc):"
+        while IFS= read -r verify_line; do
+            log_err "  $verify_line"
+        done < "$VERIFY_OUT"
+        rm -f "$CAND" "$VERIFY_OUT"
         log_err "fstab entry failed verification; $FSTAB_FILE not modified."
         exit 1
     fi
-    rm -f "$CAND"
+    rm -f "$CAND" "$VERIFY_OUT"
 
     printf '%s\n' "$LINE" >> "$FSTAB_FILE"
     trap 'rollback_fstab_line' EXIT
