@@ -124,9 +124,17 @@ case "$MODE" in
         fi
         echo "Allocating 1.5GB temporary compressible buffer in tmpfs..."
         tmpdir=$(mktemp -d /tmp/zram_stress_XXXXXX)
-        head -c 1500M </dev/zero > "$tmpdir/test.img" || true
+        if ! head -c 1500M </dev/zero > "$tmpdir/test.img"; then
+            echo "[FAIL] Could not allocate the 1.5GB tmpfs stress buffer." >&2
+            rm -rf "$tmpdir"
+            exit 1
+        fi
         echo "Memory during allocation:"
-        free -h || true
+        if ! free -h; then
+            echo "[FAIL] free -h failed while reporting memory pressure." >&2
+            rm -rf "$tmpdir"
+            exit 1
+        fi
         rm -rf "$tmpdir"
         echo "[OK] Buffer cleaned up."
         ;;
