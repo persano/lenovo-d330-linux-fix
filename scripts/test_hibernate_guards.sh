@@ -12,13 +12,13 @@
 # version-dependent (33-RESEARCH R9) and are never matched. No case invokes
 # the real systemctl, swapon, or filefrag.
 #
-# Cases (19): zram-only-refuse, swapfile-ready-proceed, safe-battery-report,
+# Cases (20): zram-only-refuse, swapfile-ready-proceed, safe-battery-report,
 # resume-not-configured, hibernation-unavailable, empty-swaps-refuse,
 # malformed-swaps-tolerated, no-battery-report-first,
 # execstart-matches-install-path, type-oneshot-kept, udev-glob-comment,
 # daemon-syntax-gates, enable-site-install-dkms, enable-site-debian-postinst,
 # enable-site-rpm-spec, swapfile-unit-static, resume-snippet-template,
-# installer-activation-step, uninstall-symmetry.
+# installer-activation-step, uninstall-symmetry, readme-docs-anchors.
 # ==============================================================================
 
 set -euo pipefail
@@ -35,12 +35,13 @@ UDEV_RULE="patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-criti
 INSTALLER="scripts/install_dkms.sh"
 DEBIAN_POSTINST="packaging/debian/postinst"
 RPM_SPEC="packaging/rpm/lenovo-d330-fix.spec"
+README="patches/power_hibernate/README.md"
 
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 33 hibernate guard suite (19 cases, env-seam fixtures, no root,
+Runs the Phase 33 hibernate guard suite (20 cases, env-seam fixtures, no root,
 no battery, no systemd).
 
 Options:
@@ -402,6 +403,17 @@ case_uninstall_symmetry() {
     expect_file_out "rm -f /etc/systemd/system/d330-auto-hibernate.service" "$INSTALLER"
 }
 
+# --- Plan 33-03 docs guard (README claims cannot drift from shipped artifacts) ---
+case_readme_docs_anchors() {
+    # Every anchor the plan's acceptance criteria require the README to document.
+    local anchor
+    for anchor in "d330-swapfile.service" "53-lenovo-d330-resume.cfg" \
+                  "resume_offset" "filefrag" "initramfs" "Secure Boot" \
+                  "unencrypted" "d330-auto-hibernate.service"; do
+        expect_file_out "$anchor" "$README"
+    done
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -425,6 +437,7 @@ CASE_NAMES=(
     case_resume_snippet_template
     case_installer_activation_step
     case_uninstall_symmetry
+    case_readme_docs_anchors
 )
 
 for fn in "${CASE_NAMES[@]}"; do
