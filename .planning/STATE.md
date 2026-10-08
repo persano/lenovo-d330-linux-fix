@@ -2,17 +2,18 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
-current_phase_name: READY TO EXECUTE
+current_phase_name: "Phase 33: Low-Battery Hibernate Feasibility"
 status: executing
-last_updated: "2026-10-08T09:35:30.957Z"
+stopped_at: Completed 33-03-PLAN.md (Task 1 green; Task 2 deferred to UAT)
+last_updated: "2026-10-08T10:46:59.331Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 32 complete, transitioned to Phase 33
-state_head: 5b35fb5d61fba833e67d81633feed011de96af88
+last_activity_desc: Phase 33 all plans executed (33-03 Task 1 green; Task 2 deferred to UAT)
+state_head: 586c0d1c2eb740fd00870ad9c612b753cabffe0c
 progress:
   total_phases: 11
   completed_phases: 1
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 6
   percent: 9
 ---
 
@@ -27,7 +28,7 @@ progress:
   * C3 — low-battery auto-hibernate has only a 3 GB zram swap → no valid resume device, safety net cannot work. (Phase 33)
   * C4 — the 600 ms PPS clamp (`patches/d330_display_resume_fix.patch`) is not applied by the recommended install path; the DKMS module delays *after* the panel is already re-energised. (Phase 34)
   * [PENDING DEPLOY] Phase 32 UAT items 1–2 — physical mounted-target abort on a real MicroSD and on-target `/etc/fstab` + absent-card boot on the D330 — were deferred under documented VERIFICATION overrides (no hardware in this environment). Machine-checked equivalents are green (suite 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 32`.
-- **Next Immediate Action**: Plan Phase 33 (`/gsd-plan-phase`), then execute in order 33 → 34 (remaining safety fixes) before any of 35–42.
+- **Next Immediate Action**: Run Phase 33 UAT on the tablet (`/gsd-verify-work 33` — seven on-device steps in `33-03-SUMMARY.md`), then plan/execute Phase 34 (C4 PPS clamp) before any of 35–42.
 
 ## Archived Milestones
 
@@ -44,7 +45,25 @@ progress:
 
 ## Current Position
 
-Phase: null — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-08 — Phase 32 complete, transitioned to Phase 33
+Phase: 33-low-battery-hibernate-feasibility — Low-Battery Hibernate Feasibility
+Plan: 33-03 complete (3/3 plans executed); Task 2 on-device round trip deferred to UAT
+Status: Executing — all local gates green (hibernate suite 20/0); awaiting on-device UAT (`/gsd-verify-work 33`) for SC1/SC2/SC3 sign-off
+Last activity: 2026-10-08 — Plan 33-03: subsystem README + docs-anchor case committed (`586c0d1`); on-device steps extracted to 33-03-SUMMARY.md
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 33 P33-03 | 20min | 1 tasks | 3 files |
+
+## Decisions
+
+- [Phase ?]: 33-03: README documents Secure Boot/lockdown degradation as owner decision, never an instruction to weaken security (R3)
+- [Phase ?]: 33-03: R1 probe commands + round-trip-only-proof rule embedded verbatim in README Known Limits so the unverified initramfs swap-file resume stays visible
+- [Phase ?]: 33-03: requirements SC1-3 left unmarked (on-device proof deferred to UAT); marking now would claim unproven success (T-33-04)
+
+## Session
+
+**Last session:** 2026-10-08T10:46:59.247Z
+**Stopped at:** Completed 33-03-PLAN.md (Task 1 green; Task 2 deferred to UAT)
+**Resume file:** None
