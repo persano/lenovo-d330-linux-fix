@@ -826,7 +826,15 @@ do_uninstall() {
         rm -f /usr/local/bin/d330-fastboot-tune
         rm -f /usr/local/bin/d330-vaapi-check
         rm -f /usr/local/bin/d330-tray
-        rm -rf /usr/share/alsa/ucm2/sof-essx8336
+        # IN-02: installer-owned subtree only. Remove exactly the two files we
+        # copied from patches/audio/ucm2/sof-essx8336 ({sof-essx8336,HiFi}.conf)
+        # and rmdir the subtree only if empty, so a foreign file placed there is
+        # never deleted (previously a broad `rm -rf` on this path).
+        if [ -d /usr/share/alsa/ucm2/sof-essx8336 ]; then
+            rm -f /usr/share/alsa/ucm2/sof-essx8336/sof-essx8336.conf
+            rm -f /usr/share/alsa/ucm2/sof-essx8336/HiFi.conf
+            rmdir /usr/share/alsa/ucm2/sof-essx8336 2>/dev/null || true
+        fi
         rm -f /etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf
         rm -f /etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf
         rm -f /etc/tlp.d/50-lenovo-d330.conf
