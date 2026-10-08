@@ -5,20 +5,21 @@
 # Fixture-driven guard suite for tools/d330-auto-hibernate.py (Phase 33,
 # audit C3 false safety net).
 #
-# Four env seams (D330_PROC_SWAPS, D330_SYS_POWER, D330_PROC_CMDLINE,
-# D330_POWER_SUPPLY_DIR) point the daemon at fixture files, so every daemon
-# case runs with no root, no battery, no systemd. Only daemon-produced markers
-# and exit codes are asserted -- systemd/kernel refusal strings are
-# version-dependent (33-RESEARCH R9) and are never matched. No case invokes
-# the real systemctl, swapon, or filefrag.
+# Five env seams (D330_PROC_SWAPS, D330_SYS_POWER, D330_PROC_CMDLINE,
+# D330_POWER_SUPPLY_DIR, D330_SYSTEMCTL) point the daemon at fixture files
+# and a stub systemctl, so every daemon case runs with no root, no battery,
+# no systemd. Only daemon-produced markers and exit codes are asserted --
+# systemd/kernel refusal strings are version-dependent (33-RESEARCH R9) and
+# are never matched. No case invokes the real systemctl, swapon, or filefrag.
 #
-# Cases (20): zram-only-refuse, swapfile-ready-proceed, safe-battery-report,
+# Cases (21): zram-only-refuse, swapfile-ready-proceed, safe-battery-report,
 # resume-not-configured, hibernation-unavailable, empty-swaps-refuse,
 # malformed-swaps-tolerated, no-battery-report-first,
 # execstart-matches-install-path, type-oneshot-kept, udev-glob-comment,
 # daemon-syntax-gates, enable-site-install-dkms, enable-site-debian-postinst,
 # enable-site-rpm-spec, swapfile-unit-static, resume-snippet-template,
-# installer-activation-step, uninstall-symmetry, readme-docs-anchors.
+# installer-activation-step, uninstall-symmetry, readme-docs-anchors,
+# rc-propagates.
 # ==============================================================================
 
 set -euo pipefail
@@ -42,7 +43,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 33 hibernate guard suite (20 cases, env-seam fixtures, no root,
+Runs the Phase 33 hibernate guard suite (21 cases, env-seam fixtures, no root,
 no battery, no systemd).
 
 Options:
@@ -443,6 +444,33 @@ case_readme_docs_anchors() {
     done
 }
 
+# --- Audit N5 coverage: run_power_action's rc must reach the process exit ---
+# The D330_SYSTEMCTL seam points at a stub that records its verb and exits 7;
+# the daemon runs WITHOUT --dry-run so run_power_action is really called, but
+# the real systemctl never runs.
+case_rc_propagates() {
+    local stub="$FIX/systemctl_stub" verb_file="$FIX/stub_verb"
+    printf '#!/usr/bin/env bash\necho "$1" > "%s"\nexit 7\n' "$verb_file" > "$stub"
+    chmod +x "$stub"
+    set_battery 3 Discharging
+    rc=0
+    D330_PROC_SWAPS="$FIX/sw_mixed" D330_SYS_POWER="$FIX/sys_ready" \
+    D330_PROC_CMDLINE="$FIX/cmd_resume_set" D330_POWER_SUPPLY_DIR="$FIX/power" \
+    D330_SYSTEMCTL="$stub" \
+        python3 "$DAEMON" > "$CASE_OUT" 2>&1 || rc=$?
+    if [ "$rc" -eq 0 ]; then
+        echo "    [detail] expected non-zero daemon rc from stubbed systemctl, got 0"
+        CASE_FAIL=1
+    fi
+    expect_out "[CRITICAL] Battery at 3%!"
+    expect_out "[ERROR] systemctl hibernate failed (rc=7)"
+    expect_no_out "Traceback"
+    if [ "$(cat "$verb_file" 2>/dev/null)" != "hibernate" ]; then
+        echo "    [detail] stub expected verb 'hibernate', got: $(cat "$verb_file" 2>/dev/null || echo none)"
+        CASE_FAIL=1
+    fi
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -467,6 +495,7 @@ CASE_NAMES=(
     case_installer_activation_step
     case_uninstall_symmetry
     case_readme_docs_anchors
+    case_rc_propagates
 )
 
 for fn in "${CASE_NAMES[@]}"; do

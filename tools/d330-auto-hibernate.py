@@ -17,6 +17,9 @@ D330_PROC_SWAPS = os.environ.get("D330_PROC_SWAPS", "/proc/swaps")
 D330_SYS_POWER = os.environ.get("D330_SYS_POWER", "/sys/power")
 D330_PROC_CMDLINE = os.environ.get("D330_PROC_CMDLINE", "/proc/cmdline")
 D330_POWER_SUPPLY_DIR = os.environ.get("D330_POWER_SUPPLY_DIR", "/sys/class/power_supply")
+# systemctl binary seam (review IN-04): tests point this at a stub that exits
+# non-zero to prove rc propagation; unset (production) runs real systemctl.
+D330_SYSTEMCTL = os.environ.get("D330_SYSTEMCTL", "systemctl")
 
 def find_battery():
     base = D330_POWER_SUPPLY_DIR
@@ -148,7 +151,7 @@ def run_power_action(verb):
     """sync + sleep verb in list form; the verb's return code is captured and
     propagated (audit N5: it used to be discarded)."""
     subprocess.run(["sync"])
-    result = subprocess.run(["systemctl", verb])
+    result = subprocess.run([D330_SYSTEMCTL, verb])
     rc = result.returncode
     if rc != 0:
         print(f"[ERROR] systemctl {verb} failed (rc={rc})")
