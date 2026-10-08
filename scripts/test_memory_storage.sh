@@ -5,6 +5,7 @@
 set -euo pipefail
 
 MODE="probe"
+APPLY=0
 
 show_help() {
     cat << 'EOF'
@@ -15,6 +16,7 @@ Options:
   --stress-zram   Perform memory compression stress test by allocating test buffer
   --stress-emmc   Perform temporary write/read benchmark on eMMC filesystem
   --trim          Trigger fstrim across active mounted filesystems
+  --apply         Execute system mutations (required for --stress-*/--trim)
   --dry-run       Validate script logic and tuning values without modifying state
   --help          Show this help message
 EOF
@@ -36,6 +38,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --trim)
             MODE="trim"
+            shift
+            ;;
+        --apply)
+            APPLY=1
             shift
             ;;
         --dry-run)
@@ -107,6 +113,10 @@ case "$MODE" in
         inspect_emmc
         ;;
     stress-zram)
+        if [[ "$APPLY" -ne 1 ]]; then
+            echo "[INFO] --stress-zram requires --apply (would allocate a 1.5GB tmpfs buffer)."
+            exit 0
+        fi
         echo "Allocating 1.5GB temporary compressible buffer in tmpfs..."
         tmpdir=$(mktemp -d /tmp/zram_stress_XXXXXX)
         head -c 1500M </dev/zero > "$tmpdir/test.img" || true
@@ -116,6 +126,10 @@ case "$MODE" in
         echo "[OK] Buffer cleaned up."
         ;;
     stress-emmc)
+        if [[ "$APPLY" -ne 1 ]]; then
+            echo "[INFO] --stress-emmc requires --apply (would write/read a 256MB benchmark file)."
+            exit 0
+        fi
         echo "Running eMMC sequential write/read test (256MB)..."
         test_file="/tmp/d330_emmc_benchmark.bin"
         dd if=/dev/zero of="$test_file" bs=1M count=256 conv=fdatasync 2>&1 | tail -n 1
@@ -124,8 +138,12 @@ case "$MODE" in
         echo "[OK] Benchmark completed."
         ;;
     trim)
+        if [[ "$APPLY" -ne 1 ]]; then
+            echo "[INFO] --trim requires --apply (would run: fstrim -av)."
+            exit 0
+        fi
         echo "Triggering fstrim..."
-        fstrim -av || true
+        fstrim -av
         ;;
 esac
 

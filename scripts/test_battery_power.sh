@@ -26,7 +26,8 @@ Diagnostic tool for Lenovo D330 battery consumption, thermal state, and Intel P-
 Options:
     --telemetry     Print instantaneous battery discharge rate, thermal readings, and frequencies
     --stress N      Run an N-second CPU load test and monitor thermal delta
-    --tune          Execute power tuning script (lenovo-d330-power-tune.sh)
+    --tune          Preview the power tuning script (lenovo-d330-power-tune.sh)
+    --apply         Actually execute system mutations (required to run --tune)
     --help          Show this message
 EOF
 }
@@ -34,6 +35,7 @@ EOF
 TELEMETRY=1
 STRESS_SEC=0
 DO_TUNE=0
+APPLY=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -51,6 +53,7 @@ while [[ $# -gt 0 ]]; do
             fi
             STRESS_SEC="$2"; shift 2 ;;
         --tune) DO_TUNE=1; shift ;;
+        --apply) APPLY=1; shift ;;
         --help|-h) show_help; exit 0 ;;
         *) log_err "Unknown argument: $1"; show_help; exit 1 ;;
     esac
@@ -59,10 +62,17 @@ done
 log_info "=== Lenovo D330 Battery & Thermal Diagnostic Harness ==="
 
 if [ $DO_TUNE -eq 1 ]; then
-    log_info "Applying power tuning profile..."
-    if [ -f "tools/lenovo-d330-power-tune.sh" ]; then
-        bash tools/lenovo-d330-power-tune.sh
-        log_ok "Power tuning applied."
+    if [ $APPLY -eq 1 ]; then
+        log_info "Applying power tuning profile..."
+        if [ -f "tools/lenovo-d330-power-tune.sh" ]; then
+            bash tools/lenovo-d330-power-tune.sh
+            log_ok "Power tuning applied."
+        else
+            log_err "tools/lenovo-d330-power-tune.sh not found."
+            exit 1
+        fi
+    else
+        log_warn "--tune is read-only without --apply; would run: bash tools/lenovo-d330-power-tune.sh"
     fi
 fi
 
