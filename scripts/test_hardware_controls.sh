@@ -103,6 +103,10 @@ case "$MODE" in
             exit 1
         fi
         original="$(cat "$node")"
+        # Rollback trap: a SIGINT/SIGTERM or crash between the write below and
+        # the restore would otherwise leave the user's battery in conservation
+        # mode. Restore the original on any exit until the restore is verified.
+        trap 'echo "$original" > "$node" 2>/dev/null' EXIT INT TERM
         if ! echo 1 > "$node" 2>/dev/null; then
             echo "[FAIL] Could not write conservation_mode=1 to $node." >&2
             exit 1
@@ -117,6 +121,7 @@ case "$MODE" in
             echo "[FAIL] Toggle/restore mismatch (toggled=$toggled restored=$restored original=$original)." >&2
             exit 1
         fi
+        trap - EXIT INT TERM
         echo "[OK] Conservation mode toggled to 1 and restored to $original."
         ;;
 esac
