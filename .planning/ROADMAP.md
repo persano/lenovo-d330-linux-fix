@@ -80,7 +80,7 @@
 - [x] Phase 33: Low-Battery Hibernate Feasibility (Audit C3) (completed 2026-10-08)
 - [x] Phase 34: Deliver the Actual PPS / Display Resume Fix (Audit C4) (completed 2026-10-08)
 - [x] Phase 35: Installer & Uninstaller Symmetry (Audit M1, M2, M11, N6) (completed 2026-10-08)
-- [ ] Phase 36: Desktop Session Wiring — Tray Applet & Tablet Daemon (Audit M3, M6)
+- [x] Phase 36: Desktop Session Wiring — Tray Applet & Tablet Daemon (Audit M3, M6) (completed 2026-10-08)
 - [ ] Phase 37: No-Op Tools Made Real or Removed — PWM & Sensor Filter (Audit M4, M5)
 - [ ] Phase 38: PipeWire DSP Activation (Audit M7)
 - [ ] Phase 39: udev / hwdb / Wireless Match Correctness (Audit M8, M9, M10, M15, M16)
