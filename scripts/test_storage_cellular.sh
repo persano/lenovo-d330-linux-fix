@@ -56,7 +56,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_wireless_coex.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -113,6 +113,17 @@ if [[ "$MODE" == "dry-run" ]]; then
         exit 1
     fi
     echo "[OK] RNNoise probe fails closed when librnnoise_ladspa.so is absent"
+
+    # udev/hwdb/wireless match-string guard suite (Phase 39): asserts every
+    # match string equals a real D330 string and no modprobe option targets an
+    # absent module. Same contract as the suites above - its non-zero exit
+    # propagates under set -e; its passed=N failed=M summary flows into output.
+    bash scripts/test_udev_hwdb_match.sh
+
+    # Wireless modprobe-conf validator (Phase 39, SC3): `--dry-run` parses the
+    # conf and exits non-zero on an unknown module name or a missing in-tree
+    # `rtw88_8821ce`. Same contract as the suites above.
+    bash scripts/test_wireless_coex.sh --dry-run
 
     # Inventory context only - these paths are not checks.
     echo "[INFO] ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
