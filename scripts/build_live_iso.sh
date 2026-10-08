@@ -88,11 +88,14 @@ if [[ "$DRY_RUN" = true ]]; then
 
     # 3. Output path: the parent directory must exist and be writable.
     out_parent="$(dirname "$OUTPUT_ISO")"
-    if [[ -d "$out_parent" ]]; then
-        log_ok "output directory present: $out_parent"
-    else
+    if [[ ! -d "$out_parent" ]]; then
         log_err "output parent directory missing: $out_parent"
         dry_failed=$((dry_failed + 1))
+    elif [[ ! -w "$out_parent" ]]; then
+        log_err "output parent directory exists but is not writable: $out_parent"
+        dry_failed=$((dry_failed + 1))
+    else
+        log_ok "output directory present and writable: $out_parent"
     fi
 
     # 4. Source paths the injection pipeline copies from.
