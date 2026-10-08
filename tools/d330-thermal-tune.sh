@@ -43,8 +43,14 @@ show_status() {
     # Read CPU package temp
     for zone in /sys/class/thermal/thermal_zone*; do
         if [[ -f "$zone/type" ]] && grep -qi "pkg_temp\|cpu" "$zone/type"; then
-            temp=$(cat "$zone/temp" 2>/dev/null || echo 0)
-            echo "  - CPU Package Temperature: $((temp / 1000)) °C"
+            temp=$(cat "$zone/temp" 2>/dev/null || true)
+            # Numeric guard: an empty/non-numeric temp value would otherwise
+            # abort the arithmetic below under set -euo pipefail.
+            if [[ "$temp" =~ ^[0-9]+$ ]]; then
+                echo "  - CPU Package Temperature: $((temp / 1000)) °C"
+            else
+                echo "  - CPU Package Temperature: N/A (raw: ${temp:-empty})"
+            fi
         fi
     done
 }
