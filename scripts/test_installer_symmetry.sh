@@ -13,7 +13,7 @@
 # Cases (17): manifest-single-source, manifest-deploy-consistency,
 # verify-drift-detected, verify-clean-passes, verify-conditional-absent,
 # verify-removed-direction, grub-regen-both-paths, uninstall-rescue-bypass,
-# enable-parity-9, user-unit-packaged, dropin-narrow-removal,
+# enable-parity-8, user-unit-packaged, dropin-narrow-removal,
 # warn-named-packages, uninstall-gaps, uninstall-nonroot-warn, no-broad-rm-rf,
 # no-broad-ucm-rm-rf, bash-n-all.
 # ==============================================================================
@@ -336,15 +336,17 @@ case_uninstall_rescue_bypass() {
     esac
 }
 
-case_enable_parity_9() {
+case_enable_parity_8() {
     local f n
     for f in "$S" "$DEBIAN_POSTINST" "$RPM_SPEC"; do
         if ! grep -q "lenovo-d330-camera-loopback.service" "$f"; then
             echo "    [detail] camera-loopback not enabled in $f"
             CASE_FAIL=1
         fi
+        # Phase 37 retired the no-op PWM boot unit: the shipped enable census
+        # dropped from 9 to 8 (7 system units + the global tablet user unit).
         n="$(grep -oE "systemctl (--global )?enable [a-zA-Z0-9._-]+\.service" "$f" | awk '{print $NF}' | sort -u | wc -l)"
-        if [ "$n" -lt 9 ]; then
+        if [ "$n" -lt 8 ]; then
             echo "    [detail] $f enables only $n units"
             CASE_FAIL=1
         fi
@@ -481,7 +483,7 @@ CASE_NAMES=(
     case_verify_removed_direction
     case_grub_regen_both_paths
     case_uninstall_rescue_bypass
-    case_enable_parity_9
+    case_enable_parity_8
     case_user_unit_packaged
     case_dropin_narrow_removal
     case_warn_named_packages

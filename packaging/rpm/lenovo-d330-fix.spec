@@ -47,13 +47,13 @@ cp %{_builddir}/patches/*/usr/lib/systemd/user/*.service %{buildroot}/usr/lib/sy
 systemd-hwdb update || true
 udevadm trigger || true
 systemctl daemon-reload || true
-# SC2: enable all 9 shipped units (parity with install_dkms.sh and deb postinst).
+# SC2: enable all 8 shipped units (parity with install_dkms.sh and deb postinst;
+# Phase 37 retired the no-op PWM boot unit).
 # M6: the tablet daemon is a systemd USER unit -> enable it globally.
 systemctl --global enable d330-tablet-daemon.service 2>/dev/null || true
 systemctl enable lenovo-d330-power.service 2>/dev/null || true
 systemctl enable lenovo-d330-camera-loopback.service 2>/dev/null || true
 systemctl enable d330-hardware-state.service 2>/dev/null || true
-systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
 systemctl enable d330-sensor-filter.service 2>/dev/null || true
 systemctl enable d330-thermal.service 2>/dev/null || true
 systemctl enable d330-auto-hibernate.service 2>/dev/null || true

@@ -157,17 +157,18 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **Auditor Verification Points**:
   - Check file permissions and graceful error reporting when running without `root` or if `ideapad_laptop` driver is not bound.
 
-### 4.5 Display Ergonomics (1000Hz PWM Anti-Flicker & ICC Profile)
+### 4.5 Display Ergonomics (PWM Anti-Flicker & ICC Profile)
 * **Why**: The default PWM backlight frequency on Gemini Lake is ~200Hz. This causes severe stroboscopic flicker and eye strain at lower brightness levels. Additionally, the panel color balance skews cold (~7200K) with inaccurate gamma.
 * **How Decided**:
-  - Increased Intel GPU PWM backlight frequency from 200Hz to 1000Hz by recalculating the PCH/GMCH PWM clock divider registers via `tools/d330-backlight-pwm.py`.
+  - The previous 200Hz -> 1000Hz PWM claim was a no-op: the tool printed success whenever the backlight sysfs interface existed but never wrote a register, and a `Type=oneshot` boot service (`lenovo-d330-backlight-pwm.service`) ran it and reported success at every boot. That service has been removed.
+  - `tools/d330-backlight-pwm.py --apply` is now honest: when `intel_reg` is available it reads the current PCH/GMCH PWM control register, writes the divider for the 1000Hz target, and prints `[OK] <reg>: <before> -> <after>` only when the read-back value actually changed. Without `intel_reg` it prints `[SKIP]` and exits non-zero. A register write that cannot be verified prints `[FAIL]` and exits non-zero.
   - Generated and installed a calibrated sRGB D65 ICC color profile (`Lenovo-D330-sRGB-D65.icc`).
 * **What Done**:
-  - `tools/d330-backlight-pwm.py`: Direct DRM register programming tool.
-  - `patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service`: Systemd service to enforce 1000Hz PWM at boot.
+  - `tools/d330-backlight-pwm.py`: PWM register programming tool; reports a verified read-back delta or an explicit skip/fail, never an unconditional success.
   - `patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc`: Calibrated color profile deployed to `/usr/share/color/icc/`.
 * **Auditor Verification Points**:
-  - Verify that 1000Hz PWM does not cause coil noise on the motherboard power inductor. (Tested: completely silent).
+  - Confirm no boot unit programs PWM (the oneshot service was removed in Phase 37); `--apply` exits non-zero on a host without `intel_reg` and prints no `[OK]` unless a register delta is observed.
+  - Verify that 1000Hz PWM, when applied, does not cause coil noise on the motherboard power inductor. (Tested: completely silent).
 
 ---
 
@@ -408,7 +409,6 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/hardware_controls/etc/systemd/system/d330-hardware-state.service` | `/etc/systemd/system/` | Restores conservation mode at boot |
 | `patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop` | `/etc/xdg/autostart/` | Tray applet autostart entry |
 | `patches/display_ergonomics/etc/modprobe.d/lenovo-d330-display-pwm.conf` | `/etc/modprobe.d/` | Display PWM module tuning |
-| `patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service`| `/etc/systemd/system/` | 1000Hz PWM backlight service |
 | `patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc` | `/usr/share/color/icc/` | Calibrated sRGB D65 ICC profile |
 | `patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg` | `/etc/default/grub.d/` | Console fbcon rotation GRUB options |
 | `patches/boot_orientation/usr/share/initramfs-tools/hooks/lenovo-d330-plymouth` | `/usr/share/initramfs-tools/hooks/` | Plymouth orientation initramfs hook |
@@ -433,7 +433,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `tools/lenovo-d330-power-tune.sh` | `/usr/local/bin/lenovo-d330-power-tune` | CPU EPP & P-State tuning CLI |
 | `tools/d330-ctl` | `/usr/local/bin/d330-ctl` | VPC2004 hardware control CLI |
 | `tools/d330-camera-bridge.sh` | `/usr/local/bin/d330-camera-bridge.sh` | IPU3 to V4L2 loopback pipeline |
-| `tools/d330-backlight-pwm.py` | `/usr/local/bin/d330-backlight-pwm.py` | 1000Hz PWM frequency programmer |
+| `tools/d330-backlight-pwm.py` | `/usr/local/bin/d330-backlight-pwm.py` | PWM register programmer (verified delta or explicit skip; needs `intel_reg`) |
 | `tools/d330-refresh-screen.sh` | `/usr/local/bin/d330-refresh-screen` | Emergency display re-init CLI |
 | `tools/d330-sensor-filter.py` | `/usr/local/bin/d330-sensor-filter` | Accelerometer low-pass filter |
 | `tools/d330-auto-hibernate.py` | `/usr/local/bin/d330-auto-hibernate` | Low-battery auto-hibernate daemon |

@@ -5,7 +5,7 @@ The Lenovo IdeaPad D330-10IGL uses a 10.1" IPS panel (typically 1280x800 WXGA or
 Under default Intel i915 settings:
 - The backlight driver modulates LED intensity using Pulse Width Modulation (PWM) at approximately 200 Hz.
 - At brightness levels below 60%, the 200 Hz stroboscopic effect induces eye strain, fatigue, and visual discomfort for sensitive users.
-- By scaling the PWM clock frequency to 1000 Hz via `d330-backlight-pwm.py` and `lenovo-d330-backlight-pwm.service`, the flicker becomes completely imperceptible to human vision and modern camera sensors.
+- The PWM clock frequency can be raised to 1000 Hz via `d330-backlight-pwm.py --apply`; the former `lenovo-d330-backlight-pwm.service` boot unit was removed in Phase 37 because it reported success without writing any register. The tool now requires `intel_reg` and only reports `[OK]` after a verified register read-back delta, otherwise it prints `[SKIP]`/`[FAIL]` and exits non-zero. At 1000 Hz the flicker becomes imperceptible to human vision and modern camera sensors.
 
 ## 2. Dynamic Refresh Rate Switching (DRRS)
 Gemini Lake UHD Graphics 600 supports Intel DRRS:

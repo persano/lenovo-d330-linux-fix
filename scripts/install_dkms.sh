@@ -140,7 +140,6 @@ deploy_manifest() {
 /etc/systemd/system/lenovo-d330-power.service	unit
 /etc/systemd/system/lenovo-d330-camera-loopback.service	unit
 /etc/systemd/system/d330-hardware-state.service	unit
-/etc/systemd/system/lenovo-d330-backlight-pwm.service	unit
 /etc/systemd/system/d330-sensor-filter.service	unit
 /etc/systemd/system/d330-auto-hibernate.service	unit
 /etc/systemd/system/d330-thermal.service	unit
@@ -155,7 +154,6 @@ d330-tablet-daemon.service	unit-user-enabled
 lenovo-d330-power.service	unit-enabled
 lenovo-d330-camera-loopback.service	unit-enabled
 d330-hardware-state.service	unit-enabled
-lenovo-d330-backlight-pwm.service	unit-enabled
 d330-sensor-filter.service	unit-enabled
 d330-auto-hibernate.service	unit-enabled
 d330-thermal.service	unit-enabled
@@ -513,8 +511,6 @@ do_install() {
             cp "${REPO_ROOT}/patches/camera/etc/systemd/system/lenovo-d330-camera-loopback.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/hardware_controls/etc/systemd/system/d330-hardware-state.service" ] && \
             cp "${REPO_ROOT}/patches/hardware_controls/etc/systemd/system/d330-hardware-state.service" /etc/systemd/system/
-        [ -f "${REPO_ROOT}/patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service" ] && \
-            cp "${REPO_ROOT}/patches/display_ergonomics/etc/systemd/system/lenovo-d330-backlight-pwm.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/sensors/etc/systemd/system/d330-sensor-filter.service" ] && \
             cp "${REPO_ROOT}/patches/sensors/etc/systemd/system/d330-sensor-filter.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service" ] && \
@@ -525,10 +521,12 @@ do_install() {
             cp "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-swapfile.service" /etc/systemd/system/
 
         systemctl daemon-reload || true
-        # Phase 34 removed the echo-only resume unit; the shipped census is 9
-        # units (35-RESEARCH Finding 2). SC2: all 9 must return enabled, so this
-        # enable block, packaging/debian/postinst and the RPM %post each enable
-        # the same 9 (camera-loopback was the previously-missing one).
+        # Phase 34 removed the echo-only resume unit; Phase 37 removed the
+        # no-op PWM boot unit. The shipped census is now 8 units
+        # (35-RESEARCH Finding 2, adjusted for 37). SC2: all 8 must return
+        # enabled, so this enable block, packaging/debian/postinst and the
+        # RPM %post each enable the same 8 (camera-loopback was the
+        # previously-missing one).
         # M6: enable the tablet daemon as a GLOBAL user unit (not a system unit).
         # If systemd-user is unavailable (systemctl absent, or systemd not PID 1),
         # warn honestly instead of silently pretending the unit is enabled.
@@ -541,7 +539,6 @@ do_install() {
         systemctl enable lenovo-d330-power.service 2>/dev/null || true
         systemctl enable lenovo-d330-camera-loopback.service 2>/dev/null || true
         systemctl enable d330-hardware-state.service 2>/dev/null || true
-        systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
         systemctl enable d330-sensor-filter.service 2>/dev/null || true
         systemctl enable d330-thermal.service 2>/dev/null || true
         systemctl enable d330-auto-hibernate.service 2>/dev/null || true
@@ -875,7 +872,6 @@ do_uninstall() {
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-camera-loopback.service >/dev/null 2>&1 || true
         systemctl disable --now d330-hardware-state.service >/dev/null 2>&1 || true
-        systemctl disable --now lenovo-d330-backlight-pwm.service >/dev/null 2>&1 || true
         systemctl disable --now d330-sensor-filter.service >/dev/null 2>&1 || true
         systemctl disable --now d330-auto-hibernate.service >/dev/null 2>&1 || true
         systemctl disable --now d330-thermal.service >/dev/null 2>&1 || true
@@ -906,7 +902,11 @@ do_uninstall() {
         rm -f /etc/systemd/system/lenovo-d330-power.service
         rm -f /etc/systemd/system/lenovo-d330-camera-loopback.service
         rm -f /etc/systemd/system/d330-hardware-state.service
-        rm -f /etc/systemd/system/lenovo-d330-backlight-pwm.service
+        # Phase 37 migration: the no-op PWM boot unit was retired (it only
+        # reported success without a register write). Remove any stale copy left
+        # by an older install, pattern-based so no manifest/unit reference
+        # remains in this script.
+        find /etc/systemd/system -maxdepth 2 -name '*backlight-pwm*.service' -delete 2>/dev/null || true
         rm -f /etc/systemd/system/d330-sensor-filter.service
         rm -f /etc/systemd/system/d330-auto-hibernate.service
         rm -f /etc/systemd/system/d330-thermal.service
