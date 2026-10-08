@@ -4,17 +4,17 @@ milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
 current_phase: 39
 current_phase_name: udev / hwdb / Wireless Match Correctness
-status: planning
-stopped_at: Phase 38 complete, ready to plan Phase 39
-last_updated: "2026-10-08T18:00:57.639Z"
+status: executing
+stopped_at: Completed 39-01-PLAN.md (SC3 mutation-proven; SC1/SC2 host-bound)
+last_updated: "2026-10-08T18:18:00.000Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 38 complete, transitioned to Phase 39
+last_activity_desc: Phase 39 plan 01 executed (5/5 tasks, 5 commits)
 state_head: 48f1c4aa06f4419bb1a8e71986423b8a2b76a30c
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
   percent: 64
 ---
 
@@ -56,9 +56,9 @@ progress:
 ## Current Position
 
 Phase: 39 — udev / hwdb / Wireless Match Correctness
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-08 — Phase 38 complete, transitioned to Phase 39
+Plan: 01 complete (5/5 tasks)
+Status: Executing — 39-01 done, SC3 machine-proven
+Last activity: 2026-10-08 — Phase 39 plan 01 executed (5 commits, all gates green)
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Last activity: 2026-10-08 — Phase 38 complete, transitioned to Phase 39
 |------|----------|-------|-------|
 | Phase 33 P33-03 | 20min | 1 tasks | 3 files |
 | Phase 34 P34-01 | 25min | 7 tasks | 13 files |
+| Phase 39 P01 | 12min | 5 tasks | 14 files |
 
 ## Decisions
 
@@ -76,9 +77,12 @@ Last activity: 2026-10-08 — Phase 38 complete, transitioned to Phase 39
 - [Phase ?]: 34-01: video=efifb:nobgrt KEPT (research 3a disproved removal premise; parsed by efifb_setup)
 - [Phase ?]: 34-01: echo-only resume service deleted with zero stale refs; enabled-unit census 9->8 (Phase 35 recount)
 - [Phase ?]: 34-01: SC1/SC2 left hardware-gated (Task 8 UAT); only SC3 machine-verified this phase
+- [Phase 39]: 39-01: emit both rtl8821ce + rtw88_8821ce module spellings; keep only real in-tree rtw88 params (disable_lps_deep/disable_aspm); drop fwlps/ips and all Intel options
+- [Phase 39]: 39-01: match hwdb/udev on DMI pn82H0/pn81MD/pn81H3; the pvr product string has a space and never matched
+- [Phase 39]: 39-01: udev cannot chmod sysfs platform attrs (drop MODE/GROUP); wifi resume only bounces a wedged link; refresh-screen preserves rotation and drops the no-op dpms branch
 
 ## Session
 
-**Last session:** 2026-10-08T14:28:40.277Z
-**Stopped at:** Phase 38 complete, ready to plan Phase 39
+**Last session:** 2026-10-08T18:19:45.942Z
+**Stopped at:** Completed 39-01-PLAN.md (SC3 mutation-proven; SC1/SC2 host-bound)
 **Resume file:** None
