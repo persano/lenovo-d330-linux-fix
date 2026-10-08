@@ -145,8 +145,8 @@ deploy_manifest() {
 /etc/systemd/system/d330-thermal.service	unit
 /etc/systemd/system/d330-swapfile.service	unit
 /usr/share/alsa/ucm2/sof-essx8336	dir-optional
-/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf	file-optional
-/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf	file-optional
+/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf	file-optional
+/etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf	file-optional
 /etc/tlp.d/50-lenovo-d330.conf	file-optional
 /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc	file-optional
 /etc/d330-hardware-state.json	state
@@ -704,11 +704,11 @@ do_install() {
             log_ok "Installed UCM2 audio profiles to ${UCM_DIR}/sof-essx8336."
         fi
         if [ -d "/etc/pipewire" ]; then
-            mkdir -p /etc/pipewire/filter-chain.conf.d
-            [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" ] && \
-                cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf" /etc/pipewire/filter-chain.conf.d/
-            [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf" ] && \
-                cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf" /etc/pipewire/filter-chain.conf.d/
+            mkdir -p /etc/pipewire/pipewire.conf.d
+            [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf" ] && \
+                cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf" /etc/pipewire/pipewire.conf.d/
+            [ -f "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf" ] && \
+                cp "${REPO_ROOT}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf" /etc/pipewire/pipewire.conf.d/
             log_ok "Installed PipeWire speaker DSP and RNNoise AI mic filters."
         fi
     fi
@@ -851,6 +851,10 @@ do_uninstall() {
             rm -f /usr/share/alsa/ucm2/sof-essx8336/HiFi.conf
             rmdir /usr/share/alsa/ucm2/sof-essx8336 2>/dev/null || true
         fi
+        rm -f /etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf
+        rm -f /etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf
+        # Migration (Phase 38): also remove fragments from the legacy, inert
+        # filter-chain.conf.d location if a previous install left them there.
         rm -f /etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf
         rm -f /etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf
         rm -f /etc/tlp.d/50-lenovo-d330.conf
