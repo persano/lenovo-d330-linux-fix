@@ -36,10 +36,13 @@ Options:
   --install     Install DKMS module, modprobe configs, and udev hwdb rules (Default)
   --uninstall   Remove DKMS module, modprobe configs, and udev hwdb rules
   --dry-run     Check system prerequisites and show actions without applying changes
-  --verify [--root DIR]
+  --verify [--root DIR] [--removed]
                 Diff deployed paths against the installer's own deploy manifest and
                 exit non-zero on drift. Read-only: needs neither build tools nor root.
                 --root DIR checks a fixture tree instead of / (skips systemctl checks).
+                --removed inverts the contract: assert every manifest path is ABSENT
+                (exit non-zero if any is present) -- machine-checks that an
+                install-then-uninstall leaves nothing behind (SC1).
   --dump-manifest
                 Print the deploy manifest as path<TAB>kind lines and exit (read-only).
   --kernel-src PATH
@@ -904,13 +907,20 @@ do_uninstall() {
 # exist). Required entries are the only ones that count as drift. unit-enabled
 # additionally requires systemd to be PID 1 ([ -d /run/systemd/system ]), so a
 # chroot/container/WSL reports SKIP rather than 9 false DRIFTs (WR-05).
+#
+# optional $2 (default false): `--removed` mode inverts the contract -- every
+# manifest path must be ABSENT (present => DRIFT), proving SC1 "install then
+# uninstall leaves nothing".
 # ------------------------------------------------------------------------------
 do_verify() {
     local root="${1:-/}"
+    local removed="${2:-false}"
     local path kind full
     local total=0 drift=0
+    local expect="present"
+    [ "$removed" = true ] && expect="absent"
 
-    log_info "Verifying deployed artifacts against the deploy manifest (root=${root})..."
+    log_info "Verifying deployed artifacts against the deploy manifest (root=${root}, expecting ${expect})..."
     while IFS=$'\t' read -r path kind; do
         [ -n "$path" ] || continue
         total=$((total + 1))
@@ -919,10 +929,19 @@ do_verify() {
             unit-enabled)
                 if [ "$root" = "/" ] && command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
                     if [ "$(systemctl is-enabled "$path" 2>/dev/null || true)" = "enabled" ]; then
-                        echo "  [OK] $path ($kind)"
+                        if [ "$removed" = true ]; then
+                            echo "  [DRIFT] $path ($kind): unit still enabled"
+                            drift=$((drift + 1))
+                        else
+                            echo "  [OK] $path ($kind)"
+                        fi
                     else
-                        echo "  [DRIFT] $path ($kind): unit not enabled"
-                        drift=$((drift + 1))
+                        if [ "$removed" = true ]; then
+                            echo "  [OK] $path ($kind): not enabled"
+                        else
+                            echo "  [DRIFT] $path ($kind): unit not enabled"
+                            drift=$((drift + 1))
+                        fi
                     fi
                 else
                     echo "  [SKIP] $path ($kind): systemctl unavailable, non-root target, or systemd not PID 1"
@@ -932,10 +951,19 @@ do_verify() {
             fstab-line)
                 if [ "$root" = "/" ]; then
                     if grep -qxF "$path" /etc/fstab 2>/dev/null; then
-                        echo "  [OK] fstab: $path"
+                        if [ "$removed" = true ]; then
+                            echo "  [DRIFT] fstab entry still present: $path"
+                            drift=$((drift + 1))
+                        else
+                            echo "  [OK] fstab: $path"
+                        fi
                     else
-                        echo "  [DRIFT] fstab entry missing: $path"
-                        drift=$((drift + 1))
+                        if [ "$removed" = true ]; then
+                            echo "  [OK] fstab entry absent: $path"
+                        else
+                            echo "  [DRIFT] fstab entry missing: $path"
+                            drift=$((drift + 1))
+                        fi
                     fi
                 else
                     echo "  [SKIP] fstab line ($kind): non-root target"
@@ -948,6 +976,18 @@ do_verify() {
             full="$path"
         else
             full="${root%/}${path}"
+        fi
+
+        # --removed mode: presence of ANY manifest path is drift, regardless of
+        # kind -- uninstall must leave nothing behind.
+        if [ "$removed" = true ]; then
+            if [ -e "$full" ] || [ -d "$full" ]; then
+                echo "  [DRIFT] $path ($kind): still present after uninstall"
+                drift=$((drift + 1))
+            else
+                echo "  [OK] $path ($kind): absent"
+            fi
+            continue
         fi
 
         case "$kind" in
@@ -989,10 +1029,10 @@ do_verify() {
 
     echo ""
     if [ "$drift" -gt 0 ]; then
-        log_err "verify: ${drift} DRIFT of ${total} manifest entries (root=${root})."
+        log_err "verify: ${drift} DRIFT of ${total} manifest entries (root=${root}, expecting ${expect})."
         return 1
     fi
-    log_ok "verify: all ${total} manifest entries present (root=${root})."
+    log_ok "verify: all ${total} manifest entries ${expect} (root=${root})."
     return 0
 }
 
@@ -1000,6 +1040,7 @@ ACTION="install"
 DRY_RUN=false
 KERNEL_SRC=""
 VERIFY_ROOT="/"
+VERIFY_REMOVED=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -1007,6 +1048,7 @@ while [[ $# -gt 0 ]]; do
         --uninstall) ACTION="uninstall"; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
         --verify) ACTION="verify"; shift ;;
+        --removed) VERIFY_REMOVED=true; shift ;;
         --dump-manifest) ACTION="dump-manifest"; shift ;;
         --root)
             if [ -z "${2:-}" ] || [ "${2#--}" != "$2" ]; then
@@ -1047,6 +1089,6 @@ esac
 case "$ACTION" in
     install) do_install ;;
     uninstall) do_uninstall ;;
-    verify) do_verify "$VERIFY_ROOT" ;;
+    verify) do_verify "$VERIFY_ROOT" "$VERIFY_REMOVED" ;;
     dump-manifest) deploy_manifest ;;
 esac
