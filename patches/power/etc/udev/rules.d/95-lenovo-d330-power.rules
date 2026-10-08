@@ -1,16 +1,23 @@
 # Lenovo IdeaPad D330 Runtime Power Management Udev Rules
+#
+# Ownership split (Phase 40): TLP is the single runtime-PM owner for the
+# classes it manages -- PCI/PCIe, USB and the Intel audio DSP -- via
+# RUNTIME_PM_ON_AC / RUNTIME_PM_ON_BAT in
+# /etc/tlp.d/50-lenovo-d330.conf. udev MUST NOT also write the runtime-PM
+# control attribute for those classes, or two writers race and TLP's AC/DC
+# policy is silently lost.
+#
+# The rules below cover ONLY the controllers TLP does not manage:
+# the eMMC host controller and the detachable dock.
 
-# Enable Runtime PM on all PCI host devices and Gemini Lake root bridges
-ACTION=="add", SUBSYSTEM=="pci", ATTR{power/control}="auto"
-
-# Enable Runtime PM on eMMC storage controllers
+# eMMC host controller runtime PM (not covered by TLP's PCI runtime PM)
 ACTION=="add", SUBSYSTEM=="mmc", ATTR{power/control}="auto"
 
-# USB Autosuspend with 2000ms delay, excluding dock input hardware
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}!="17ef", ATTR{power/control}="auto", ATTR{power/autosuspend_delay_ms}="2000"
+# Detachable dock (17ef:*): TLP's USB_DENYLIST="17ef:*" already excludes the
+# dock, so udev is the single writer here and pins the dock's keyboard/touchpad
+# runtime PM on (never autosuspend).
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="17ef", ATTR{power/control}="on"
 
-# I2C Serial IO bus runtime PM
-ACTION=="add", SUBSYSTEM=="i2c", ATTR{power/control}="auto"
-
-# Audio DSP runtime PM
-ACTION=="add", SUBSYSTEM=="sound", ATTR{power/control}="auto"
+# Re-apply the AC-aware CPU performance cap when the power source changes, so
+# plugging AC lifts the max_perf_pct cap without a reboot (Phase 40).
+ACTION=="change", SUBSYSTEM=="power_supply", RUN+="/bin/systemctl --no-block restart lenovo-d330-power.service"
