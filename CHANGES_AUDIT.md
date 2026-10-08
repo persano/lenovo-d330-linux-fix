@@ -358,17 +358,17 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **Auditor Verification Points**:
   - Verify that masking `wait-online` does not break network mounts (e.g. NFS/Samba). D330 is an offline mobile device; standard desktop networking is unaffected.
 
-### 7.8 Phase 31: Desktop GUI System Tray Hardware Applet
-* **Why**: Users lacked an intuitive graphical interface to check battery conservation mode, toggle Fn-lock, switch thermal performance profiles, or trigger screen recovery without using the terminal.
+### 7.8 Phase 31: Desktop Hardware Notification Helper
+* **Why**: Users lacked a one-command way to check battery conservation mode and trigger screen recovery without opening the terminal.
 * **How Decided**:
-  - Developed a lightweight Python GTK3 status icon applet (`tools/d330-tray.py`) consuming ~15MB RAM.
-  - Exposes an interactive system tray menu connecting directly to D330 hardware controllers (`d330-ctl`, RAPL profiles, screen refresh).
+  - Kept the helper deliberately dependency-free: a stdlib Python script (`tools/d330-tray.py`) that uses `notify-send` plus a `--status` CLI, with no GTK or AppIndicator dependency.
+  - Exposes battery conservation state and a screen-refresh trigger that call the installed `d330-ctl` / `d330-refresh-screen` binaries (no cwd-relative fallbacks).
 * **What Done**:
-  - `tools/d330-tray.py`: GTK3 status icon application.
-  - `patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop`: User autostart desktop entry.
+  - `tools/d330-tray.py`: lightweight stdlib notification/status helper (`notify-send` + `--status`); starts via XDG autostart. No GTK, no AppIndicator.
+  - `patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop`: User autostart desktop entry (`Exec=/usr/local/bin/d330-tray`).
   - `scripts/test_tray_applet.sh`: Verification harness.
 * **Auditor Verification Points**:
-  - Verify GUI desktop independence: Uses standard FreeDesktop StatusNotifier / XEmbed tray protocol, compatible with GNOME (via AppIndicator extension), KDE Plasma, XFCE, Cinnamon, and MATE.
+  - Confirm the helper is stdlib-only (no GTK/AppIndicator imports) and that the autostart `Exec` resolves to the binary the installer deploys (`/usr/local/bin/d330-tray`).
 
 ---
 
@@ -387,7 +387,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/touchpad_pen/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb` | `/etc/udev/hwdb.d/` | Active pen stylus calibration |
 | `patches/touchpad_pen/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf` | `/etc/X11/xorg.conf.d/` | Touchpad & Active pen button mapping |
 | `patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules` | `/etc/udev/rules.d/` | POGO dock udev triggers |
-| `patches/dock/etc/systemd/system/d330-tablet-daemon.service` | `/etc/systemd/system/` | Tablet mode background daemon unit |
+| `patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service` | `/usr/lib/systemd/user/` | Tablet mode daemon (systemd user unit, `WantedBy=default.target`) |
 | `patches/audio/ucm2/sof-essx8336/` | `/usr/share/alsa/ucm2/sof-essx8336/` | ALSA UCM2 audio profiles for ES8336 |
 | `patches/audio/etc/modprobe.d/lenovo-d330-audio.conf` | `/etc/modprobe.d/` | ES8336 codec quirks |
 | `patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf` | `/etc/pipewire/filter-chain.conf.d/` | PipeWire speaker EQ filter-chain |
@@ -441,7 +441,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `tools/d330-thermal-tune.sh` | `/usr/local/bin/d330-thermal-tune` | RAPL MSR/sysfs clamp daemon script |
 | `tools/d330-fastboot-tune.sh` | `/usr/local/bin/d330-fastboot-tune` | Fast boot service optimizer CLI |
 | `tools/d330-vaapi-check.sh` | `/usr/local/bin/d330-vaapi-check` | VA-API diagnostic inspection CLI |
-| `tools/d330-tray.py` | `/usr/local/bin/d330-tray` | GTK3 system tray hardware applet |
+| `tools/d330-tray.py` | `/usr/local/bin/d330-tray` | stdlib notification/status helper (`notify-send` + `--status`) |
 
 ### 8.2 Unified Installation and Uninstallation Script (`scripts/install_dkms.sh`)
 * **Deployment Mechanism**:
@@ -461,7 +461,7 @@ Every subsystem includes an automated bash verification test script supporting `
 5. `scripts/test_mic_rnnoise.sh`: Tests PipeWire configuration JSON/SPA syntax, checks LADSPA plugin presence, validates audio routing.
 6. `scripts/test_wireless_coex.sh`: Validates `rtw88_8821ce` modprobe parameters, inspects Wi-Fi sleep resume hook execution permissions.
 7. `scripts/test_boot_speed.sh`: Analyzes kernel boot parameters in GRUB, checks `systemd-analyze` critical-chain, and verifies service masking.
-8. `scripts/test_tray_applet.sh`: Tests Python GTK3 bindings, validates `.desktop` autostart file syntax using `desktop-file-validate`.
+8. `scripts/test_tray_applet.sh`: Validates the tray helper wiring (autostart `Exec` equals the installed binary, stdlib-only, no cwd-relative fallbacks) and the tablet systemd user unit shape.
 9. `scripts/test_distro_packaging.sh`: Validates Debian, RPM, and Arch packaging recipes and file manifests.
 10. `scripts/test_iso_integrity.sh`: Validates El Torito boot catalog, EFI system partition, and Live ISO build prerequisites.
 11. `scripts/test_ci_workflows.sh`: Validates GitHub Actions workflow YAML schemas.
