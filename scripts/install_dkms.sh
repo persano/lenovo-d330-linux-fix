@@ -429,8 +429,12 @@ do_install() {
         fi
 
         # Deploy thermald config
-        if [ -d "/etc/thermald" ] && [ -f "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" ]; then
-            cp "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" /etc/thermald/
+        if [ -d "/etc/thermald" ]; then
+            if [ -f "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" ]; then
+                cp "${REPO_ROOT}/patches/thermal/etc/thermald/thermal-conf.xml" /etc/thermald/
+            fi
+        else
+            log_warn "[WARN] /etc/thermald not found (thermald not installed?); skipping thermal-conf.xml deployment."
         fi
     fi
 
@@ -689,13 +693,21 @@ do_install() {
 
     # 8. Deploy TLP & Color Management configuration
     if [ "$DRY_RUN" = false ]; then
-        if [ -d "/etc/tlp.d" ] && [ -f "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" ]; then
-            cp "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" /etc/tlp.d/
-            log_ok "Deployed TLP power configuration."
+        if [ -d "/etc/tlp.d" ]; then
+            if [ -f "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" ]; then
+                cp "${REPO_ROOT}/patches/power/etc/tlp.d/50-lenovo-d330.conf" /etc/tlp.d/
+                log_ok "Deployed TLP power configuration."
+            fi
+        else
+            log_warn "[WARN] /etc/tlp.d not found (tlp not installed?); skipping TLP power configuration."
         fi
-        if [ -d "/usr/share/color/icc" ] && [ -f "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" ]; then
-            cp "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" /usr/share/color/icc/
-            log_ok "Installed calibrated D330 ICC color profile."
+        if [ -d "/usr/share/color/icc" ]; then
+            if [ -f "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" ]; then
+                cp "${REPO_ROOT}/patches/display_ergonomics/color/icc/Lenovo-D330-sRGB-D65.icc" /usr/share/color/icc/
+                log_ok "Installed calibrated D330 ICC color profile."
+            fi
+        else
+            log_warn "[WARN] /usr/share/color/icc not found (colord/ICC profile dir missing?); skipping D330 ICC profile deployment."
         fi
     fi
 
@@ -779,7 +791,10 @@ do_uninstall() {
         rm -f /usr/share/initramfs-tools/hooks/lenovo-d330-plymouth
         rm -f /etc/environment.d/50-lenovo-d330-vaapi.conf
         rm -f /etc/default/earlyoom
-        rm -rf /etc/systemd/system/earlyoom.service.d
+        # Narrow removal (M11/T-35-02): delete only the installer-authored
+        # drop-in and rmdir only if empty, so foreign earlyoom drop-ins survive.
+        rm -f /etc/systemd/system/earlyoom.service.d/d330-override.conf
+        rmdir /etc/systemd/system/earlyoom.service.d 2>/dev/null || true
         rm -f /etc/thermald/thermal-conf.xml
         rm -f /etc/xdg/autostart/d330-tray.desktop
         rm -f /usr/local/bin/d330-tablet-daemon
