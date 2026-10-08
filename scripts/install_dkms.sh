@@ -282,6 +282,8 @@ do_install() {
             cp "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/thermal/etc/systemd/system/d330-thermal.service" ] && \
             cp "${REPO_ROOT}/patches/thermal/etc/systemd/system/d330-thermal.service" /etc/systemd/system/
+        [ -f "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-swapfile.service" ] && \
+            cp "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-swapfile.service" /etc/systemd/system/
 
         systemctl daemon-reload || true
         systemctl enable lenovo-d330-resume.service || true
@@ -291,7 +293,145 @@ do_install() {
         systemctl enable lenovo-d330-backlight-pwm.service 2>/dev/null || true
         systemctl enable d330-sensor-filter.service 2>/dev/null || true
         systemctl enable d330-thermal.service 2>/dev/null || true
+        systemctl enable d330-auto-hibernate.service 2>/dev/null || true
+        systemctl enable d330-swapfile.service 2>/dev/null || true
         log_ok "Enabled systemd background units."
+
+        # ------------------------------------------------------------------
+        # Resume activation (Plan 33-02): swapfile persist + kernel cmdline.
+        # Fail-closed, phase-32 guard posture: [WARN] lines instead of
+        # half-executed steps, success printed only on genuine completion.
+        # Units are already enabled above (SC3), so the manual-step non-zero
+        # exit at the end of this block never un-enables anything.
+        # ------------------------------------------------------------------
+
+        # 1. Create the swapfile by starting the freshly-copied unit. On
+        #    failure (free-space guard or dd/mkswap, RESEARCH R6) warn loudly,
+        #    skip ALL remaining activation sub-steps, and let install continue:
+        #    the daemon degrades honestly to suspend (Plan 33-01).
+        SWAPFILE_READY=false
+        if systemctl start d330-swapfile.service; then
+            SWAPFILE_READY=true
+        else
+            log_warn "[WARN] d330-swapfile.service failed to create /var/swapfile (free space or dd/mkswap failure)."
+            log_warn "[WARN] hibernate stays unavailable; skipping resume activation. Install continues (daemon degrades to suspend)."
+        fi
+
+        if [ "$SWAPFILE_READY" = true ]; then
+            # 2. Persist activation (RESEARCH R5): verify-before-append, refuse
+            #    duplicates, report the line before writing it (phase-32 seam).
+            FSTAB_SWAP_LINE="/var/swapfile none swap sw 0 0"
+            if grep -qxF "$FSTAB_SWAP_LINE" /etc/fstab; then
+                log_info "fstab swap line already present, skipping duplicate append."
+            else
+                log_info "Planned fstab append: $FSTAB_SWAP_LINE"
+                echo "$FSTAB_SWAP_LINE" >> /etc/fstab
+            fi
+
+            # 3. Validate offset unit basis (R7): fs block size must equal page
+            #    size or resume_offset units would silently break resume.
+            FS_BLOCK_SIZE="$(stat -f -c %S / 2>/dev/null || echo 0)"
+            PAGE_SIZE="$(getconf PAGESIZE 2>/dev/null || echo 0)"
+            OFFSET_UNITS_OK=false
+            if [ "$FS_BLOCK_SIZE" = "$PAGE_SIZE" ] && [ -n "$FS_BLOCK_SIZE" ]; then
+                OFFSET_UNITS_OK=true
+            else
+                log_warn "[WARN] fs block size ($FS_BLOCK_SIZE) != page size ($PAGE_SIZE); resume_offset units would be wrong."
+            fi
+
+            # 4. Offset EXCLUSIVELY from filefrag -v first extent physical
+            #    (RESEARCH Q1.4 tooling correction: the swapon OFFSET column
+            #    variant does not exist and must never appear here).
+            RESUME_OFFSET=""
+            if [ "$OFFSET_UNITS_OK" = true ]; then
+                RESUME_OFFSET="$(filefrag -v /var/swapfile 2>/dev/null | awk '/^[[:space:]]*0:/{print $4; exit}' | sed 's/\.\..*//' || true)"
+                RESUME_OFFSET="${RESUME_OFFSET:-}"
+            fi
+            if ! echo "$RESUME_OFFSET" | grep -qE '^[0-9]+$'; then
+                log_warn "[WARN] could not compute resume_offset via filefrag -v for /var/swapfile."
+                RESUME_OFFSET=""
+            fi
+
+            # 5. Root UUID (RESEARCH §2): exit codes captured explicitly so a
+            #    failure cannot trip set -e before an honest message prints.
+            ROOT_SRC="$(findmnt -n -o SOURCE / 2>/dev/null || true)"
+            ROOT_UUID=""
+            if [ -n "$ROOT_SRC" ]; then
+                ROOT_UUID="$(blkid -s UUID -o value "$ROOT_SRC" 2>/dev/null || true)"
+            fi
+            if [ -z "$ROOT_UUID" ]; then
+                log_warn "[WARN] could not read root UUID from '${ROOT_SRC:-unknown}'."
+            fi
+
+            # 6. Render the snippet: substitute the two placeholder tokens in
+            #    the repo template (never modified) and write ONLY under
+            #    /etc/default/grub.d, only when content differs (idempotent).
+            SNIPPET_RENDERED=""
+            if [ -n "$ROOT_UUID" ] && [ -n "$RESUME_OFFSET" ]; then
+                SNIPPET_RENDERED="$(sed -e "s/__D330_RESUME_UUID__/${ROOT_UUID}/" -e "s/__D330_RESUME_OFFSET__/${RESUME_OFFSET}/" \
+                    "${REPO_ROOT}/patches/power_hibernate/etc/default/grub.d/53-lenovo-d330-resume.cfg" || true)"
+                if [ -d /etc/default/grub.d ]; then
+                    if [ -f /etc/default/grub.d/53-lenovo-d330-resume.cfg ] && \
+                       grep -qxF "GRUB_CMDLINE_LINUX_DEFAULT=\"\${GRUB_CMDLINE_LINUX_DEFAULT} resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET}\"" /etc/default/grub.d/53-lenovo-d330-resume.cfg; then
+                        log_info "Resume grub.d snippet already rendered with current values, not rewriting."
+                    else
+                        printf '%s\n' "$SNIPPET_RENDERED" > /etc/default/grub.d/53-lenovo-d330-resume.cfg
+                        log_ok "Rendered /etc/default/grub.d/53-lenovo-d330-resume.cfg (resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET})."
+                    fi
+                else
+                    log_warn "[WARN] /etc/default/grub.d does not exist; cannot deploy resume snippet."
+                fi
+            fi
+
+            # 7. Activation + verification ladder (R2): detect mkconfig in
+            #    order update-grub -> grub2-mkconfig -> grub-mkconfig, run it,
+            #    then grep the generated grub.cfg for resume_offset=. Failure
+            #    of ANY link prints the exact required cmdline as a manual step
+            #    and exits non-zero (locked honest behavior; enablement above
+            #    already happened, so SC3 survives this exit).
+            MKCONFIG_TOOL=""
+            GRUB_CFG=""
+            if command -v update-grub >/dev/null 2>&1; then
+                MKCONFIG_TOOL="update-grub"; GRUB_CFG="/boot/grub/grub.cfg"
+            elif command -v grub2-mkconfig >/dev/null 2>&1; then
+                MKCONFIG_TOOL="grub2-mkconfig"; GRUB_CFG="/boot/grub2/grub.cfg"
+            elif command -v grub-mkconfig >/dev/null 2>&1; then
+                MKCONFIG_TOOL="grub-mkconfig"; GRUB_CFG="/boot/grub/grub.cfg"
+            fi
+
+            ACTIVATION_OK=false
+            if [ -n "$MKCONFIG_TOOL" ] && [ -n "$ROOT_UUID" ] && [ -n "$RESUME_OFFSET" ] && [ -f /etc/default/grub.d/53-lenovo-d330-resume.cfg ]; then
+                log_info "Regenerating GRUB config via ${MKCONFIG_TOOL}..."
+                if [ "$MKCONFIG_TOOL" = "update-grub" ]; then
+                    update-grub || true
+                else
+                    "$MKCONFIG_TOOL" -o "$GRUB_CFG" || true
+                fi
+                if grep -q "resume_offset=" "$GRUB_CFG" 2>/dev/null; then
+                    ACTIVATION_OK=true
+                    # R1: hooks must pick up resume parameters.
+                    if command -v update-initramfs >/dev/null 2>&1; then
+                        update-initramfs -u || true
+                    fi
+                    log_ok "Resume cmdline verified in ${GRUB_CFG}: resume=UUID=${ROOT_UUID} resume_offset=${RESUME_OFFSET}"
+                else
+                    log_warn "[WARN] ${GRUB_CFG} does not contain resume_offset= after regeneration."
+                fi
+            else
+                log_warn "[WARN] Resume activation prerequisites missing (mkconfig tool / root UUID / offset / snippet)."
+            fi
+
+            if [ "$ACTIVATION_OK" != true ]; then
+                echo ""
+                log_warn "HIBERNATE RESUME NOT ACTIVATED. Manual step required:"
+                log_warn "Add the following to your kernel command line (GRUB cmdline), then re-run mkconfig:"
+                echo "        resume=UUID=${ROOT_UUID:-<root-uuid>} resume_offset=${RESUME_OFFSET:-<filefrag-offset>}"
+                echo ""
+                log_err "Resume activation failed; hibernate must not be assumed functional."
+                exit 1
+            fi
+        fi
+
     fi
 
     # 7. Deploy ALSA UCM2 Audio profiles & PipeWire DSP
@@ -393,6 +533,7 @@ do_uninstall() {
         rm -f /etc/default/grub.d/50-lenovo-d330-boot.cfg
         rm -f /etc/default/grub.d/51-lenovo-d330-acpi-override.cfg
         rm -f /etc/default/grub.d/52-lenovo-d330-fastboot.cfg
+        rm -f /etc/default/grub.d/53-lenovo-d330-resume.cfg
         rm -f /usr/share/initramfs-tools/hooks/lenovo-d330-plymouth
         rm -f /etc/environment.d/50-lenovo-d330-vaapi.conf
         rm -f /etc/default/earlyoom
@@ -427,6 +568,19 @@ do_uninstall() {
         systemctl disable --now d330-sensor-filter.service >/dev/null 2>&1 || true
         systemctl disable --now d330-auto-hibernate.service >/dev/null 2>&1 || true
         systemctl disable --now d330-thermal.service >/dev/null 2>&1 || true
+        systemctl disable --now d330-swapfile.service >/dev/null 2>&1 || true
+        swapoff /var/swapfile >/dev/null 2>&1 || true
+        # Remove the fstab swap line only; /var/swapfile itself is left on
+        # disk on purpose -- deleting a 4 GB file mid-uninstall is unnecessary
+        # risk (RESEARCH section 4 recommendation).
+        if grep -q "/var/swapfile none swap sw 0 0" /etc/fstab 2>/dev/null; then
+            grep -v "/var/swapfile none swap sw 0 0" /etc/fstab > /etc/fstab.d330-tmp 2>/dev/null || true
+            if [ -s /etc/fstab.d330-tmp ]; then
+                mv /etc/fstab.d330-tmp /etc/fstab || true
+            else
+                rm -f /etc/fstab.d330-tmp
+            fi
+        fi
         rm -f /etc/systemd/system/lenovo-d330-resume.service
         rm -f /etc/systemd/system/d330-tablet-daemon.service
         rm -f /etc/systemd/system/lenovo-d330-power.service
@@ -436,6 +590,7 @@ do_uninstall() {
         rm -f /etc/systemd/system/d330-sensor-filter.service
         rm -f /etc/systemd/system/d330-auto-hibernate.service
         rm -f /etc/systemd/system/d330-thermal.service
+        rm -f /etc/systemd/system/d330-swapfile.service
         systemctl daemon-reload >/dev/null 2>&1 || true
 
         # Refresh
