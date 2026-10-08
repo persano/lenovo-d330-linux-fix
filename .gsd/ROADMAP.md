@@ -131,20 +131,20 @@ Plans:
   2. `d330-auto-hibernate --dry-run` reports the swap situation
   3. service is `enabled` after `--install`.
 
-**Plans**: 3 plans
+**Plans**: 3/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 33-01-PLAN.md — Daemon honest degradation: swap-situation report, refuse-and-degrade on zram-only, ExecStart fix, fixture guard suite
+- [x] 33-01-PLAN.md — Daemon honest degradation: swap-situation report, refuse-and-degrade on zram-only, ExecStart fix, fixture guard suite
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 33-02-PLAN.md — Disk-backed resume swap: swapfile unit + resume cmdline template, installer activation with mkconfig verify, enablement ×3, uninstall symmetry
+- [x] 33-02-PLAN.md — Disk-backed resume swap: swapfile unit + resume cmdline template, installer activation with mkconfig verify, enablement ×3, uninstall symmetry
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 33-03-PLAN.md — Subsystem README + docs anchors, on-device acceptance of SC1/SC2/SC3 with R1 initramfs evidence (deferred-to-UAT)
+- [x] 33-03-PLAN.md — Subsystem README + docs anchors, on-device acceptance of SC1/SC2/SC3 with R1 initramfs evidence (deferred-to-UAT)
 
 - **Audit Ref**: C3, M2 (partial).
 - **Components**:
