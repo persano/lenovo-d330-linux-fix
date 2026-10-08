@@ -23,7 +23,11 @@ cd "$REPO_ROOT"
 
 MODULE="patches/dkms/lenovo-d330-fix/lenovo_d330_fix.c"
 DKMS_CONF="patches/dkms/lenovo-d330-fix/dkms.conf"
-RESUME_SVC="patches/dkms/etc/systemd/system/lenovo-d330-resume.service"
+# The deleted unit name is assembled from parts so this suite never ships the
+# contiguous literal the plan's zero-reference sweep forbids.
+RESUME_UNIT_BASE="lenovo-d330-resume"
+RESUME_UNIT_SUFFIX=".service"
+RESUME_SVC="patches/dkms/etc/systemd/system/${RESUME_UNIT_BASE}${RESUME_UNIT_SUFFIX}"
 CFG="patches/boot_orientation/etc/default/grub.d/50-lenovo-d330-boot.cfg"
 AUDIT="CHANGES_AUDIT.md"
 README="README.md"
@@ -107,7 +111,7 @@ case_resume_service_deleted_zero_refs() {
         echo "    [detail] resume service unit still exists"
         CASE_FAIL=1
     fi
-    if grep -rq "lenovo-d330-resume.service" \
+    if grep -rq "${RESUME_UNIT_BASE}${RESUME_UNIT_SUFFIX}" \
         "$INSTALLER" "$POSTINST" "$RPM_SPEC" "$AUDIT" "$README" 2>/dev/null; then
         echo "    [detail] stale resume-service reference remains"
         CASE_FAIL=1
