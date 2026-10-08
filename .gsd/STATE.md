@@ -2,27 +2,27 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
-current_phase: 40
-current_phase_name: Power Stack Reconciliation
-status: executing
-stopped_at: Completed 40-01-PLAN.md
-last_updated: "2026-10-08T19:10:46.514Z"
+current_phase: 41
+current_phase_name: Test Harness Trustworthiness
+status: planning
+stopped_at: Phase 40 complete, ready to plan Phase 41
+last_updated: "2026-10-08T19:40:22.475Z"
 last_activity: 2026-10-08
 last_activity_desc: Phase 40 complete, transitioned to Phase 41
-state_head: 657282544cc9ad4a5b8cf35dc1c6ce926debe098
+state_head: 5a6bce0f287388f9f5c216dc0fedca9a638c41dc
 progress:
   total_phases: 11
   completed_phases: 9
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 13
+  completed_plans: 13
   percent: 82
 ---
 
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 7 — Pre-Deployment Audit Remediation (v7.0), Phases 32–42
-- **Active Phase**: Phase 40: Power Stack Reconciliation (Audit M13, M14)
-- **Status**: Executing. Phases 32–39 complete (8/11 phases). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
+- **Active Phase**: Phase 41: Test Harness Trustworthiness (Audit M12, N8)
+- **Status**: Executing. Phases 32–40 complete (9/11 phases). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
 - **Blockers**:
   * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
   * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
@@ -41,7 +41,9 @@ progress:
   * [PENDING DEPLOY] Phase 35 UAT tests 1–2 — real install→`find /etc /usr/local/bin /usr/share/alsa` empty sweep and `systemctl is-enabled` ×9 after a real install — deferred under documented VERIFICATION overrides (no systemd target). Machine-checked equivalents green (`--verify --removed` round trip, 9-unit enable parity; suites 16/0 + 21/0 + 10/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 35`.
   * [PENDING DEPLOY] Phase 36 UAT test 1 — live GNOME dock/undock on the D330 (panel auto-rotate + OSK on detach, landscape + OSK hide on attach; `systemctl --user` unit active) — deferred under a documented VERIFICATION override (no hardware/live session). Machine-checked equivalents green (user-unit shape + packager deploy + enable parity; tray harness 9/0 with SC1 mutation catch; suites 17/0 + 21/0 + 10/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 36`.
   * [PENDING DEPLOY] Phase 39 UAT tests 1–2 — on-device `udevadm test`/`udevadm hwdb --test` (rules + `pn82H0` keys resolve) and `modprobe -s rtw88_8821ce`/`rtw88_core`/`rtw88_pci` reflecting the intended params — deferred under documented VERIFICATION overrides (no udev/D330 or rtw88 module here). Machine-checked equivalents green (`test_udev_hwdb_match.sh` 10/0 scanning all 22 options; SC3 mutation-proven). Re-run at sign-off: `/gsd-verify-work 39`.
-- **Next Immediate Action**: Plan/execute Phase 41 (remaining audit cleanup: cwd-relative tool paths / residual claim conflicts) before 42.
+  * [PENDING DEPLOY] Phase 40 UAT tests 1–3 — on-device `tlp-stat -s` vs `/sys/class/powercap` agreement after AC hot-plug, a clean TLP journal across a full AC/battery cycle, and a reproduced boot bench — deferred under documented VERIFICATION overrides (no D330/TLP/RAPL here). Machine-checked equivalents green (`test_power_stack.sh` 12/0, non-vacuous; storage --dry-run rc 0). Re-run at sign-off: `/gsd-verify-work 40`.
+  * [RESOLVED — Phase 40] M13/M14 — the power stack had multiple writers per knob: `lenovo-d330-power-tune.sh` applied a boot-only 75% CPU cap that survived AC plug; the udev `95` rule forced `power/control=auto` broadly while TLP also drove runtime PM (permanent flapping); TLP `INTEL_GPU_MIN_FREQ_ON_AC=100` was below the GLK ~300 MHz min (rejected write every AC event); `nowatchdog` disabled the very lockup detection the device needs; thermald `<Type>cpu</Type>` could be ignored and `d330-thermal-tune.sh` `$((pl1/1000000))` turned `N/A` into 0. Fixed: AC-aware perf cap (mains by `type`, fail-safe to battery) re-applied on a Mains-filtered `power_supply` change rule, TLP as sole owner of PCI/USB/MMC runtime PM with scoped udev for i2c/sound/eMMC/dock, GPU min removed + max/boost documented, `nowatchdog`→`softlockup_panic=1`+`panic=10` with §7.7 claim corrected, thermald `x86_pkg_temp` + numeric guards (pl1/pl2/temp) + `ExecCondition` fallback + debian Recommends. New `scripts/test_power_stack.sh` (12/0, non-vacuous, repo-wide `power/control` scan). Suites 12/0 + 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + 10/0 + 17/0 + 7/0. Hardware/boot SC1-3 deferred (see PENDING DEPLOY).
+- **Next Immediate Action**: Plan/execute Phase 41 (test-harness trustworthiness: make `test_*.sh` fail when their subject is broken, gate live mutations behind `--apply`, CWD anchoring, `build_live_iso.sh` honesty, per Audit M12/N8) before 42.
 
 ## Archived Milestones
 
@@ -58,10 +60,10 @@ progress:
 
 ## Current Position
 
-Phase: 40 — Power Stack Reconciliation
-Plan: 40-01 complete (1/1)
-Status: Executing (Phase 40 complete; ready to plan Phase 41)
-Last activity: 2026-10-08 — Phase 40 complete (power-stack single-writer reconciliation)
+Phase: 41 — Test Harness Trustworthiness
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-08 — Phase 40 complete, transitioned to Phase 41
 
 ## Performance Metrics
 
@@ -91,5 +93,5 @@ Last activity: 2026-10-08 — Phase 40 complete (power-stack single-writer recon
 ## Session
 
 **Last session:** 2026-10-08T19:10:45.949Z
-**Stopped at:** Completed 40-01-PLAN.md
+**Stopped at:** Phase 40 complete, ready to plan Phase 41
 **Resume file:** None
