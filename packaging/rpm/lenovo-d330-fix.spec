@@ -30,6 +30,10 @@ mkdir -p %{buildroot}/etc/udev/hwdb.d
 mkdir -p %{buildroot}/etc/systemd/system
 
 cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/ || true
+# d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
+# install the daemon as /usr/local/bin/d330-auto-hibernate, mode 755.
+mv %{buildroot}/usr/local/bin/d330-auto-hibernate.py %{buildroot}/usr/local/bin/d330-auto-hibernate
+chmod 755 %{buildroot}/usr/local/bin/d330-auto-hibernate
 cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/ || true
 cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/ || true
 cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/ || true
