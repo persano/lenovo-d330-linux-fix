@@ -398,9 +398,11 @@ do_install() {
         [ -f "${REPO_ROOT}/patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules" ] && \
             cp "${REPO_ROOT}/patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules" /etc/udev/rules.d/
 
-        # Deploy ModemManager FCC unlock
-        if [ -d "/etc/ModemManager/fcc-unlock.d" ] && [ -f "${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360" ]; then
-            cp "${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360" /etc/ModemManager/fcc-unlock.d/
+        # Deploy ModemManager FCC unlock. The repo stores the hook as `8086`
+        # because Windows cannot track a literal colon in a filename; ModemManager
+        # looks it up as `8086:7360`, so it is copied to that colon-named target.
+        if [ -d "/etc/ModemManager/fcc-unlock.d" ] && [ -f "${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086" ]; then
+            cp "${REPO_ROOT}/patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086" /etc/ModemManager/fcc-unlock.d/8086:7360
             chmod +x /etc/ModemManager/fcc-unlock.d/8086:7360
         fi
 
