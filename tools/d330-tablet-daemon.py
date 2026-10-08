@@ -98,12 +98,27 @@ class D330TabletDaemon:
 
     def query_sysfs_tablet_mode(self):
         """Queries sysfs for initial tablet-mode state."""
-        for sw_file in glob.glob('/sys/class/input/input*/device/properties'):
-            pass
         # Fallback to dock USB probe
         if self.check_dock_usb_presence():
             return 0  # Laptop mode (dock connected)
         return 1      # Tablet mode (dock disconnected)
+
+    def apply_commands(self, commands):
+        """Run (label, command) pairs; return the labels of any that failed."""
+        failed = []
+        for label, cmd in commands:
+            ok, _ = run_command(cmd)
+            if not ok:
+                failed.append(label)
+        return failed
+
+    def report_mode_result(self, mode, failed):
+        """Log success only when every desktop command returned 0 (M6)."""
+        if failed:
+            logger.warning("%s: some settings did not apply (no desktop session?); failed: %s",
+                           mode, ", ".join(failed))
+        else:
+            logger.info("%s settings applied successfully.", mode)
 
     def set_laptop_mode(self):
         """Applies Clamshell/Laptop configuration."""
@@ -116,22 +131,30 @@ class D330TabletDaemon:
             logger.info("[DRY-RUN] Enabled touchpad, locked orientation to landscape, disabled OSK.")
             return
 
-        # 1. Lock display orientation to normal landscape
-        run_command("gsettings set org.gnome.settings-daemon.plugins.orientation active false")
-        run_command("xrandr --output eDP-1 --rotate normal 2>/dev/null || xrandr --output eDP-1 --rotate right 2>/dev/null")
-
-        # 2. Enable physical touchpad / trackpoint
-        run_command("xinput enable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true")
-        run_command("xinput enable 'Elan Touchpad' 2>/dev/null || true")
-        run_command("xinput enable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true")
-
-        # 3. Disable On-Screen Keyboard (OSK)
-        run_command("gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false")
-        run_command("gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled false")
-        run_command("qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled false 2>/dev/null || true")
-        run_command("killall onboard 2>/dev/null || true")
-
-        logger.info("Laptop mode settings applied successfully.")
+        # 1-3. Orientation, touchpad, and OSK desktop commands. Collect their
+        # results so success is only reported when they actually applied (M6);
+        # `|| true` best-effort calls are inherently reported as applied.
+        failed = self.apply_commands([
+            ("gsettings orientation",
+             "gsettings set org.gnome.settings-daemon.plugins.orientation active false"),
+            ("xrandr rotate normal",
+             "xrandr --output eDP-1 --rotate normal 2>/dev/null || xrandr --output eDP-1 --rotate right 2>/dev/null"),
+            ("xinput enable SynPS/2 Synaptics TouchPad",
+             "xinput enable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true"),
+            ("xinput enable Elan Touchpad",
+             "xinput enable 'Elan Touchpad' 2>/dev/null || true"),
+            ("xinput enable ELAN0676 Touchpad",
+             "xinput enable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true"),
+            ("gsettings gnome OSK off",
+             "gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false"),
+            ("gsettings cinnamon OSK off",
+             "gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled false"),
+            ("qdbus KWin OSK off",
+             "qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled false 2>/dev/null || true"),
+            ("killall onboard",
+             "killall onboard 2>/dev/null || true"),
+        ])
+        self.report_mode_result("Laptop mode", failed)
 
     def set_tablet_mode(self):
         """Applies Tablet configuration."""
@@ -144,22 +167,27 @@ class D330TabletDaemon:
             logger.info("[DRY-RUN] Enabled auto-rotation, enabled OSK, disabled external dock inputs.")
             return
 
-        # 1. Enable automatic accelerometer orientation via iio-sensor-proxy
-        run_command("gsettings set org.gnome.settings-daemon.plugins.orientation active true")
-
-        # 2. Enable On-Screen Keyboard (OSK across GNOME, Cinnamon, KDE, X11)
-        run_command("gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true")
-        run_command("gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled true")
-        run_command("qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled true 2>/dev/null || true")
-        # In non-composited X11 desktops, launch onboard in background if installed
-        run_command("which onboard >/dev/null 2>&1 && (pgrep onboard >/dev/null || onboard &) || true")
-
-        # 3. Ignore or suppress residual dock touchpad inputs
-        run_command("xinput disable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true")
-        run_command("xinput disable 'Elan Touchpad' 2>/dev/null || true")
-        run_command("xinput disable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true")
-
-        logger.info("Tablet mode settings applied successfully.")
+        # 1-3. Orientation, OSK, and touchpad desktop commands; success is only
+        # reported when they actually applied (M6).
+        failed = self.apply_commands([
+            ("gsettings orientation auto",
+             "gsettings set org.gnome.settings-daemon.plugins.orientation active true"),
+            ("gsettings gnome OSK on",
+             "gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true"),
+            ("gsettings cinnamon OSK on",
+             "gsettings set org.cinnamon.desktop.a11y.applications screen-keyboard-enabled true"),
+            ("qdbus KWin OSK on",
+             "qdbus org.kde.KWin /VirtualKeyboard org.kde.kwin.VirtualKeyboard.setEnabled true 2>/dev/null || true"),
+            ("launch onboard",
+             "which onboard >/dev/null 2>&1 && (pgrep onboard >/dev/null || onboard &) || true"),
+            ("xinput disable SynPS/2 Synaptics TouchPad",
+             "xinput disable 'SynPS/2 Synaptics TouchPad' 2>/dev/null || true"),
+            ("xinput disable Elan Touchpad",
+             "xinput disable 'Elan Touchpad' 2>/dev/null || true"),
+            ("xinput disable ELAN0676 Touchpad",
+             "xinput disable 'ELAN0676:00 04F3:3195 Touchpad' 2>/dev/null || true"),
+        ])
+        self.report_mode_result("Tablet mode", failed)
 
     def run(self):
         """Main event loop monitoring switch events."""
