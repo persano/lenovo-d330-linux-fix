@@ -28,7 +28,7 @@ Options:
     --probe         Detect MicroSD card and print partition details (Default)
     --format        Initialize MicroSD with GPT partition table and flash-optimized ext4
     --mount-data    Mount MicroSD to /data with flash-friendly fstab options
-    --mount-home    Migrate and mount MicroSD as /home expansion
+    --mount-home    Migrate and mount MicroSD as /home expansion (unsupported: not implemented)
     --device DEV    Target block device (e.g. /dev/mmcblk1). Required for destructive
                     actions (--format, --mount-data, --mount-home); the default
                     /dev/mmcblk1 applies only to --probe.
@@ -235,6 +235,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_device_for_action
+
+# ------------------------------------------------------------------------------
+# --mount-home stub (locked decision): the flag stays in --help marked
+# unsupported, and this action always fails fast. The branch fires immediately
+# after the device requirement — before the existence precondition, guards,
+# preflight, and any prompt — because the stub performs no disk work at all,
+# so it can never reach the trailing success line.
+# ------------------------------------------------------------------------------
+if [ "$ACTION" = "mount-home" ]; then
+    log_err "--mount-home is not implemented in this release; see --help (flag marked unsupported)."
+    exit 1
+fi
+
 validate_device_path
 
 log_info "=== Lenovo D330 MicroSD Storage Expansion Harness ==="
@@ -422,11 +435,6 @@ if [ "$ACTION" = "mount-data" ]; then
 
     log_ok "Mounted $PART_DEV to $MOUNT_POINT with boot-safe nofail options."
     trap - EXIT
-fi
-
-if [ "$ACTION" = "mount-home" ]; then
-    log_info "Preparing /home expansion migration..."
-    log_warn "Backup /home before running full user migration."
 fi
 
 log_ok "Storage expansion task complete."
