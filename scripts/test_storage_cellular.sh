@@ -56,7 +56,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_wireless_coex.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -119,6 +119,13 @@ if [[ "$MODE" == "dry-run" ]]; then
     # absent module. Same contract as the suites above - its non-zero exit
     # propagates under set -e; its passed=N failed=M summary flows into output.
     bash scripts/test_udev_hwdb_match.sh
+
+    # Power-stack single-writer guard suite (Phase 40): asserts the CPU perf cap
+    # is AC-aware, the udev runtime-PM rule is scoped off TLP's turf, no rejected
+    # GPU frequency, no nowatchdog, and the thermal numeric guard. Same contract
+    # as the suites above - its non-zero exit propagates under set -e; its
+    # passed=N failed=M summary flows into this output.
+    bash scripts/test_power_stack.sh
 
     # Wireless modprobe-conf validator (Phase 39, SC3): `--dry-run` parses the
     # conf and exits non-zero on an unknown module name or a missing in-tree
