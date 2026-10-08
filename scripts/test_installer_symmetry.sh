@@ -88,7 +88,7 @@ contains() { case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac; }
 # is filtered out by the NF==2 + known-kind guard.
 dump_manifest() {
     bash "$S" --dump-manifest 2>/dev/null | \
-        awk -F'\t' 'NF==2 && $2 ~ /^(dir|dir-optional|file|exec|unit|unit-enabled|grub-snippet|fstab-line|state|file-optional|exec-optional|grub-snippet-optional)$/ {print}'
+        awk -F'\t' 'NF==2 && $2 ~ /^(dir|dir-optional|file|exec|unit|unit-user|unit-enabled|unit-user-enabled|grub-snippet|fstab-line|state|file-optional|exec-optional|grub-snippet-optional)$/ {print}'
 }
 
 # The install_dkms.sh body with the deploy_manifest() heredoc removed, so a
@@ -104,7 +104,7 @@ populate_root() {
     while IFS=$'\t' read -r p k; do
         [ -n "$p" ] || continue
         case "$k" in
-            unit-enabled|fstab-line) continue ;;
+            unit-enabled|unit-user-enabled|fstab-line) continue ;;
             dir|dir-optional) mkdir -p "${R}${p}" ;;
             exec|exec-optional) mkdir -p "$(dirname "${R}${p}")"; : > "${R}${p}"; chmod +x "${R}${p}" ;;
             *) mkdir -p "$(dirname "${R}${p}")"; : > "${R}${p}" ;;
@@ -137,7 +137,7 @@ case_manifest_single_source() {
         [ -n "$p" ] || continue
         n=$((n + 1))
         case "$k" in
-            unit-enabled|fstab-line) continue ;;
+            unit-enabled|unit-user-enabled|fstab-line) continue ;;
         esac
         # The DKMS staging dir is variable-expanded (DEST_SRC) everywhere; assert
         # the variable, not the literal path.
@@ -177,7 +177,7 @@ case_manifest_deploy_consistency() {
     while IFS=$'\t' read -r p k; do
         [ -n "$p" ] || continue
         case "$k" in
-            unit-enabled|fstab-line|state) continue ;;
+            unit-enabled|unit-user-enabled|fstab-line|state) continue ;;
         esac
         b="${p##*/}"
         # install deploy action
@@ -257,7 +257,7 @@ case_verify_conditional_absent() {
     while IFS=$'\t' read -r p k; do
         [ -n "$p" ] || continue
         case "$k" in
-            unit-enabled|fstab-line|state|file-optional|exec-optional|dir-optional|grub-snippet-optional) continue ;;
+            unit-enabled|unit-user-enabled|fstab-line|state|file-optional|exec-optional|dir-optional|grub-snippet-optional) continue ;;
         esac
         case "$k" in
             dir) mkdir -p "${R}${p}" ;;
@@ -340,7 +340,7 @@ case_enable_parity_9() {
             echo "    [detail] camera-loopback not enabled in $f"
             CASE_FAIL=1
         fi
-        n="$(grep -oE "systemctl enable [a-zA-Z0-9._-]+\.service" "$f" | awk '{print $3}' | sort -u | wc -l)"
+        n="$(grep -oE "systemctl (--global )?enable [a-zA-Z0-9._-]+\.service" "$f" | awk '{print $NF}' | sort -u | wc -l)"
         if [ "$n" -lt 9 ]; then
             echo "    [detail] $f enables only $n units"
             CASE_FAIL=1

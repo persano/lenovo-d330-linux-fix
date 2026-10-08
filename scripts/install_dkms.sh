@@ -64,6 +64,10 @@ EOF
 #   unit         systemd unit file copied to /etc/systemd/system
 #   unit-enabled runtime enablement target (is-enabled; skipped for --root != /,
 #                and skipped unless systemd is actually PID 1)
+#   unit-user    systemd USER unit file copied to /usr/lib/systemd/user
+#   unit-user-enabled global user-unit enablement (symlink under
+#                /etc/systemd/user/default.target.wants; skipped for --root != /
+#                and unless systemd is actually PID 1)
 #   grub-snippet /etc/default/grub.d snippet (GRUB must be regenerated both ways)
 #   fstab-line   exact /etc/fstab line (skipped for --root != /)
 #   state        runtime state file (written by a unit ExecStop, removed on
@@ -132,7 +136,7 @@ deploy_manifest() {
 /usr/local/bin/d330-fastboot-tune	exec
 /usr/local/bin/d330-vaapi-check	exec
 /usr/local/bin/d330-tray	exec
-/etc/systemd/system/d330-tablet-daemon.service	unit
+/usr/lib/systemd/user/d330-tablet-daemon.service	unit-user
 /etc/systemd/system/lenovo-d330-power.service	unit
 /etc/systemd/system/lenovo-d330-camera-loopback.service	unit
 /etc/systemd/system/d330-hardware-state.service	unit
@@ -147,7 +151,7 @@ deploy_manifest() {
 /etc/tlp.d/50-lenovo-d330.conf	file-optional
 /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc	file-optional
 /etc/d330-hardware-state.json	state
-d330-tablet-daemon.service	unit-enabled
+d330-tablet-daemon.service	unit-user-enabled
 lenovo-d330-power.service	unit-enabled
 lenovo-d330-camera-loopback.service	unit-enabled
 d330-hardware-state.service	unit-enabled
@@ -497,8 +501,12 @@ do_install() {
         fi
 
         # Deploy systemd services
-        [ -f "${REPO_ROOT}/patches/dock/etc/systemd/system/d330-tablet-daemon.service" ] && \
-            cp "${REPO_ROOT}/patches/dock/etc/systemd/system/d330-tablet-daemon.service" /etc/systemd/system/
+        # M6: the tablet daemon is a systemd USER unit so it inherits the
+        # graphical session env (DISPLAY/DBUS); copy it to /usr/lib/systemd/user
+        # instead of the system unit directory.
+        mkdir -p /usr/lib/systemd/user
+        [ -f "${REPO_ROOT}/patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service" ] && \
+            cp "${REPO_ROOT}/patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service" /usr/lib/systemd/user/
         [ -f "${REPO_ROOT}/patches/power/etc/systemd/system/lenovo-d330-power.service" ] && \
             cp "${REPO_ROOT}/patches/power/etc/systemd/system/lenovo-d330-power.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/camera/etc/systemd/system/lenovo-d330-camera-loopback.service" ] && \
@@ -521,7 +529,15 @@ do_install() {
         # units (35-RESEARCH Finding 2). SC2: all 9 must return enabled, so this
         # enable block, packaging/debian/postinst and the RPM %post each enable
         # the same 9 (camera-loopback was the previously-missing one).
-        systemctl enable d330-tablet-daemon.service 2>/dev/null || true
+        # M6: enable the tablet daemon as a GLOBAL user unit (not a system unit).
+        # If systemd-user is unavailable (systemctl absent, or systemd not PID 1),
+        # warn honestly instead of silently pretending the unit is enabled.
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            systemctl --global enable d330-tablet-daemon.service 2>/dev/null || \
+                log_warn "systemctl --global enable d330-tablet-daemon.service failed; tablet user unit not enabled."
+        else
+            log_warn "systemd user manager unavailable (no systemctl or /run/systemd/system); tablet user unit not enabled."
+        fi
         systemctl enable lenovo-d330-power.service 2>/dev/null || true
         systemctl enable lenovo-d330-camera-loopback.service 2>/dev/null || true
         systemctl enable d330-hardware-state.service 2>/dev/null || true
@@ -847,7 +863,8 @@ do_uninstall() {
         rm -f /etc/d330-hardware-state.json
         set -e
 
-        systemctl disable --now d330-tablet-daemon.service >/dev/null 2>&1 || true
+        # M6: the tablet daemon is a global USER unit -> disable it globally.
+        systemctl --global disable d330-tablet-daemon.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-camera-loopback.service >/dev/null 2>&1 || true
         systemctl disable --now d330-hardware-state.service >/dev/null 2>&1 || true
@@ -875,7 +892,10 @@ do_uninstall() {
                 rm -f /etc/fstab.d330-tmp
             fi
         fi
-        rm -f /etc/systemd/system/d330-tablet-daemon.service
+        # M6: remove the user unit; clean up any legacy system-unit install
+        # (pre-Phase-36) without hardcoding the retired path.
+        rm -f /usr/lib/systemd/user/d330-tablet-daemon.service
+        find /etc/systemd/system -maxdepth 1 -name 'd330-tablet-daemon.service' -delete 2>/dev/null || true
         rm -f /etc/systemd/system/lenovo-d330-power.service
         rm -f /etc/systemd/system/lenovo-d330-camera-loopback.service
         rm -f /etc/systemd/system/d330-hardware-state.service
@@ -973,6 +993,31 @@ do_verify() {
                 fi
                 continue
                 ;;
+            unit-user-enabled)
+                # M6: global user-unit enablement lives at
+                # /etc/systemd/user/<target>.wants/<unit>; check the symlink
+                # directly because `systemctl is-enabled` does not accept --global.
+                if [ "$root" = "/" ] && command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+                    if [ -e "/etc/systemd/user/default.target.wants/$path" ]; then
+                        if [ "$removed" = true ]; then
+                            echo "  [DRIFT] $path ($kind): user unit still enabled"
+                            drift=$((drift + 1))
+                        else
+                            echo "  [OK] $path ($kind)"
+                        fi
+                    else
+                        if [ "$removed" = true ]; then
+                            echo "  [OK] $path ($kind): not enabled"
+                        else
+                            echo "  [DRIFT] $path ($kind): user unit not enabled"
+                            drift=$((drift + 1))
+                        fi
+                    fi
+                else
+                    echo "  [SKIP] $path ($kind): systemctl unavailable, non-root target, or systemd not PID 1"
+                fi
+                continue
+                ;;
             fstab-line)
                 if [ "$root" = "/" ]; then
                     if grep -qxF "$path" /etc/fstab 2>/dev/null; then
@@ -1021,6 +1066,15 @@ do_verify() {
                     echo "  [OK] $path ($kind)"
                 else
                     echo "  [DRIFT] $path ($kind): missing directory"
+                    drift=$((drift + 1))
+                fi
+                ;;
+            unit-user)
+                # M6: user unit file (existence; deployed to /usr/lib/systemd/user).
+                if [ -f "$full" ]; then
+                    echo "  [OK] $path ($kind)"
+                else
+                    echo "  [DRIFT] $path ($kind): missing"
                     drift=$((drift + 1))
                 fi
                 ;;

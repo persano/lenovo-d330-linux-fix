@@ -1,0 +1,16 @@
+[Unit]
+Description=Lenovo IdeaPad D330 Detachable Keyboard Dock & Tablet Mode Daemon
+Documentation=https://github.com/persano/lenovo-d330-linux-fix
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/d330-tablet-daemon --daemon
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+Nice=-5
+
+[Install]
+WantedBy=default.target
