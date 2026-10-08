@@ -449,6 +449,14 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `tools/d330-vaapi-check.sh` | `/usr/local/bin/d330-vaapi-check` | VA-API diagnostic inspection CLI |
 | `tools/d330-tray.py` | `/usr/local/bin/d330-tray` | stdlib notification/status helper (`notify-send` + `--status`) |
 
+**Development-only tools (not installed):** `tools/d330-acpi-override.sh` (manual
+`iasl` early-CPIO builder) and `tools/d330-pen-config.sh` (ad-hoc pen/touchpad
+diagnostics) are development helpers. `install_dkms.sh` does not deploy them to
+`/usr/local/bin`, and they are intentionally absent from `deploy_manifest()`.
+Likewise `patches/acpi_override/dsdt_override.asl` is a source sketch that the
+installer never compiles; only the archive-guarded
+`51-lenovo-d330-acpi-override.cfg` GRUB snippet is deployed.
+
 ### 8.2 Unified Installation and Uninstallation Script (`scripts/install_dkms.sh`)
 * **Deployment Mechanism**:
   - `scripts/install_dkms.sh --install`: Validates root privileges, verifies DKMS tooling, builds and loads the kernel module, creates all necessary configuration directories, copies configuration files, enables all systemd services, updates `systemd-hwdb`, and triggers initramfs regeneration.

@@ -111,12 +111,18 @@ dmesg | grep lenovo_d330_fix
 ## Repository Structure
 
 ```text
+├── .github/              # CI workflows and harness-trust checks
 ├── .gsd/                 # GSD autonomous state management & worklogs
 ├── docs/
+│   ├── DISTRO_INSTALL_GUIDE.md  # Ubuntu/Mint, Fedora, Arch and ISO guidance
 │   ├── research/        # Prior art and community findings analysis
 │   ├── dumps/           # Hardware extraction procedures & dump archives
 │   └── windows_analysis/# igdkmd64.sys vs i915 differential analysis
 ├── drivers_base/        # Official Lenovo Windows driver baseline references
+├── packaging/           # Debian, Arch and RPM packaging metadata
+│   ├── debian/          # dpkg-buildpackage rules & control
+│   ├── arch/            # PKGBUILD
+│   └── rpm/             # lenovo-d330-fix.spec
 ├── patches/
 │   ├── d330_display_resume_fix.patch  # Unified DRM kernel patch
 │   ├── chromeos/        # ChromeOS kernel 5.15 & 6.6 patches
@@ -126,9 +132,16 @@ dmesg | grep lenovo_d330_fix
 │   ├── acquire_lenovo_drivers.sh      # Downloader for Lenovo OEM drivers
 │   ├── extract_telemetry.sh           # ACPI/VBT/EDID telemetry collection
 │   ├── install_dkms.sh                # Automated DKMS installation harness
-│   └── test_resume_loop.sh            # Suspend/resume verification loop
+│   └── test_*.sh        # Test harnesses (resume, touch, dock, audio, battery...)
 └── tools/
     ├── analyze_igdkmd64.py            # PE/COFF driver & INF parser
     ├── compare_pps_timings.py         # PPS timing state machine model
     └── ghidra_export_power_callbacks.py # Ghidra headless callback exporter
 ```
+
+The test harnesses are trusted to fail loudly: `scripts/test_harness_trust.sh`
+(Phase 41) deliberately breaks the subject of representative suites and asserts a
+non-zero exit, so a green run means the checks actually executed rather than
+silently passing. Development-only helpers (`tools/d330-acpi-override.sh`,
+`tools/d330-pen-config.sh`) are diagnostics and are **not** installed by
+`install_dkms.sh`.
