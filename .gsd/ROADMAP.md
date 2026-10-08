@@ -86,7 +86,7 @@
 - [x] Phase 39: udev / hwdb / Wireless Match Correctness (Audit M8, M9, M10, M15, M16) (completed 2026-10-08)
 - [x] Phase 40: Power Stack Reconciliation (Audit M13, M14) (completed 2026-10-08)
 - [x] Phase 41: Test Harness Trustworthiness (Audit M12, N8) (completed 2026-10-08)
-- [ ] Phase 42: Documentation Parity & Repository Polish (Audit M17, N1–N5, N7, N9, N10)
+- [x] Phase 42: Documentation Parity & Repository Polish (Audit M17, N1–N5, N7, N9, N10) (completed 2026-10-08)
 
 ### Phase 32: Data-Loss & Boot Safety Guards
 
