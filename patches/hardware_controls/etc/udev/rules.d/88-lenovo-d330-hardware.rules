@@ -1,5 +1,8 @@
 # Lenovo IdeaPad D330-10IGL Hardware Control udev rules
-# Grants non-root users in plugdev/wheel access to adjust conservation mode & fn-lock
-
-SUBSYSTEM=="platform", DRIVERS=="ideapad_laptop", ATTR{conservation_mode}!="", MODE="0664", GROUP="plugdev"
-SUBSYSTEM=="platform", DRIVERS=="ideapad_laptop", ATTR{fn_lock}!="", MODE="0664", GROUP="plugdev"
+#
+# NOTE: `conservation_mode` and `fn_lock` are platform sysfs attributes owned
+# by the `ideapad_laptop` driver. udev cannot chmod sysfs attributes, so a
+# MODE/GROUP attribute rule here would be a no-op and has been removed.
+# Writing these nodes therefore requires root (or `pkexec <cmd>`); there is no
+# non-root plugdev path. Use `d330-ctl` via sudo/pkexec to toggle conservation
+# mode and fn-lock.

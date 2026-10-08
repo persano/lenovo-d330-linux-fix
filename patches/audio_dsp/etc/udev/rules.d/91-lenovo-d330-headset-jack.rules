@@ -3,6 +3,3 @@
 
 # Tag headset jack input device for desktop media key routing
 ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="*Headset*", ENV{ID_INPUT_KEY}="1"
-
-# Handle Everest / Intel SOF jack detection switches
-ACTION=="change", SUBSYSTEM=="sound", KERNEL=="card*", ENV{SOUND_INITIALIZED}="1"
