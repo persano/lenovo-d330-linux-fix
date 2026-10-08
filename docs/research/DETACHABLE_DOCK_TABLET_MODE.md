@@ -37,7 +37,7 @@ The daemon (`tools/d330-tablet-daemon.py`) provides hybrid event listening:
 
 ## 3. Systemd and Udev Integration
 
-- Service unit: `patches/dock/etc/systemd/system/d330-tablet-daemon.service`
+- Service unit: `patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service` (systemd user unit; enabled with `systemctl --global enable`)
 - Udev rule: `patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules`
   * Captures USB hotplug events and triggers daemon state synchronization.
   * Tags Intel HID switch devices for systemd activation.
