@@ -1,4 +1,9 @@
 # Lenovo IdeaPad D330-10IGL Low Battery udev rule
 # Triggers auto-hibernate service when battery discharge state updates
 
+# ATTR{capacity}=="[0-5]" is a udev glob, not a regex: udev(7) brackets match
+# any single character, so this matches the single characters 0-5 (capacity
+# 0%-5%) and is correct as-is for a critical threshold. Do NOT rewrite it with
+# regex/range intent (it deliberately does not match 10, 20, ...).
+# TAG+="systemd" is mandatory here: SYSTEMD_WANTS is ignored on untagged devices.
 SUBSYSTEM=="power_supply", ATTR{type}=="Battery", ATTR{status}=="Discharging", ATTR{capacity}=="[0-5]", TAG+="systemd", ENV{SYSTEMD_WANTS}="d330-auto-hibernate.service"

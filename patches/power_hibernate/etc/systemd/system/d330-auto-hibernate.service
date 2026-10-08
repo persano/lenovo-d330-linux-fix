@@ -3,8 +3,13 @@ Description=Lenovo IdeaPad D330 Low Battery Hibernate Daemon
 After=power-profiles-daemon.service
 
 [Service]
+# Type=oneshot is deliberate: the checker exits promptly and, without
+# RemainAfterExit=, a finished oneshot is dead — systemd's device code
+# re-enqueues a fresh start job for it on every udev event, so the udev
+# SYSTEMD_WANTS trigger re-fires this unit per battery event. A long-running
+# type would leave the unit active and later events would be skipped.
 Type=oneshot
-ExecStart=/usr/local/bin/d330-auto-hibernate.py
+ExecStart=/usr/local/bin/d330-auto-hibernate
 
 [Install]
 WantedBy=multi-user.target
