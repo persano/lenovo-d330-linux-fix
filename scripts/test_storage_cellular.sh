@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ and patches/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 
 show_help() {
@@ -156,7 +161,7 @@ fi
 case "$MODE" in
     probe)
         echo "--- 1. MicroSD Storage State ---"
-        bash tools/d330-microsd-setup.sh --probe
+        bash "$SCRIPT_DIR/tools/d330-microsd-setup.sh" --probe
 
         echo ""
         echo "--- 2. LTE Cellular Modem State ---"
@@ -175,7 +180,7 @@ case "$MODE" in
         # as --probe; it is retained for backwards compatibility (documented in
         # --help) rather than pretending to be a distinct test.
         echo "--- MicroSD Probe (--test-microsd alias of --probe) ---"
-        bash tools/d330-microsd-setup.sh --probe
+        bash "$SCRIPT_DIR/tools/d330-microsd-setup.sh" --probe
         ;;
 esac
 

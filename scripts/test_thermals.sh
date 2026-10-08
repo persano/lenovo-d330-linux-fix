@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 
 show_help() {
@@ -60,10 +65,10 @@ fi
 
 case "$MODE" in
     probe)
-        bash tools/d330-thermal-tune.sh
+        bash "$SCRIPT_DIR/tools/d330-thermal-tune.sh"
         ;;
     apply)
-        bash tools/d330-thermal-tune.sh --apply
+        bash "$SCRIPT_DIR/tools/d330-thermal-tune.sh" --apply
         ;;
 esac
 

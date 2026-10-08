@@ -6,6 +6,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# patches/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -51,10 +56,10 @@ log_info "=== Lenovo D330 Touchscreen & Active Pen Diagnostic ==="
 if [ $DRY_RUN -eq 1 ]; then
     log_info "[DRY-RUN] Auditing shipped touchscreen configuration (no hardware touched)..."
     for f in \
-        patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf \
-        patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules \
-        patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb \
-        patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh; do
+        "$SCRIPT_DIR/patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf" \
+        "$SCRIPT_DIR/patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules" \
+        "$SCRIPT_DIR/patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb" \
+        "$SCRIPT_DIR/patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh"; do
         if [ -f "$f" ]; then
             log_ok "Shipped config present: $f"
         else

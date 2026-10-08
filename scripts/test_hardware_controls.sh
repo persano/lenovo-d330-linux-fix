@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 APPLY=0
 FAILED=0
@@ -57,7 +62,7 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying d330-ctl tool execution..."
-    if ! python3 tools/d330-ctl status; then
+    if ! python3 "$SCRIPT_DIR/tools/d330-ctl" status; then
         echo "[FAIL] d330-ctl status failed." >&2
         exit 1
     fi
@@ -67,7 +72,7 @@ fi
 
 case "$MODE" in
     probe)
-        if ! python3 tools/d330-ctl status; then
+        if ! python3 "$SCRIPT_DIR/tools/d330-ctl" status; then
             echo "[FAIL] d330-ctl status failed." >&2
             FAILED=$((FAILED + 1))
         fi
@@ -77,7 +82,7 @@ case "$MODE" in
         if [[ "$APPLY" -ne 1 ]]; then
             echo "[INFO] --test-toggle is read-only without --apply."
             echo "[INFO] Would toggle conservation_mode and restore the original value."
-            python3 tools/d330-ctl battery status || true
+            python3 "$SCRIPT_DIR/tools/d330-ctl" battery status || true
             exit 0
         fi
         if [[ $EUID -ne 0 ]]; then

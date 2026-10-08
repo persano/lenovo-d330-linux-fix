@@ -6,6 +6,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -59,7 +64,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-DAEMON_SCRIPT="tools/d330-tablet-daemon.py"
+DAEMON_SCRIPT="$SCRIPT_DIR/tools/d330-tablet-daemon.py"
 if [ ! -f "$DAEMON_SCRIPT" ]; then
     DAEMON_SCRIPT="/usr/local/bin/d330-tablet-daemon"
 fi

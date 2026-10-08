@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 FAILED=0
 
@@ -84,7 +89,7 @@ case "$MODE" in
         ;;
     build-cpio)
         echo "Building ACPI CPIO archive..."
-        if bash tools/d330-acpi-override.sh /tmp/acpi-override-test.cpio; then
+        if bash "$SCRIPT_DIR/tools/d330-acpi-override.sh" /tmp/acpi-override-test.cpio; then
             echo "[OK] Test CPIO created at /tmp/acpi-override-test.cpio"
         else
             echo "[FAIL] d330-acpi-override.sh failed to build the CPIO." >&2

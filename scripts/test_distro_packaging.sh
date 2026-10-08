@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# packaging/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 FAILED=0
 
@@ -44,9 +49,9 @@ echo "=========================================================="
 echo " Lenovo D330-10IGL Distro Packaging Verification Tool     "
 echo "=========================================================="
 
-DEB_CTRL="packaging/debian/control"
-RPM_SPEC="packaging/rpm/lenovo-d330-fix.spec"
-ARCH_PKG="packaging/arch/PKGBUILD"
+DEB_CTRL="$SCRIPT_DIR/packaging/debian/control"
+RPM_SPEC="$SCRIPT_DIR/packaging/rpm/lenovo-d330-fix.spec"
+ARCH_PKG="$SCRIPT_DIR/packaging/arch/PKGBUILD"
 
 ok()  { echo "  [OK] $*"; }
 bad() { echo "  [FAIL] $*" >&2; FAILED=$((FAILED + 1)); }

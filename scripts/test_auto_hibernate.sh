@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 MODE="probe"
 FAILED=0
 
@@ -53,7 +58,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying auto-hibernate daemon..."
     echo "  - Critical threshold: <= 5% capacity"
     echo "  - Trigger: Discharging state"
-    if ! python3 tools/d330-auto-hibernate.py --dry-run; then
+    if ! python3 "$SCRIPT_DIR/tools/d330-auto-hibernate.py" --dry-run; then
         echo "[FAIL] auto-hibernate dry-run validation failed." >&2
         FAILED=$((FAILED + 1))
     fi
@@ -77,14 +82,14 @@ case "$MODE" in
 
         echo ""
         echo "--- 2. Battery Monitoring ---"
-        if ! python3 tools/d330-auto-hibernate.py --dry-run; then
+        if ! python3 "$SCRIPT_DIR/tools/d330-auto-hibernate.py" --dry-run; then
             echo "[FAIL] auto-hibernate battery monitor failed." >&2
             FAILED=$((FAILED + 1))
         fi
         ;;
     simulate)
         echo "Simulating low-battery auto-hibernate..."
-        if ! python3 tools/d330-auto-hibernate.py --dry-run; then
+        if ! python3 "$SCRIPT_DIR/tools/d330-auto-hibernate.py" --dry-run; then
             echo "[FAIL] auto-hibernate simulation failed." >&2
             FAILED=$((FAILED + 1))
         fi

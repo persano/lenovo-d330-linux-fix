@@ -6,6 +6,11 @@
 
 set -euo pipefail
 
+# CWD anchoring: resolve the repo root from this script's own location so the
+# tools/ and patches/ references below work from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -64,15 +69,15 @@ log_info "=== Lenovo D330 Battery & Thermal Diagnostic Harness ==="
 if [ $DO_TUNE -eq 1 ]; then
     if [ $APPLY -eq 1 ]; then
         log_info "Applying power tuning profile..."
-        if [ -f "tools/lenovo-d330-power-tune.sh" ]; then
-            bash tools/lenovo-d330-power-tune.sh
+        if [ -f "$SCRIPT_DIR/tools/lenovo-d330-power-tune.sh" ]; then
+            bash "$SCRIPT_DIR/tools/lenovo-d330-power-tune.sh"
             log_ok "Power tuning applied."
         else
             log_err "tools/lenovo-d330-power-tune.sh not found."
             exit 1
         fi
     else
-        log_warn "--tune is read-only without --apply; would run: bash tools/lenovo-d330-power-tune.sh"
+        log_warn "--tune is read-only without --apply; would run: bash $SCRIPT_DIR/tools/lenovo-d330-power-tune.sh"
     fi
 fi
 
