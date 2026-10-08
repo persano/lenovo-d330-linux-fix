@@ -56,7 +56,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -79,6 +79,11 @@ if [[ "$MODE" == "dry-run" ]]; then
     # non-zero exit propagates under set -e, so any failing case fails this
     # mode; its passed=N failed=M summary flows into this output.
     bash scripts/test_hibernate_guards.sh
+
+    # Installer symmetry guard suite (Phase 35, 11 cases): same contract as the
+    # suites above - its non-zero exit propagates under set -e, so any failing
+    # case fails this mode; its passed=N failed=M summary flows into this output.
+    bash scripts/test_installer_symmetry.sh
 
     # Inventory context only - these paths are not checks.
     echo "[INFO] ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
