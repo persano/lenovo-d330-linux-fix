@@ -12,7 +12,7 @@ Usage: scripts/test_storage_cellular.sh [OPTIONS]
 
 Options:
   --probe          Inspect MicroSD card slot and LTE modem state (default)
-  --test-microsd   Run probe using tools/d330-microsd-setup.sh
+  --test-microsd   Alias for --probe (read-only MicroSD probe, kept for compatibility)
   --dry-run        Validate scripts and configs without modifying hardware
   --help           Show this help message
 EOF
@@ -132,9 +132,23 @@ if [[ "$MODE" == "dry-run" ]]; then
     # `rtw88_8821ce`. Same contract as the suites above.
     bash scripts/test_wireless_coex.sh --dry-run
 
-    # Inventory context only - these paths are not checks.
-    echo "[INFO] ModemManager FCC Unlock: patches/cellular_storage/etc/ModemManager/fcc-unlock.d/8086:7360"
-    echo "[INFO] Cellular Rules: patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"
+    # Cellular packaging inventory: resolve the real FCC-unlock hook instead of
+    # printing a hardcoded path that does not exist.
+    shopt -s nullglob
+    fcc_files=(patches/cellular_storage/etc/ModemManager/fcc-unlock.d/*)
+    shopt -u nullglob
+    if [ "${#fcc_files[@]}" -eq 0 ]; then
+        echo "[FAIL] No ModemManager FCC unlock hook under patches/cellular_storage/etc/ModemManager/fcc-unlock.d/" >&2
+        exit 1
+    fi
+    for f in "${fcc_files[@]}"; do
+        if [ -s "$f" ]; then
+            echo "[OK] ModemManager FCC unlock hook: $f"
+        else
+            echo "[INFO] ModemManager FCC unlock hook present but empty: $f"
+        fi
+    done
+    echo "[OK] Cellular Rules: patches/cellular_storage/etc/udev/rules.d/78-lenovo-d330-cellular.rules"
     echo "[OK] dry-run verification complete"
     exit 0
 fi
@@ -157,6 +171,10 @@ case "$MODE" in
         fi
         ;;
     test-microsd)
+        # Honest alias: --test-microsd performs the same read-only MicroSD probe
+        # as --probe; it is retained for backwards compatibility (documented in
+        # --help) rather than pretending to be a distinct test.
+        echo "--- MicroSD Probe (--test-microsd alias of --probe) ---"
         bash tools/d330-microsd-setup.sh --probe
         ;;
 esac

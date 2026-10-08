@@ -5,6 +5,8 @@
 set -euo pipefail
 
 MODE="probe"
+APPLY=0
+FAILED=0
 
 show_help() {
     cat << 'EOF'
@@ -12,7 +14,8 @@ Usage: scripts/test_hardware_controls.sh [OPTIONS]
 
 Options:
   --probe          Inspect active VPC2004 sysfs nodes and ideapad_laptop driver (default)
-  --test-toggle    Test toggling battery conservation mode and restoring state
+  --test-toggle    Toggle battery conservation mode and restore it (requires --apply)
+  --apply          Actually write to hardware (required for --test-toggle)
   --dry-run        Validate CLI tool and script without writing to hardware
   --help           Show this help message
 EOF
@@ -26,6 +29,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --test-toggle)
             MODE="test-toggle"
+            shift
+            ;;
+        --apply)
+            APPLY=1
             shift
             ;;
         --dry-run)
@@ -50,23 +57,69 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying d330-ctl tool execution..."
-    python3 tools/d330-ctl status || true
+    if ! python3 tools/d330-ctl status; then
+        echo "[FAIL] d330-ctl status failed." >&2
+        exit 1
+    fi
     echo "[DRY-RUN] Hardware controls logic validated."
     exit 0
 fi
 
 case "$MODE" in
     probe)
-        python3 tools/d330-ctl status
+        if ! python3 tools/d330-ctl status; then
+            echo "[FAIL] d330-ctl status failed." >&2
+            FAILED=$((FAILED + 1))
+        fi
         ;;
     test-toggle)
         echo "Testing Battery Conservation Mode toggle..."
-        if [[ $EUID -ne 0 ]]; then
-            echo "[WARN] Root privileges required to write to sysfs."
+        if [[ "$APPLY" -ne 1 ]]; then
+            echo "[INFO] --test-toggle is read-only without --apply."
+            echo "[INFO] Would toggle conservation_mode and restore the original value."
+            python3 tools/d330-ctl battery status || true
+            exit 0
         fi
-        python3 tools/d330-ctl battery status
+        if [[ $EUID -ne 0 ]]; then
+            echo "[FAIL] Root privileges required to toggle conservation_mode." >&2
+            exit 1
+        fi
+        node=""
+        for d in /sys/bus/platform/drivers/ideapad_laptop/VPC2004:00 \
+                 /sys/devices/platform/VPC2004:00 \
+                 /sys/bus/platform/devices/VPC2004:00; do
+            if [[ -e "$d/conservation_mode" ]]; then
+                node="$d/conservation_mode"
+                break
+            fi
+        done
+        if [[ -z "$node" ]]; then
+            echo "[FAIL] conservation_mode node not found (ideapad_laptop driver inactive)." >&2
+            exit 1
+        fi
+        original="$(cat "$node")"
+        if ! echo 1 > "$node" 2>/dev/null; then
+            echo "[FAIL] Could not write conservation_mode=1 to $node." >&2
+            exit 1
+        fi
+        toggled="$(cat "$node")"
+        if ! echo "$original" > "$node" 2>/dev/null; then
+            echo "[FAIL] Could not restore conservation_mode=$original to $node." >&2
+            exit 1
+        fi
+        restored="$(cat "$node")"
+        if [[ "$toggled" != "1" || "$restored" != "$original" ]]; then
+            echo "[FAIL] Toggle/restore mismatch (toggled=$toggled restored=$restored original=$original)." >&2
+            exit 1
+        fi
+        echo "[OK] Conservation mode toggled to 1 and restored to $original."
         ;;
 esac
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "[FAIL] ${FAILED} check(s) failed." >&2
+    exit 1
+fi
 
 echo "=========================================================="
 echo " Test completed.                                          "

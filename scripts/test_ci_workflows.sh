@@ -43,9 +43,21 @@ echo "=========================================================="
 echo " Lenovo D330-10IGL CI/CD Workflow Verification Tool       "
 echo "=========================================================="
 
-python3 - << 'EOF'
+# The parsed MODE is consumed by the validator: --probe is strict (a missing
+# optional name: is a failure), --dry-run tolerates the optional name: while
+# still failing on the required on:/jobs: keys. Both modes exit non-zero on a
+# real structural problem.
+CI_STRICT=1
+if [[ "$MODE" == "dry-run" ]]; then
+    CI_STRICT=0
+    echo "[DRY-RUN] Validating workflow structure without external services..."
+fi
+
+D330_CI_STRICT="$CI_STRICT" python3 - << 'EOF'
 import os
 import sys
+
+strict = os.environ.get("D330_CI_STRICT", "1") == "1"
 
 workflows_dir = ".github/workflows"
 if not os.path.isdir(workflows_dir):
@@ -57,20 +69,30 @@ if not files:
     print("[FAIL] No workflow files found.")
     sys.exit(1)
 
+failed = 0
 print(f"Found {len(files)} workflow file(s):")
 for f in sorted(files):
     full_path = os.path.join(workflows_dir, f)
     with open(full_path, "r", encoding="utf-8") as wf:
         content = wf.read()
-    # Basic YAML structural sanity checks
     has_name = "name:" in content
     has_on = "on:" in content
     has_jobs = "jobs:" in content
-    if has_name and has_on and has_jobs:
-        print(f"  [OK] {f} (name, triggers, jobs defined)")
+    if not (has_on and has_jobs):
+        print(f"  [FAIL] {f} missing required keys: on={has_on}, jobs={has_jobs}")
+        failed += 1
+    elif not has_name:
+        if strict:
+            print(f"  [FAIL] {f} missing 'name:'")
+            failed += 1
+        else:
+            print(f"  [WARN] {f} has no 'name:' (optional)")
     else:
-        print(f"  [WARN] {f} may be incomplete: name={has_name}, on={has_on}, jobs={has_jobs}")
+        print(f"  [OK] {f} (name, triggers, jobs defined)")
 
+if failed:
+    print(f"[FAIL] {failed} workflow file(s) failed validation.")
+    sys.exit(1)
 print("All GitHub Actions workflows validated.")
 EOF
 
