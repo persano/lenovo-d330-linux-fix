@@ -815,6 +815,9 @@ do_uninstall() {
         rm -f /etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf
         rm -f /etc/tlp.d/50-lenovo-d330.conf
         rm -f /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc
+        # N6/I34: runtime state file written by d330-hardware-state.service
+        # ExecStop (manifest kind 'state'); never removed before Phase 35.
+        rm -f /etc/d330-hardware-state.json
 
         systemctl disable --now d330-tablet-daemon.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
@@ -854,6 +857,10 @@ do_uninstall() {
         rm -f /etc/systemd/system/d330-thermal.service
         rm -f /etc/systemd/system/d330-swapfile.service
         systemctl daemon-reload >/dev/null 2>&1 || true
+        # N6/I35: undo wait-online masking (net-new defensive cleanup, scoped to
+        # the two named units only; a no-op if they were never masked).
+        systemctl unmask systemd-networkd-wait-online.service >/dev/null 2>&1 || true
+        systemctl unmask NetworkManager-wait-online.service >/dev/null 2>&1 || true
 
         # Refresh
         if command -v systemd-hwdb >/dev/null 2>&1; then
@@ -869,6 +876,10 @@ do_uninstall() {
         fi
         if command -v update-initramfs >/dev/null 2>&1; then
             update-initramfs -u || true
+        elif command -v dracut >/dev/null 2>&1; then
+            # N6/I33: mirror install's dracut branch so a dracut-only distro
+            # refreshes its initramfs after the hook/snippet removals above.
+            dracut -f || true
         fi
     fi
     log_ok "Uninstallation complete. System restored to baseline state."
