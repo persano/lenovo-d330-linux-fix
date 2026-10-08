@@ -12,11 +12,13 @@
 # version-dependent (33-RESEARCH R9) and are never matched. No case invokes
 # the real systemctl, swapon, or filefrag.
 #
-# Cases (12): zram-only-refuse, swapfile-ready-proceed, safe-battery-report,
+# Cases (19): zram-only-refuse, swapfile-ready-proceed, safe-battery-report,
 # resume-not-configured, hibernation-unavailable, empty-swaps-refuse,
 # malformed-swaps-tolerated, no-battery-report-first,
 # execstart-matches-install-path, type-oneshot-kept, udev-glob-comment,
-# daemon-syntax-gates.
+# daemon-syntax-gates, enable-site-install-dkms, enable-site-debian-postinst,
+# enable-site-rpm-spec, swapfile-unit-static, resume-snippet-template,
+# installer-activation-step, uninstall-symmetry.
 # ==============================================================================
 
 set -euo pipefail
@@ -27,14 +29,18 @@ cd "$REPO_ROOT"
 
 DAEMON="tools/d330-auto-hibernate.py"
 SERVICE="patches/power_hibernate/etc/systemd/system/d330-auto-hibernate.service"
+SWAPFILE_UNIT="patches/power_hibernate/etc/systemd/system/d330-swapfile.service"
+RESUME_SNIPPET="patches/power_hibernate/etc/default/grub.d/53-lenovo-d330-resume.cfg"
 UDEV_RULE="patches/power_hibernate/etc/udev/rules.d/99-lenovo-d330-battery-critical.rules"
 INSTALLER="scripts/install_dkms.sh"
+DEBIAN_POSTINST="packaging/debian/postinst"
+RPM_SPEC="packaging/rpm/lenovo-d330-fix.spec"
 
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 33 hibernate guard suite (12 cases, env-seam fixtures, no root,
+Runs the Phase 33 hibernate guard suite (19 cases, env-seam fixtures, no root,
 no battery, no systemd).
 
 Options:
@@ -261,6 +267,141 @@ case_daemon_syntax_gates() {
     expect_rc_eq "$rc" 0
 }
 
+# --- Plan 33-02 static guards (SC3 enable sites, assets, installer, symmetry) ---
+
+# Both enable lines present in $1 installer file, in one helper.
+expect_enable_sites() {
+    if ! grep -q "systemctl enable d330-auto-hibernate.service" "$1"; then
+        echo "    [detail] $1 missing: systemctl enable d330-auto-hibernate.service"
+        CASE_FAIL=1
+    fi
+    if ! grep -q "systemctl enable d330-swapfile.service" "$1"; then
+        echo "    [detail] $1 missing: systemctl enable d330-swapfile.service"
+        CASE_FAIL=1
+    fi
+}
+
+case_enable_site_install_dkms() {
+    expect_enable_sites "$INSTALLER"
+    # Both must land in the enable block, before the block's success message.
+    local line_enable line_ok
+    line_enable=$(grep -n "systemctl enable d330-swapfile.service" "$INSTALLER" | head -1 | cut -d: -f1 || true)
+    line_ok=$(grep -n 'log_ok "Enabled systemd background units."' "$INSTALLER" | head -1 | cut -d: -f1 || true)
+    if [ -z "${line_enable:-}" ] || [ -z "${line_ok:-}" ] || [ "$line_enable" -ge "$line_ok" ]; then
+        echo "    [detail] swapfile enable not before the enable-block log_ok line"
+        CASE_FAIL=1
+    fi
+}
+
+case_enable_site_debian_postinst() {
+    expect_enable_sites "$DEBIAN_POSTINST"
+    # Placement: after the existing six enables, before update-initramfs.
+    local line_enable line_init
+    line_enable=$(grep -n "systemctl enable d330-swapfile.service" "$DEBIAN_POSTINST" | head -1 | cut -d: -f1 || true)
+    line_init=$(grep -n "update-initramfs" "$DEBIAN_POSTINST" | head -1 | cut -d: -f1 || true)
+    if [ -z "${line_enable:-}" ] || [ -z "${line_init:-}" ] || [ "$line_enable" -ge "$line_init" ]; then
+        echo "    [detail] swapfile enable not before update-initramfs in postinst"
+        CASE_FAIL=1
+    fi
+}
+
+case_enable_site_rpm_spec() {
+    # Inside %post: enable lines must come after the %post header.
+    local line_post line_enable
+    line_post=$(grep -n "^%post" "$RPM_SPEC" | head -1 | cut -d: -f1 || true)
+    line_enable=$(grep -n "systemctl enable d330-swapfile.service" "$RPM_SPEC" | head -1 | cut -d: -f1 || true)
+    if [ -z "${line_post:-}" ] || [ -z "${line_enable:-}" ] || [ "$line_enable" -le "$line_post" ]; then
+        echo "    [detail] enable lines not inside rpm %post"
+        CASE_FAIL=1
+    fi
+    expect_enable_sites "$RPM_SPEC"
+    # Enable-only this phase (R8): no %preun invented; gap recorded for Phase 35.
+    if grep -q "%preun" "$RPM_SPEC"; then
+        echo "    [detail] %preun was invented (Phase 35 owns uninstall symmetry)"
+        CASE_FAIL=1
+    fi
+}
+
+case_swapfile_unit_static() {
+    expect_file_out "Type=oneshot" "$SWAPFILE_UNIT"
+    expect_file_out "WantedBy=multi-user.target" "$SWAPFILE_UNIT"
+    # Existence guard: creation only when absent (never recreate, R4).
+    expect_file_out "[ -e /var/swapfile ]" "$SWAPFILE_UNIT"
+    expect_file_out "dd if=/dev/zero" "$SWAPFILE_UNIT"
+    expect_file_out "chmod 600" "$SWAPFILE_UNIT"
+    expect_file_out "mkswap" "$SWAPFILE_UNIT"
+    expect_file_out "4096" "$SWAPFILE_UNIT"
+    expect_file_out "8192" "$SWAPFILE_UNIT"
+    expect_file_out "df --output=avail" "$SWAPFILE_UNIT"
+    expect_file_out "[WARN]" "$SWAPFILE_UNIT"
+    # Creation sequence appears exactly once, only in the file-absent branch.
+    local dd_count
+    dd_count=$(grep -c "dd if=/dev/zero" "$SWAPFILE_UNIT" || true)
+    if [ "$dd_count" -ne 1 ]; then
+        echo "    [detail] expected exactly 1 dd creation line, got $dd_count"
+        CASE_FAIL=1
+    fi
+}
+
+case_resume_snippet_template() {
+    expect_file_out 'GRUB_CMDLINE_LINUX_DEFAULT="${GRUB_CMDLINE_LINUX_DEFAULT} resume=UUID=__D330_RESUME_UUID__ resume_offset=__D330_RESUME_OFFSET__"' "$RESUME_SNIPPET"
+    # No machine-derived values ship in the template.
+    if grep -Eq "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" "$RESUME_SNIPPET"; then
+        echo "    [detail] real UUID shipped in template"
+        CASE_FAIL=1
+    fi
+    if grep -Eq "resume_offset=[0-9]+" "$RESUME_SNIPPET"; then
+        echo "    [detail] numeric offset shipped in template"
+        CASE_FAIL=1
+    fi
+    if ! grep -qi "install" "$RESUME_SNIPPET"; then
+        echo "    [detail] install-time render comment missing"
+        CASE_FAIL=1
+    fi
+}
+
+case_installer_activation_step() {
+    # Positive static greps only (daemon-marker style, no real binaries run).
+    # Clamp/free-space guard are asserted against the unit by swapfile-unit-static.
+    expect_file_out "filefrag -v" "$INSTALLER"
+    expect_file_out "update-grub" "$INSTALLER"
+    expect_file_out "grub2-mkconfig" "$INSTALLER"
+    expect_file_out "grub-mkconfig" "$INSTALLER"
+    expect_file_out "resume_offset=" "$INSTALLER"
+    expect_file_out "update-initramfs" "$INSTALLER"
+    expect_file_out "/var/swapfile none swap sw 0 0" "$INSTALLER"
+    expect_file_out "resume=UUID=" "$INSTALLER"
+    expect_file_out "systemctl start d330-swapfile.service" "$INSTALLER"
+    expect_file_out "stat -f -c %S" "$INSTALLER"
+    expect_file_out "getconf PAGESIZE" "$INSTALLER"
+    # The invalid swapon OFFSET-column variant must never appear (Q1.4).
+    if grep -q "show=OFFSET" "$INSTALLER"; then
+        echo "    [detail] invalid offset column referenced"
+        CASE_FAIL=1
+    fi
+    # Manual-step honesty: non-zero exit in the verify-failure branch.
+    if ! grep -q "exit 1" "$INSTALLER"; then
+        echo "    [detail] manual-step non-zero exit missing"
+        CASE_FAIL=1
+    fi
+}
+
+case_uninstall_symmetry() {
+    # Six coverage points: snippet rm, unit disable, unit rm, swapoff,
+    # fstab-line removal, and the pre-existing daemon coverage still present.
+    expect_file_out "rm -f /etc/default/grub.d/53-lenovo-d330-resume.cfg" "$INSTALLER"
+    expect_file_out "systemctl disable --now d330-swapfile.service" "$INSTALLER"
+    expect_file_out "rm -f /etc/systemd/system/d330-swapfile.service" "$INSTALLER"
+    expect_file_out "swapoff /var/swapfile" "$INSTALLER"
+    if ! grep -E -q "sed .*/var/swapfile none swap|grep -v .*/var/swapfile none swap" "$INSTALLER"; then
+        echo "    [detail] fstab swap-line removal missing"
+        CASE_FAIL=1
+    fi
+    expect_file_out "rm -f /usr/local/bin/d330-auto-hibernate" "$INSTALLER"
+    expect_file_out "systemctl disable --now d330-auto-hibernate.service" "$INSTALLER"
+    expect_file_out "rm -f /etc/systemd/system/d330-auto-hibernate.service" "$INSTALLER"
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -277,6 +418,13 @@ CASE_NAMES=(
     case_type_oneshot_kept
     case_udev_glob_comment
     case_daemon_syntax_gates
+    case_enable_site_install_dkms
+    case_enable_site_debian_postinst
+    case_enable_site_rpm_spec
+    case_swapfile_unit_static
+    case_resume_snippet_template
+    case_installer_activation_step
+    case_uninstall_symmetry
 )
 
 for fn in "${CASE_NAMES[@]}"; do

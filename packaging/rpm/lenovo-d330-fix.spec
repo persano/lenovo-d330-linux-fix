@@ -42,6 +42,8 @@ systemctl daemon-reload || true
 systemctl enable lenovo-d330-resume.service 2>/dev/null || true
 systemctl enable d330-tablet-daemon.service 2>/dev/null || true
 systemctl enable lenovo-d330-power.service 2>/dev/null || true
+systemctl enable d330-auto-hibernate.service 2>/dev/null || true
+systemctl enable d330-swapfile.service 2>/dev/null || true
 
 %files
 /usr/local/bin/*
