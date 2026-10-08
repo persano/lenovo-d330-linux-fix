@@ -14,8 +14,21 @@ case "${1:-}/${2:-}" in
             operstate="$(cat "$iface/operstate" 2>/dev/null || echo unknown)"
             echo "[d330-wifi-resume] $ifname: operstate=$operstate carrier=$carrier"
 
-            # Carrier is up and the device is not down: nothing to do.
-            if [ "$carrier" = "1" ] && [ "$operstate" != "down" ]; then
+            # Carrier 0 is ambiguous: the link can be wedged, or the user can
+            # have turned the radio off. Only act when the radio is actually
+            # enabled, so a user-disabled Wi-Fi is never re-enabled here.
+            radio_enabled=0
+            if command -v nmcli >/dev/null 2>&1; then
+                case "$(nmcli -t -f WIFI radio 2>/dev/null || true)" in
+                    *enabled*) radio_enabled=1 ;;
+                esac
+            elif command -v rfkill >/dev/null 2>&1; then
+                if ! rfkill list wifi 2>/dev/null | grep -q 'blocked: yes'; then
+                    radio_enabled=1
+                fi
+            fi
+            if [ "$radio_enabled" -ne 1 ]; then
+                echo "[d330-wifi-resume] $ifname: Wi-Fi radio disabled/blocked; not reconnecting."
                 break
             fi
 
