@@ -54,17 +54,17 @@ echo " Lenovo D330-10IGL Display Ergonomics Test Tool           "
 echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
-    echo "[DRY-RUN] Verifying display ergonomics configuration..."
-    echo "  - Backlight Anti-Flicker: 1000 Hz target PWM frequency"
+    echo "[DRY-RUN] Checking display ergonomics configuration files only; no screen state is changed and no PWM register is written."
+    echo "  - Backlight Anti-Flicker: 1000 Hz target PWM frequency (applied only by --test-pwm, and only when intel_reg is present)"
     echo "  - Color Profile: Lenovo-D330-sRGB-D65.icc (D65 White Point, Gamma 2.2)"
     echo "  - Dynamic Refresh Rate Switching: i915 enable_drrs=1 (48Hz/60Hz)"
-    echo "[DRY-RUN] All parameters verified valid."
+    echo "[DRY-RUN] Configuration values listed above; nothing was applied or verified on hardware."
     exit 0
 fi
 
 inspect_display() {
     echo "--- 1. Backlight Controller ---"
-    python3 tools/d330-backlight-pwm.py || true
+    python3 tools/d330-backlight-pwm.py
 
     echo ""
     echo "--- 2. i915 DRRS Configuration ---"
@@ -86,7 +86,15 @@ case "$MODE" in
         inspect_display
         ;;
     test-pwm)
-        python3 tools/d330-backlight-pwm.py --apply
+        # --test-pwm propagates the tool's rc: a no-op or unverified apply is a
+        # non-zero test result, never masked behind an unconditional success.
+        if python3 tools/d330-backlight-pwm.py --apply; then
+            echo "[OK] PWM apply reported a verified register delta."
+        else
+            pwm_rc=$?
+            echo "[FAIL] PWM apply did not verify a register write (rc=$pwm_rc); no success claimed."
+            exit "$pwm_rc"
+        fi
         ;;
     test-drrs)
         if command -v xrandr >/dev/null 2>&1; then

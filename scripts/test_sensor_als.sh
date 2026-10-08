@@ -49,11 +49,21 @@ echo " Lenovo D330-10IGL Sensor Debounce & ALS Test Tool        "
 echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
-    echo "[DRY-RUN] Verifying sensor filter configuration..."
+    echo "[DRY-RUN] Exercising the sensor filter against a fake IIO tree (no hardware touched)..."
     echo "  - Accelerometer: BOSC0200 (15 deg deadband, 500ms debounce)"
-    echo "  - Light Sensor: ACPI0008 (Exponential Moving Average alpha=0.15)"
-    python3 tools/d330-sensor-filter.py || true
-    echo "[DRY-RUN] Configuration verified successfully."
+    echo "  - Light Sensor: in_illuminance_input fallback (Exponential Moving Average alpha=0.15)"
+    iio_tmp="$(mktemp -d "${TMPDIR:-/tmp}/d330-als.XXXXXX")"
+    trap 'rm -rf "$iio_tmp"' EXIT
+    dev="${iio_tmp}/iio:device0"
+    mkdir -p "$dev"
+    printf 'bosc0200\n' > "$dev/name"
+    printf '100\n' > "$dev/in_accel_x_raw"
+    printf '0\n' > "$dev/in_accel_y_raw"
+    printf '0\n' > "$dev/in_accel_z_raw"
+    # Only in_illuminance_input (no _raw) so the ALS fallback path is exercised.
+    printf '200\n' > "$dev/in_illuminance_input"
+    D330_IIO_BASE="$iio_tmp" python3 tools/d330-sensor-filter.py --cycles 3
+    echo "[DRY-RUN] Sensor filter ran 3 cycles against the fake IIO tree and exited 0."
     exit 0
 fi
 
