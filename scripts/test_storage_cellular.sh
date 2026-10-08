@@ -80,7 +80,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     # mode; its passed=N failed=M summary flows into this output.
     bash scripts/test_hibernate_guards.sh
 
-    # Installer symmetry guard suite (Phase 35, 11 cases): same contract as the
+    # Installer symmetry guard suite (Phase 35, 16 cases): same contract as the
     # suites above - its non-zero exit propagates under set -e, so any failing
     # case fails this mode; its passed=N failed=M summary flows into this output.
     bash scripts/test_installer_symmetry.sh
