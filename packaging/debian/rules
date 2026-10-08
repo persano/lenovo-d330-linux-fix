@@ -24,3 +24,9 @@ override_dh_auto_install:
 	# `systemctl --global enable`, which must find the unit at /usr/lib/systemd/user.
 	mkdir -p debian/lenovo-d330-fix/usr/lib/systemd/user
 	cp patches/*/usr/lib/systemd/user/*.service debian/lenovo-d330-fix/usr/lib/systemd/user/ || true
+	# Install PipeWire filter-chain DSP fragments into the RUNNING daemon's
+	# pipewire.conf.d (Phase 38). patches/*/etc/pipewire/** was shipped by no
+	# packager before, so the now-active speaker/RNNoise graphs were missing from
+	# packaged installs. dh_install picks these up from the debian/<pkg> tree.
+	mkdir -p debian/lenovo-d330-fix/etc/pipewire/pipewire.conf.d
+	cp patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf debian/lenovo-d330-fix/etc/pipewire/pipewire.conf.d/ || true

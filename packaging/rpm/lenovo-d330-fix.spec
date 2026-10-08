@@ -42,6 +42,10 @@ cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/
 # systemd USER unit: %post enables it with `systemctl --global enable`, which
 # requires the unit under /usr/lib/systemd/user.
 cp %{_builddir}/patches/*/usr/lib/systemd/user/*.service %{buildroot}/usr/lib/systemd/user/ || true
+# PipeWire filter-chain DSP fragments (Phase 38): must land in the RUNNING
+# daemon's pipewire.conf.d, which no packager shipped before.
+mkdir -p %{buildroot}/etc/pipewire/pipewire.conf.d
+cp %{_builddir}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf %{buildroot}/etc/pipewire/pipewire.conf.d/ || true
 
 %post
 systemd-hwdb update || true
@@ -66,6 +70,7 @@ systemctl enable d330-swapfile.service 2>/dev/null || true
 /etc/udev/hwdb.d/*
 /etc/systemd/system/*
 /usr/lib/systemd/user/*
+/etc/pipewire/pipewire.conf.d/*
 
 %changelog
 * Wed Oct 07 2026 Antigravity Community <community@example.com> - 5.0.0-1

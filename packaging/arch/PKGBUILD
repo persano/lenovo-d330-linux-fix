@@ -33,4 +33,10 @@ package() {
     # session hook, so it must land under /usr/lib/systemd/user.
     install -d "${pkgdir}/usr/lib/systemd/user"
     install -m 644 "${srcdir}"/../patches/*/usr/lib/systemd/user/*.service "${pkgdir}/usr/lib/systemd/user/"
+
+    # Install PipeWire filter-chain DSP fragments into the RUNNING daemon's
+    # pipewire.conf.d (Phase 38); patches/*/etc/pipewire/** was previously
+    # shipped by no packager.
+    install -d "${pkgdir}/etc/pipewire/pipewire.conf.d"
+    install -m 644 "${srcdir}"/../patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf "${pkgdir}/etc/pipewire/pipewire.conf.d/"
 }
