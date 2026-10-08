@@ -194,12 +194,24 @@ build_fstab_line() {
 # ------------------------------------------------------------------------------
 # rollback_fstab_line: idempotent EXIT-trap payload. Removes exactly the line
 # that was appended, so a second call is a no-op; never aborts the trap itself.
+# Fails closed (WR-03): the temp file may only replace fstab after grep itself
+# proved the rewrite succeeded (a non-zero grep rc leaves fstab untouched and
+# the empty temp is removed), and the success message prints only after mv
+# really succeeded, so a failed rollback is never reported as a success.
 # ------------------------------------------------------------------------------
 rollback_fstab_line() {
-    if [ -f "${FSTAB_FILE:-/etc/fstab}" ] && [ -n "${LINE:-}" ] && grep -qxF "$LINE" "$FSTAB_FILE" 2>/dev/null; then
-        grep -vxF "$LINE" "$FSTAB_FILE" > "$FSTAB_FILE.gsdtmp" || true
-        mv -f "$FSTAB_FILE.gsdtmp" "$FSTAB_FILE" || true
-        log_warn "Rolled back fstab entry after failed mount."
+    local f="${FSTAB_FILE:-/etc/fstab}"
+    [ -f "$f" ] && [ -n "${LINE:-}" ] || return 0
+    grep -qxF "$LINE" "$f" 2>/dev/null || return 0
+    if grep -vxF "$LINE" "$f" > "$f.gsdtmp" 2>/dev/null; then
+        if mv -f "$f.gsdtmp" "$f"; then
+            log_warn "Rolled back fstab entry after failed mount."
+        else
+            log_err "Rollback FAILED: could not rewrite $f; entry may remain."
+        fi
+    else
+        rm -f "$f.gsdtmp" || true
+        log_err "Rollback FAILED: could not read $f; entry may remain."
     fi
     return 0
 }
