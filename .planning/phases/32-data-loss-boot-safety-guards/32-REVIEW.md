@@ -59,6 +59,8 @@ out=$(lsblk -nr -o MOUNTPOINT "$TARGET_DEV" 2>/dev/null) || rc=$?
 # FAIL if any non-empty mountpoint line is != "$MOUNT_POINT"
 ```
 
+**Deferred WR-02 (resolved at fix time as wontfix by locked decision):** `guard_mountpoint_empty` is the pre-parted/mkfs guard, and `--mount-data` deliberately still has to reach the duplicate check on a re-run against an already mounted `/data` (see the guard comment in the mount-data branch of `tools/d330-microsd-setup.sh`). The plan documents this trade-off, so I left the code as-is instead of breaking duplicate-check reachability to enforce the other half of the locked refusal rule here.
+
 ### WR-03: `rollback_fstab_line` fails open: grep error can truncate fstab via unconditional `mv`, and the rollback claim is unconditional
 
 **File:** `tools/d330-microsd-setup.sh:198-205`
