@@ -44,7 +44,8 @@ systemd-hwdb update || true
 udevadm trigger || true
 systemctl daemon-reload || true
 # SC2: enable all 9 shipped units (parity with install_dkms.sh and deb postinst).
-systemctl enable d330-tablet-daemon.service 2>/dev/null || true
+# M6: the tablet daemon is a systemd USER unit -> enable it globally.
+systemctl --global enable d330-tablet-daemon.service 2>/dev/null || true
 systemctl enable lenovo-d330-power.service 2>/dev/null || true
 systemctl enable lenovo-d330-camera-loopback.service 2>/dev/null || true
 systemctl enable d330-hardware-state.service 2>/dev/null || true
