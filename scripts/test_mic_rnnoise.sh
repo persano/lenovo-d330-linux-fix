@@ -81,24 +81,10 @@ validate_rnnoise_structure() {
 
     local rnnoise_conf="patches/audio_dsp/etc/pipewire/pipewire.conf.d/51-lenovo-d330-rnnoise-mic.conf"
     local legacy_conf="patches/audio_dsp/etc/pipewire/filter-chain.conf.d/51-lenovo-d330-rnnoise-mic.conf"
-    local pass=0 fail=0
+    # shellcheck source=scripts/lib_conf_check.sh
+    source "${SCRIPT_DIR}/lib_conf_check.sh"
 
-    ck() {
-        local desc="$1"; shift
-        if "$@" >/dev/null 2>&1; then
-            echo "  [PASS] $desc"; pass=$((pass + 1))
-        else
-            echo "  [FAIL] $desc"; fail=$((fail + 1))
-        fi
-    }
-    ckn() {
-        local desc="$1"; shift
-        if "$@" >/dev/null 2>&1; then
-            echo "  [FAIL] $desc (unexpected match)"; fail=$((fail + 1))
-        else
-            echo "  [PASS] $desc"; pass=$((pass + 1))
-        fi
-    }
+    local pass=0 fail=0
 
     echo "[DRY-RUN] Validating RNNoise filter-chain graph under pipewire.conf.d..."
     ck  "rnnoise conf present under pipewire.conf.d"          test -f "$rnnoise_conf"
@@ -106,7 +92,7 @@ validate_rnnoise_structure() {
     ck  "uses ladspa label noise_suppressor_mono"             grep -q 'noise_suppressor_mono' "$rnnoise_conf"
     ck  "exposes source node rnnoise_source_d330"             grep -q 'rnnoise_source_d330' "$rnnoise_conf"
     ck  "documents librnnoise-ladspa package dependency"      grep -q 'librnnoise-ladspa' "$rnnoise_conf"
-    ckn "omits version-dependent VAD grace control"           grep -q 'Retroactive VAD Grace' "$rnnoise_conf"
+    ckn "omits version-dependent VAD grace controls"          grep -qE 'Retroactive VAD Grace|VAD Grace Period' "$rnnoise_conf"
     ck  "legacy filter-chain.conf.d copy removed"             test ! -e "$legacy_conf"
 
     echo ""
