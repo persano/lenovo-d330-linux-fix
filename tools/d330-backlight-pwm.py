@@ -12,22 +12,25 @@ an unconditional `[OK]` for an operation that performed no write.
 
 import sys
 import os
+import re
 import shutil
 import subprocess
 
 TARGET_PWM_HZ = 1000
 
-# PCH/GMCH backlight PWM registers to probe, in order of preference:
-# name -> MMIO address (as documented in intel-gpu-tools / i915 regs).
-# BLC_PWM_PCH_CTL2 holds the PCH duty/period fields; BXT_BLC_PWM_FREQ1 is the
-# Broxton/Gemini-Lake backlight frequency register.
+# Gemini Lake (BXT-family) backlight frequency register to target. On this
+# platform 0xC8254 is `_BXT_BLC_PWM_FREQ1` (kernel intel_backlight_regs.h); the
+# frequency divider is the low 16-bit field. The adjacent 0xC8258 is
+# `_BXT_BLC_PWM_DUTY1` (brightness) and is never written here.
 PWM_REGISTERS = (
-    ("BLC_PWM_PCH_CTL2", 0xC8254),
-    ("BXT_BLC_PWM_FREQ1", 0xC8258),
+    ("BXT_BLC_PWM_FREQ1", 0xC8254),
 )
 
 # PCH raw clock reference (Hz) used to derive the divider for TARGET_PWM_HZ.
 PCH_RAWCLK_HZ = 24000000
+
+# Hex value token emitted by `intel_reg read`.
+_VAL_RE = re.compile(r"0x([0-9a-fA-F]+)")
 
 
 def get_current_backlight_driver():
@@ -39,6 +42,15 @@ def get_current_backlight_driver():
     return "intel_backlight"
 
 
+def _read_sysfs(path):
+    """Read a sysfs value; return "N/A" on any read error (never abort --probe)."""
+    try:
+        with open(path, "r") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "N/A"
+
+
 def check_flicker_status():
     # Read-only inspection; performs no register access.
     driver = get_current_backlight_driver()
@@ -47,8 +59,8 @@ def check_flicker_status():
         print(f"[INFO] Backlight interface {base} not found.")
         return
 
-    cur_b = open(f"{base}/brightness").read().strip() if os.path.exists(f"{base}/brightness") else "N/A"
-    max_b = open(f"{base}/max_brightness").read().strip() if os.path.exists(f"{base}/max_brightness") else "N/A"
+    cur_b = _read_sysfs(f"{base}/brightness") if os.path.exists(f"{base}/brightness") else "N/A"
+    max_b = _read_sysfs(f"{base}/max_brightness") if os.path.exists(f"{base}/max_brightness") else "N/A"
     print(f"Backlight Interface: {driver}")
     print(f"  - Current Brightness: {cur_b} / {max_b}")
     print(f"  - Target PWM Frequency: {TARGET_PWM_HZ} Hz (Anti-Flicker)")
@@ -64,7 +76,13 @@ def find_intel_reg():
 
 
 def read_register(tool, address):
-    """Return the integer value at `address`, or None if unreadable."""
+    """Return the integer value at `address`, or None if unreadable.
+
+    `intel_reg read` prints `name (0xADDR): 0xVALUE` for MMIO registers, so the
+    value is the hex token AFTER the last `:` separator -- never the register
+    address in parentheses. Returning None makes the caller refuse to write, so
+    a target is never derived from the address.
+    """
     try:
         proc = subprocess.run(
             [tool, "read", f"0x{address:X}"],
@@ -74,13 +92,16 @@ def read_register(tool, address):
         return None
     if proc.returncode != 0:
         return None
-    for token in proc.stdout.replace("=", " ").split():
-        if token.lower().startswith("0x"):
-            try:
-                return int(token, 16)
-            except ValueError:
-                continue
-    return None
+    # Restrict parsing to the text after the last ':'; the whole-line fallback
+    # would pick up the register address in 'name (0xADDR): 0xVALUE'.
+    value_part = proc.stdout.rsplit(":", 1)[-1] if ":" in proc.stdout else proc.stdout
+    matches = _VAL_RE.findall(value_part)
+    if not matches:
+        return None
+    try:
+        return int(matches[-1], 16)
+    except ValueError:
+        return None
 
 
 def write_register(tool, address, value):
@@ -109,7 +130,8 @@ def apply_pwm_tuning():
         if before is None:
             continue  # register not present on this platform; try the next
 
-        # Preserve the upper control bits, replace the low 16-bit divider field.
+        # BXT_BLC_PWM_FREQ1: preserve the upper control bits, replace the low
+        # 16-bit divider field.
         target = (before & ~0xFFFF) | (divider & 0xFFFF)
         if not write_register(tool, address, target):
             print(f"[FAIL] PWM register {name} write not confirmed by intel_reg")
