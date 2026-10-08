@@ -2,34 +2,36 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
-current_phase_name: READY TO EXECUTE
-status: executing
-stopped_at: Completed 34-01-PLAN.md (Task 8 on-device UAT deferred)
-last_updated: "2026-10-08T14:28:40.498Z"
+current_phase: 35
+current_phase_name: Installer & Uninstaller Symmetry
+status: planning
+stopped_at: Phase 34 complete, ready to plan Phase 35
+last_updated: "2026-10-08T14:51:33.573Z"
 last_activity: 2026-10-08
-last_activity_desc: Phase 33 complete, transitioned to Phase 34
-state_head: e087803ac7dbb113b23be46f051fce69097819c4
+last_activity_desc: Phase 34 complete, transitioned to Phase 35
+state_head: 7f298570b369663a6117e95dab0609a40f06b6f0
 progress:
   total_phases: 11
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
   completed_plans: 7
-  percent: 18
+  percent: 27
 ---
 
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 7 — Pre-Deployment Audit Remediation (v7.0), Phases 32–42
-- **Active Phase**: Phase 34: Deliver the Actual PPS/Display Resume Fix (Audit C4)
-- **Status**: Executing. Phases 32–33 complete (2/11 phases). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
+- **Active Phase**: Phase 35: Installer & Uninstaller Symmetry (Audit M1, M2, M11, N6)
+- **Status**: Executing. Phases 32–34 complete (3/11 phases). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
 - **Blockers**:
   * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
   * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
   * [RESOLVED — Phase 33] C3 — low-battery auto-hibernate had only a 3 GB zram swap → no valid resume device, safety net could not work. Fixed: disk-backed `/var/swapfile` oneshot unit (RAM-sized 4–8 GB clamp, free-space guard), fail-closed resume activation ladder (`resume=`+`resume_offset=`, honest manual-step exit), daemon refuse+degrade with `[ERROR]` when non-zram swap absent, enable sites ×3, ExecStart/package-name alignment; suite 21/0 + 26/0. Hardware round trip deferred (see PENDING DEPLOY).
-  * C4 — the 600 ms PPS clamp (`patches/d330_display_resume_fix.patch`) is not applied by the recommended install path; the DKMS module delays *after* the panel is already re-energised. (Phase 34)
+  * [RESOLVED — Phase 34] C4 — the 600 ms PPS clamp was not delivered and the module advertised enforcement it did not perform. Fixed: module reduced to an honest DMI banner/breadcrumb (research proved no notifier event exists between panel-off/on), echo-only resume service deleted with all refs, optional `--kernel-src` clamp-patch step (dry-run first, warn-not-fail), grub cfg keeps `video=efifb:nobgrt` + adds `panel_orientation` tokens, dkms.conf build guards, README/CHANGES_AUDIT truth-fix, resume-loop set -e arithmetic fixed (--simulate 5/5). Suites 10/0 + 21/0 + 26/0. Hardware dmesg + real 5-cycle deferred (see PENDING DEPLOY).
   * [PENDING DEPLOY] Phase 32 UAT items 1–2 — physical mounted-target abort on a real MicroSD and on-target `/etc/fstab` + absent-card boot on the D330 — were deferred under documented VERIFICATION overrides (no hardware in this environment). Machine-checked equivalents are green (suite 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 32`.
   * [PENDING DEPLOY] Phase 33 UAT tests 1–2 — `systemctl hibernate` → power-cycle → resume round trip, and on-device `systemctl is-enabled` ×2 after a real install — deferred under documented VERIFICATION overrides (no hardware). Machine-checked equivalents green (probe: dry-run report, zram-only refusal, ready-path hibernate invocation; suites 21/0 + 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 33` (7-step sequence in `33-03-SUMMARY.md`).
-- **Next Immediate Action**: Plan/execute Phase 34 (C4 PPS clamp) before any of 35–42; keep `/gsd-verify-work 32` + `33` on the deployment checklist.
+  * [PENDING DEPLOY] Phase 34 UAT tests 1–2 — `dmesg | grep lenovo_d330_fix` DMI banner and 5 real suspend/resume cycles on the D330 — deferred under documented VERIFICATION overrides. Machine-checked equivalents green (`--simulate` 5/5; module static asserts; suites 10/0 + 21/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 34`.
+- **Next Immediate Action**: Plan/execute Phase 35 (installer/uninstaller symmetry: update-grub both ways, `--uninstall` prereq skip, enable all units, foreign drop-in removal, `--verify` manifest diff) before 36–42.
 
 ## Archived Milestones
 
@@ -46,10 +48,10 @@ progress:
 
 ## Current Position
 
-Phase: null — READY TO EXECUTE
+Phase: 35 — Installer & Uninstaller Symmetry
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-08 — Phase 33 complete, transitioned to Phase 34
+Status: Ready to plan
+Last activity: 2026-10-08 — Phase 34 complete, transitioned to Phase 35
 
 ## Performance Metrics
 
@@ -71,5 +73,5 @@ Last activity: 2026-10-08 — Phase 33 complete, transitioned to Phase 34
 ## Session
 
 **Last session:** 2026-10-08T14:28:40.277Z
-**Stopped at:** Completed 34-01-PLAN.md (Task 8 on-device UAT deferred)
+**Stopped at:** Phase 34 complete, ready to plan Phase 35
 **Resume file:** None
