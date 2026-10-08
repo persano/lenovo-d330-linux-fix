@@ -336,10 +336,13 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 ### 7.6 Phase 29: Wi-Fi / Bluetooth Coexistence & S2idle Wake Stability
 * **Why**: The Realtek RTL8821CE uses a single physical antenna shared between Wi-Fi and Bluetooth. Under simultaneous use (e.g. streaming audio to Bluetooth headphones while downloading over 2.4GHz Wi-Fi), packets collided, causing audio dropouts and Wi-Fi disconnects. Furthermore, the RTL8821CE PCIe link frequently stalled after S2idle resume.
 * **How Decided**:
-  - Modprobe options for `rtw88_8821ce` / `8821ce`:
-    * `ant_sel=2`: Explicitly binds to primary antenna port.
-    * `bt_coex_active=1`: Enables hardware-timed time-division multiplexing between Bluetooth and Wi-Fi radios.
-    * `disable_lps_deep=1`: Prevents the chip from entering PCIe deep sleep state that stalls during wake.
+  - The D330 ships a Realtek RTL8821CE only, so no Intel Wi-Fi driver options are configured.
+  - Modprobe options for the Realtek radio:
+    * `ant_sel=2`: selects the auxiliary antenna port, where Bluetooth isolation is better.
+    * `rtw88_core.disable_lps_deep=1` (`disable_lps_deep=y`): prevents the chip from entering the PCIe deep sleep state that stalls during wake.
+    * `rtw88_pci.disable_aspm=1` (`disable_aspm=y`): keeps ASPM off on the RTL8821CE PCIe link.
+  - Both module spellings (`rtl8821ce` legacy DKMS and `rtw88_8821ce` in-tree) are emitted so whichever driver the kernel ships reads its option.
+  - Realtek Wi-Fi/BT coexistence is handled automatically by the driver and firmware; there is no manual coexistence module parameter.
   - Systemd sleep script `lenovo-d330-wifi-resume.sh` to trigger interface wake.
 * **What Done**:
   - `patches/wireless/etc/modprobe.d/lenovo-d330-wireless.conf`: Radio parameters.
@@ -347,6 +350,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
   - `scripts/test_wireless_coex.sh`: Verification harness.
 * **Auditor Verification Points**:
   - Verify module names: Supports both modern in-tree kernel driver (`rtw88_8821ce` / `rtw88_core`) and legacy out-of-tree DKMS driver (`8821ce`).
+  - Verify no Intel Wi-Fi driver option is present (the D330 has no Intel wireless module).
 
 ### 7.7 Phase 30: eMMC Fast Boot Optimization
 * **Why**: Cold boot from the internal 64GB SanDisk eMMC took 28–35 seconds on stock installations. `systemd-networkd-wait-online.service` and software watchdog drivers accounted for ~12 seconds of delay.
