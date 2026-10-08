@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Lenovo IdeaPad D330-10IGL Emergency Screen Refresh Utility
-# Recovers from any display freeze, TCON electrical latch-up, or black screen
-# Can be bound to Fn hotkey or invoked from SSH / TTY
+# Recovers from a display freeze, TCON electrical latch-up, or black screen.
+# Can be bound to an Fn hotkey or invoked from SSH / TTY.
 
 set -euo pipefail
 
@@ -29,23 +29,25 @@ if command -v xrandr >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
     log "Cycling X11 outputs via xrandr..."
     OUTPUT=$(xrandr --current | grep " connected" | awk '{print $1}' | head -n 1)
     if [[ -n "$OUTPUT" ]]; then
+        # Reuse the current rotation instead of forcing one: forcing
+        # `--rotate right` on an already-rotated output would double it.
+        CUR_ROT=$(xrandr --current | awk -v out="$OUTPUT" \
+            '$1==out { for (i=2; i<=NF; i++) if ($i ~ /^(normal|left|right|inverted)$/) { print $i; exit } }')
+        CUR_ROT="${CUR_ROT:-normal}"
         xrandr --output "$OUTPUT" --off || true
         sleep 0.6
-        xrandr --output "$OUTPUT" --auto --rotate right || true
-        log "X11 display reset successfully."
+        xrandr --output "$OUTPUT" --auto --rotate "$CUR_ROT" || true
+        log "X11 display reset successfully (rotation preserved: $CUR_ROT)."
         exit 0
     fi
 fi
 
-# 3. Direct DRM framebuffer / DPMS cycle
-log "Attempting kernel DRM DPMS cycle..."
-for dpms in /sys/class/drm/card*-*/dpms; do
-    if [[ -f "$dpms" ]]; then
-        echo "Off" > "$dpms" 2>/dev/null || true
-        sleep 0.6
-        echo "On" > "$dpms" 2>/dev/null || true
-        log "Cycled DRM DPMS node: $dpms"
-    fi
-done
+# 3. No kernel-DRM fallback that only pretends to work.
+# Writing /sys/class/drm/*/dpms is a no-op on modern i915: the node is
+# writable but does not drive a connector modeset, so the old Off/On cycle
+# reported success while changing nothing. If neither wlr-randr nor xrandr was
+# available there is no safe userspace modeset to force from here.
+log "No usable display server detected; skipping the no-op kernel DPMS cycle."
+log "Re-run from a graphical session with wlr-randr or xrandr, or switch VT."
 
 log "Screen refresh cycle complete."
