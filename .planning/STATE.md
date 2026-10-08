@@ -4,16 +4,16 @@ milestone: v7.0
 milestone_name: Pre-Deployment Audit Remediation
 current_phase_name: READY TO EXECUTE
 status: executing
-stopped_at: Phase 33 complete, ready to plan Phase 34
-last_updated: "2026-10-08T14:10:16.600Z"
+stopped_at: Completed 34-01-PLAN.md (Task 8 on-device UAT deferred)
+last_updated: "2026-10-08T14:28:40.498Z"
 last_activity: 2026-10-08
 last_activity_desc: Phase 33 complete, transitioned to Phase 34
-state_head: db55459f5e241f9037ae9a62a5ead68b383f6d21
+state_head: e087803ac7dbb113b23be46f051fce69097819c4
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
   percent: 18
 ---
 
@@ -56,15 +56,20 @@ Last activity: 2026-10-08 — Phase 33 complete, transitioned to Phase 34
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 33 P33-03 | 20min | 1 tasks | 3 files |
+| Phase 34 P34-01 | 25min | 7 tasks | 13 files |
 
 ## Decisions
 
 - [Phase ?]: 33-03: README documents Secure Boot/lockdown degradation as owner decision, never an instruction to weaken security (R3)
 - [Phase ?]: 33-03: R1 probe commands + round-trip-only-proof rule embedded verbatim in README Known Limits so the unverified initramfs swap-file resume stays visible
 - [Phase ?]: 33-03: requirements SC1-3 left unmarked (on-device proof deferred to UAT); marking now would claim unproven success (T-33-04)
+- [Phase ?]: 34-01: PM handler is option (b) honest DMI banner; research Q1 proves no notifier event between panel-off/on so a notifier sleep adds zero TCON discharge time
+- [Phase ?]: 34-01: video=efifb:nobgrt KEPT (research 3a disproved removal premise; parsed by efifb_setup)
+- [Phase ?]: 34-01: echo-only resume service deleted with zero stale refs; enabled-unit census 9->8 (Phase 35 recount)
+- [Phase ?]: 34-01: SC1/SC2 left hardware-gated (Task 8 UAT); only SC3 machine-verified this phase
 
 ## Session
 
-**Last session:** 2026-10-08T10:46:59.247Z
-**Stopped at:** Phase 33 complete, ready to plan Phase 34
+**Last session:** 2026-10-08T14:28:40.277Z
+**Stopped at:** Completed 34-01-PLAN.md (Task 8 on-device UAT deferred)
 **Resume file:** None

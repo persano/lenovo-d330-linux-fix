@@ -164,7 +164,9 @@ Plans:
   2. `scripts/test_resume_loop.sh` passes 5 cycles
   3. README claims match observed behaviour.
 
-**Plans**: 1 plan
+**Plans**: 1/1 plans executed
+
+- [x] 34-01-PLAN.md
 - [x] 34-01: honest DMI banner module, resume-service removal, `--kernel-src` dry-run step, grub/dkms/docs truth-fix, resume-loop fix (8 tasks)
 
 - **Audit Ref**: C4, N3, M17 (partial).
