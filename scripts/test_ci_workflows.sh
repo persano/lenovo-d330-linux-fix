@@ -60,6 +60,7 @@ fi
 
 D330_CI_STRICT="$CI_STRICT" python3 - << 'EOF'
 import os
+import re
 import sys
 
 strict = os.environ.get("D330_CI_STRICT", "1") == "1"
@@ -81,7 +82,7 @@ for f in sorted(files):
     with open(full_path, "r", encoding="utf-8") as wf:
         content = wf.read()
     has_name = "name:" in content
-    has_on = "on:" in content
+    has_on = re.search(r'(?m)^on:', content) is not None
     has_jobs = "jobs:" in content
     if not (has_on and has_jobs):
         print(f"  [FAIL] {f} missing required keys: on={has_on}, jobs={has_jobs}")
