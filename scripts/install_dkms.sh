@@ -325,6 +325,12 @@ do_install() {
                 log_info "fstab swap line already present, skipping duplicate append."
             else
                 log_info "Planned fstab append: $FSTAB_SWAP_LINE"
+                # Trailing-newline guard (review WR-03): a last line without a
+                # newline would glue onto this append; only append the newline
+                # when the file is non-empty and actually ends without one.
+                if [ -s /etc/fstab ] && [ -n "$(tail -c1 /etc/fstab)" ]; then
+                    echo >> /etc/fstab
+                fi
                 echo "$FSTAB_SWAP_LINE" >> /etc/fstab
             fi
 
