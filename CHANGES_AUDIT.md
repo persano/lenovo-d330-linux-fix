@@ -35,10 +35,10 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 * **What Done**:
   - `patches/dkms/`: Kernel module source tree and `dkms.conf` to clamp PPS delay.
   - `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf`: Set stable DRM parameters.
-  - `patches/dkms/etc/systemd/system/lenovo-d330-resume.service`: Restores display output post-sleep.
+  - Echo-only post-resume systemd unit: **REMOVED in Phase 34** — it only logged eDP connector status and never restored display output, so the unit and every installer/postinst/spec reference were deleted. Display resume is handled by the i915 parameters plus the Option 2 kernel patch clamp.
 * **Auditor Verification Points**:
   - Verify that `enable_psr=0` does not cause unacceptable battery drain (PSR on GLK UHD 600 often causes panel flickering and FIFO underrun; disabling PSR is standard industry practice for Gemini Lake stability).
-  - Verify that `lenovo-d330-resume.service` runs after `systemd-suspend.service` and `systemd-hibernate.service`.
+  - Verify that no resume-service unit shipping now was previously `systemctl enable`d (Phase 34 deleted the echo-only unit and swept every reference); display resume is delivered by the i915 parameters plus the Option 2 kernel patch clamp, not by a systemd hook.
 
 ### 2.2 Native Display Orientation Quirks
 * **Why**: The D330 panel is physically manufactured for portrait tablets (native 800x1280 or 1200x1920). Linux DRM by default renders boot screens, TTY consoles, and display servers rotated 90 degrees counter-clockwise (sideways).
@@ -380,7 +380,6 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/dkms/` | `/usr/src/lenovo-d330-1.0.0/` | Standalone DKMS helper module |
 | `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` | `/etc/modprobe.d/` | DRM & PPS display parameters |
 | `patches/dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb` | `/etc/udev/hwdb.d/` | Accelerometer mount matrix |
-| `patches/dkms/etc/systemd/system/lenovo-d330-resume.service` | `/etc/systemd/system/` | S2idle display resume service |
 | `patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb` | `/etc/udev/hwdb.d/` | Goodix touchscreen calibration matrix |
 | `patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules` | `/etc/udev/rules.d/` | Touchscreen udev device matching |
 | `patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf` | `/etc/X11/xorg.conf.d/` | X11 touch matrix & long-press right-click |

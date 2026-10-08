@@ -43,7 +43,6 @@ cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/
 systemd-hwdb update || true
 udevadm trigger || true
 systemctl daemon-reload || true
-systemctl enable lenovo-d330-resume.service 2>/dev/null || true
 systemctl enable d330-tablet-daemon.service 2>/dev/null || true
 systemctl enable lenovo-d330-power.service 2>/dev/null || true
 systemctl enable d330-auto-hibernate.service 2>/dev/null || true

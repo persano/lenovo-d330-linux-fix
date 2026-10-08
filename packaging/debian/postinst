@@ -10,7 +10,6 @@ if [ "$1" = "configure" ]; then
 
     # Enable background services
     systemctl daemon-reload || true
-    systemctl enable lenovo-d330-resume.service 2>/dev/null || true
     systemctl enable d330-tablet-daemon.service 2>/dev/null || true
     systemctl enable lenovo-d330-power.service 2>/dev/null || true
     systemctl enable d330-hardware-state.service 2>/dev/null || true

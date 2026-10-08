@@ -265,7 +265,6 @@ do_install() {
         fi
 
         # Deploy systemd services
-        cp "${REPO_ROOT}/patches/dkms/etc/systemd/system/lenovo-d330-resume.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/dock/etc/systemd/system/d330-tablet-daemon.service" ] && \
             cp "${REPO_ROOT}/patches/dock/etc/systemd/system/d330-tablet-daemon.service" /etc/systemd/system/
         [ -f "${REPO_ROOT}/patches/power/etc/systemd/system/lenovo-d330-power.service" ] && \
@@ -286,7 +285,9 @@ do_install() {
             cp "${REPO_ROOT}/patches/power_hibernate/etc/systemd/system/d330-swapfile.service" /etc/systemd/system/
 
         systemctl daemon-reload || true
-        systemctl enable lenovo-d330-resume.service || true
+        # The echo-only resume unit was removed in Phase 34: its ExecStart only
+        # echoed connector status, so it was an echo, not a recovery. The
+        # enabled-unit census therefore drops from 9 to 8 (Phase 35 recount).
         systemctl enable d330-tablet-daemon.service 2>/dev/null || true
         systemctl enable lenovo-d330-power.service 2>/dev/null || true
         systemctl enable d330-hardware-state.service 2>/dev/null || true
@@ -579,7 +580,6 @@ do_uninstall() {
         rm -f /etc/tlp.d/50-lenovo-d330.conf
         rm -f /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc
 
-        systemctl disable --now lenovo-d330-resume.service >/dev/null 2>&1 || true
         systemctl disable --now d330-tablet-daemon.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-power.service >/dev/null 2>&1 || true
         systemctl disable --now lenovo-d330-camera-loopback.service >/dev/null 2>&1 || true
@@ -608,7 +608,6 @@ do_uninstall() {
                 rm -f /etc/fstab.d330-tmp
             fi
         fi
-        rm -f /etc/systemd/system/lenovo-d330-resume.service
         rm -f /etc/systemd/system/d330-tablet-daemon.service
         rm -f /etc/systemd/system/lenovo-d330-power.service
         rm -f /etc/systemd/system/lenovo-d330-camera-loopback.service
