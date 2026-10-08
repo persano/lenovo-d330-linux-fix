@@ -188,6 +188,31 @@ check_prerequisites() {
         log_err "On Debian/Ubuntu/Mint: sudo apt install dkms build-essential linux-headers-\$(uname -r)"
         exit 1
     fi
+
+    # Optional RNNoise LADSPA dependency (Phase 38): the PipeWire mic filter-chain
+    # (51-lenovo-d330-rnnoise-mic.conf) denoises via librnnoise_ladspa.so. The
+    # module carries `flags = [ nofail ]`, so its absence is non-fatal, but a
+    # missing plugin means the denoiser silently stays inactive -- surface it.
+    # Search the same paths scripts/test_mic_rnnoise.sh uses.
+    local rnnoise_dirs="/usr/lib/ladspa:/usr/lib/*/ladspa" rnnoise_d rnnoise_cand
+    local rnnoise_found=false
+    local IFS=':'
+    # shellcheck disable=SC2086  # $rnnoise_d may intentionally hold a glob
+    for rnnoise_d in $rnnoise_dirs; do
+        # shellcheck disable=SC2086
+        for rnnoise_cand in $rnnoise_d/librnnoise_ladspa.so; do
+            if [ -f "$rnnoise_cand" ]; then
+                rnnoise_found=true
+            fi
+        done
+    done
+    if [ "$rnnoise_found" != true ]; then
+        log_warn "librnnoise_ladspa.so not found (/usr/lib/ladspa, /usr/lib/*/ladspa)."
+        log_warn "RNNoise mic denoiser stays inactive; install it via: apt install librnnoise-ladspa"
+    else
+        log_ok "librnnoise_ladspa.so found; RNNoise mic denoiser available."
+    fi
+
     log_ok "Prerequisites satisfied."
 }
 
