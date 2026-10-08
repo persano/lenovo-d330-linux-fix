@@ -21,15 +21,16 @@ progress:
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 7 — Pre-Deployment Audit Remediation (v7.0), Phases 32–42
-- **Active Phase**: Phase 33: Low-Battery Hibernate Feasibility
-- **Status**: Executing. Phase 32 complete (1/11 phases, 3/3 plans). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
+- **Active Phase**: Phase 34: Deliver the Actual PPS/Display Resume Fix (Audit C4)
+- **Status**: Executing. Phases 32–33 complete (2/11 phases). Original audit verdict: `BLOCKED BY CRITICAL DEFECTS` (4 Critical, 17 Moderate, 11 Minor) — remediation underway in phases 32 → 42.
 - **Blockers**:
   * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
   * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
-  * C3 — low-battery auto-hibernate has only a 3 GB zram swap → no valid resume device, safety net cannot work. (Phase 33)
+  * [RESOLVED — Phase 33] C3 — low-battery auto-hibernate had only a 3 GB zram swap → no valid resume device, safety net could not work. Fixed: disk-backed `/var/swapfile` oneshot unit (RAM-sized 4–8 GB clamp, free-space guard), fail-closed resume activation ladder (`resume=`+`resume_offset=`, honest manual-step exit), daemon refuse+degrade with `[ERROR]` when non-zram swap absent, enable sites ×3, ExecStart/package-name alignment; suite 21/0 + 26/0. Hardware round trip deferred (see PENDING DEPLOY).
   * C4 — the 600 ms PPS clamp (`patches/d330_display_resume_fix.patch`) is not applied by the recommended install path; the DKMS module delays *after* the panel is already re-energised. (Phase 34)
   * [PENDING DEPLOY] Phase 32 UAT items 1–2 — physical mounted-target abort on a real MicroSD and on-target `/etc/fstab` + absent-card boot on the D330 — were deferred under documented VERIFICATION overrides (no hardware in this environment). Machine-checked equivalents are green (suite 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 32`.
-- **Next Immediate Action**: Run Phase 33 UAT on the tablet (`/gsd-verify-work 33` — seven on-device steps in `33-03-SUMMARY.md`), then plan/execute Phase 34 (C4 PPS clamp) before any of 35–42.
+  * [PENDING DEPLOY] Phase 33 UAT tests 1–2 — `systemctl hibernate` → power-cycle → resume round trip, and on-device `systemctl is-enabled` ×2 after a real install — deferred under documented VERIFICATION overrides (no hardware). Machine-checked equivalents green (probe: dry-run report, zram-only refusal, ready-path hibernate invocation; suites 21/0 + 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 33` (7-step sequence in `33-03-SUMMARY.md`).
+- **Next Immediate Action**: Plan/execute Phase 34 (C4 PPS clamp) before any of 35–42; keep `/gsd-verify-work 32` + `33` on the deployment checklist.
 
 ## Archived Milestones
 
