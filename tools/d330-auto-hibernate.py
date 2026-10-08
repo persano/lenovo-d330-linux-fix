@@ -37,8 +37,13 @@ def get_battery_info():
     cap = None
     status = "Unknown"
     if os.path.exists(cap_file):
-        with open(cap_file) as f:
-            cap = int(f.read().strip())
+        try:
+            with open(cap_file) as f:
+                cap = int(f.read().strip())
+        except ValueError:
+            # Garbage capacity (empty file, "Unknown", whitespace) degrades to
+            # the no-battery report path instead of a traceback (review IN-02).
+            cap = None
     if os.path.exists(status_file):
         with open(status_file) as f:
             status = f.read().strip()
