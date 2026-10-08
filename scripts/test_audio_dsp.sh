@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Lenovo IdeaPad D330-10IGL Audio DSP & Anti-Pop Verification Script
-# Verifies PipeWire filter-chain curve, DAC power ramp delay, and headset switch
+# Verifies PipeWire filter-chain graph structure, DAC power ramp delay, and headset switch
 
 set -euo pipefail
 
@@ -15,7 +15,7 @@ Options:
   --test-sweep     Play a frequency sweep (100 Hz - 10 kHz) to test speaker limiter and HPF
   --test-pink      Play 3 seconds of pink noise to evaluate vocal presence
   --test-anti-pop  Trigger rapid DAC mute/unmute power cycle to test pop suppression
-  --dry-run        Validate DSP configuration presets and syntax without audio output
+  --dry-run        Validate the speaker DSP graph structure (non-zero on any violation)
   --help           Show this help message
 EOF
 }
@@ -58,14 +58,69 @@ echo "=========================================================="
 echo " Lenovo D330-10IGL Audio DSP & Anti-Pop Test Tool         "
 echo "=========================================================="
 
+# ------------------------------------------------------------------------------
+# Structural validation of the speaker filter-chain graph (Phase 38, audit M7).
+# The graph must live under pipewire.conf.d (the directory the RUNNING daemon
+# reads), use valid builtin labels/controls, and declare explicit links. Any
+# violation is reported and turns into a non-zero exit, so the check can never
+# pass vacuously the way the old echo-only dry-run did.
+# ------------------------------------------------------------------------------
+validate_dsp_structure() {
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+    cd "$REPO_ROOT"
+
+    local speaker_conf="patches/audio_dsp/etc/pipewire/pipewire.conf.d/50-lenovo-d330-speaker-dsp.conf"
+    local legacy_conf="patches/audio_dsp/etc/pipewire/filter-chain.conf.d/50-lenovo-d330-speaker-dsp.conf"
+    local pass=0 fail=0
+
+    ck() {
+        local desc="$1"; shift
+        if "$@" >/dev/null 2>&1; then
+            echo "  [PASS] $desc"; pass=$((pass + 1))
+        else
+            echo "  [FAIL] $desc"; fail=$((fail + 1))
+        fi
+    }
+    ckn() {
+        local desc="$1"; shift
+        if "$@" >/dev/null 2>&1; then
+            echo "  [FAIL] $desc (unexpected match)"; fail=$((fail + 1))
+        else
+            echo "  [PASS] $desc"; pass=$((pass + 1))
+        fi
+    }
+    no_shared_var() {
+        ! grep -qE '^[[:space:]]*filter_chain\.nodes' "$1"
+    }
+
+    echo "[DRY-RUN] Validating speaker DSP graph under pipewire.conf.d..."
+    ck  "speaker conf present under pipewire.conf.d"        test -f "$speaker_conf"
+    ck  "uses builtin bq_highpass node"                     grep -q 'label = bq_highpass' "$speaker_conf"
+    ck  "uses builtin bq_peaking node"                      grep -q 'label = bq_peaking' "$speaker_conf"
+    ck  "uses builtin clamp node"                           grep -q 'label = clamp' "$speaker_conf"
+    ck  "declares explicit node links"                      grep -q 'links' "$speaker_conf"
+    ck  "exposes virtual sink effect_input.d330_speaker_dsp" grep -q 'effect_input.d330_speaker_dsp' "$speaker_conf"
+    ck  "graph nodes are inlined (no shared variable)"      no_shared_var "$speaker_conf"
+    ckn "no invalid label = biquad"                         grep -qE 'label = biquad' "$speaker_conf"
+    ckn "no nonexistent label = limiter"                    grep -qE 'label = limiter' "$speaker_conf"
+    ckn "no invalid \"Type\" control"                       grep -qE '"Type"' "$speaker_conf"
+    ck  "legacy filter-chain.conf.d copy removed"           test ! -e "$legacy_conf"
+
+    echo ""
+    echo "=========================================================="
+    echo " Speaker DSP structure: passed=$pass failed=$fail"
+    echo "=========================================================="
+    if [ "$fail" -gt 0 ]; then
+        echo "[FAIL] Speaker DSP graph validation failed." >&2
+        return 1
+    fi
+    echo "[DRY-RUN] Speaker DSP graph validated successfully."
+    return 0
+}
+
 if [[ "$MODE" == "dry-run" ]]; then
-    echo "[DRY-RUN] Verifying Audio DSP presets and anti-pop options..."
-    echo "  - High-pass Filter: 130 Hz, Q=0.707 (chassis protection)"
-    echo "  - Peaking EQ 1: 2800 Hz, Q=1.2, +3.5 dB (speech intelligibility)"
-    echo "  - Peaking EQ 2: 8000 Hz, Q=1.0, +2.0 dB (treble clarity)"
-    echo "  - Peak Limiter: Ceiling -1.5 dBFS, Release 50ms (anti-clipping)"
-    echo "  - ALSA DAC Power Ramp Delay: 1000ms"
-    echo "[DRY-RUN] All DSP parameters validated successfully."
+    validate_dsp_structure
     exit 0
 fi
 
