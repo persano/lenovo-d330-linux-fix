@@ -37,14 +37,25 @@ TEST_LAPTOP=0
 TEST_TABLET=0
 CYCLE_N=0
 
-for arg in "$@"; do
-    case "$arg" in
-        --status) STATUS=1 ;;
-        --test-laptop) TEST_LAPTOP=1 ;;
-        --test-tablet) TEST_TABLET=1 ;;
-        --cycle-test) CYCLE_N=3 ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --status) STATUS=1; shift ;;
+        --test-laptop) TEST_LAPTOP=1; shift ;;
+        --test-tablet) TEST_TABLET=1; shift ;;
+        --cycle-test)
+            if [[ -z "${2:-}" || "${2#--}" != "$2" ]]; then
+                log_err "--cycle-test requires a cycle count."
+                show_help
+                exit 1
+            fi
+            if ! echo "$2" | grep -qE '^[0-9]+$'; then
+                log_err "--cycle-test requires a non-negative integer (got: '$2')."
+                show_help
+                exit 1
+            fi
+            CYCLE_N="$2"; shift 2 ;;
         --help|-h) show_help; exit 0 ;;
-        *) log_err "Unknown argument: $arg"; show_help; exit 1 ;;
+        *) log_err "Unknown argument: $1"; show_help; exit 1 ;;
     esac
 done
 

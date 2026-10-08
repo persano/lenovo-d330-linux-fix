@@ -17,7 +17,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-LOG_FILE="${REPO_ROOT}/docs/dumps/resume_test_$(date +%Y%m%d_%H%M%S).log"
+LOG_FILE="/tmp/resume_test_$(date +%Y%m%d_%H%M%S).log"
 LOG_FILE_SET=false
 
 CYCLES=5

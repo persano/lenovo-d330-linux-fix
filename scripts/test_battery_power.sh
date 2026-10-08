@@ -35,13 +35,24 @@ TELEMETRY=1
 STRESS_SEC=0
 DO_TUNE=0
 
-for arg in "$@"; do
-    case "$arg" in
-        --telemetry) TELEMETRY=1 ;;
-        --stress) STRESS_SEC=10 ;;
-        --tune) DO_TUNE=1 ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --telemetry) TELEMETRY=1; shift ;;
+        --stress)
+            if [[ -z "${2:-}" || "${2#--}" != "$2" ]]; then
+                log_err "--stress requires a duration in seconds."
+                show_help
+                exit 1
+            fi
+            if ! echo "$2" | grep -qE '^[0-9]+$'; then
+                log_err "--stress requires a non-negative integer (got: '$2')."
+                show_help
+                exit 1
+            fi
+            STRESS_SEC="$2"; shift 2 ;;
+        --tune) DO_TUNE=1; shift ;;
         --help|-h) show_help; exit 0 ;;
-        *) log_err "Unknown argument: $arg"; show_help; exit 1 ;;
+        *) log_err "Unknown argument: $1"; show_help; exit 1 ;;
     esac
 done
 

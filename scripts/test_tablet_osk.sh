@@ -78,10 +78,10 @@ case "$MODE" in
         fi
         ;;
     simulate-dock)
-        python3 tools/d330-tablet-daemon.py --test-laptop
+        python3 tools/d330-tablet-daemon.py --dry-run --simulate-dock
         ;;
     simulate-tab)
-        python3 tools/d330-tablet-daemon.py --test-tablet
+        python3 tools/d330-tablet-daemon.py --dry-run --simulate-undock
         ;;
 esac
 
