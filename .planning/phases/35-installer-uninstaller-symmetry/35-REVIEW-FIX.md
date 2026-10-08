@@ -1,6 +1,6 @@
 ---
 phase: 35-installer-uninstaller-symmetry
-fixed_at: 2026-10-08T15:35:38Z
+fixed_at: 2026-10-08T12:40:59Z
 review_path: .planning/phases/35-installer-uninstaller-symmetry/35-REVIEW.md
 iteration: 1
 findings_in_scope: 8
@@ -11,7 +11,7 @@ status: all_fixed
 
 # Phase 35: Code Review Fix Report
 
-**Fixed at:** 2026-10-08T15:35:38Z
+**Fixed at:** 2026-10-08T12:40:59Z
 **Source review:** .planning/phases/35-installer-uninstaller-symmetry/35-REVIEW.md
 **Iteration:** 1
 
@@ -26,13 +26,13 @@ status: all_fixed
 
 **Files modified:** `scripts/install_dkms.sh`
 **Commit:** e42e1ba
-**Applied fix:** Added conditional-artifact manifest kinds. `53-lenovo-d330-resume.cfg` is now `grub-snippet-optional`; the conditional package copies (`ModemManager` `exec-optional`; tlp, icc, thermald, xdg autostart, pipewire x2 as `file-optional`); X11 copies `file-optional`. `do_verify` treats `state|file-optional|exec-optional|grub-snippet-optional` as present=OK / absent=SKIP (never DRIFT). `unit-enabled` is gated on `[ -d /run/systemd/system ]` (see WR-05). New regression case `verify-conditional-absent` proves a required-only fixture exits 0 with a `conditional/runtime artifact absent` SKIP.
+**Applied fix:** Added conditional-artifact manifest kinds. `53-lenovo-d330-resume.cfg` is now `grub-snippet-optional`; the conditional package copies (`ModemManager` `exec-optional`; tlp, icc, thermald, xdg autostart, pipewire x2 as `file-optional`); X11 copies `file-optional`; `/etc/d330-hardware-state.json` is `state`. `do_verify` treats `state|file-optional|exec-optional|grub-snippet-optional` as present=OK / absent=SKIP (never DRIFT), so only required entries count as drift. `unit-enabled` is additionally gated on `[ -d /run/systemd/system ]` (see WR-05). New regression case `verify-conditional-absent` proves a required-only fixture exits 0 with a `conditional/runtime artifact absent` SKIP.
 
 ### WR-05: `--verify` unit check only probes for the `systemctl` binary, not a running systemd
 
 **Files modified:** `scripts/install_dkms.sh`
 **Commit:** e42e1ba (implemented once with CR-01)
-**Applied fix:** The `unit-enabled` branch now additionally requires `[ -d /run/systemd/system ]`; otherwise the entry reports `[SKIP] ... systemd not PID 1` instead of 9 false DRIFTs on a chroot/container/WSL.
+**Applied fix:** The `unit-enabled` branch now requires `command -v systemctl` AND `[ -d /run/systemd/system ]`; otherwise the entry reports `[SKIP] ... systemd not PID 1` instead of 9 false DRIFTs on a chroot/container/WSL.
 
 ### WR-01: SC1 "install→uninstall leaves nothing" is not machine-checked
 
@@ -62,7 +62,7 @@ status: all_fixed
 
 **Files modified:** `scripts/install_dkms.sh`
 **Commit:** 77c9c8a
-**Applied fix:** Removed the literal leading `[WARN] ` from every `log_warn` message in the installer (29 calls inspected; `log_warn` already emits the tag). No doubled prefix remains (`rg '"\[WARN\]'` => no match).
+**Applied fix:** Removed the literal leading `[WARN] ` from every `log_warn` message in the installer (`log_warn` already emits the tag). No doubled prefix remains (`rg 'log_warn "\[WARN\]'` => no match).
 
 ### IN-02: broad `rm -rf /usr/share/alsa/ucm2/sof-essx8336`
 
@@ -76,7 +76,7 @@ status: all_fixed
 
 ## Verification
 
-Ran in the main checkout under WSL (`core.autocrlf=true`; `test_display_fix_guards.sh` and `test_resume_loop.sh` were temporarily LF in the working tree to run, then restored to their original CRLF so no EOL-only dirt remains).
+Re-verified on a clean checkout: all eight fixes are present at the commits listed above, so no additional source edits were required this pass. Gates re-run in the main checkout under WSL (`core.autocrlf=true`; `test_display_fix_guards.sh` and `test_resume_loop.sh` were temporarily LF in the working tree to run, then restored to their original CRLF, leaving no EOL-only dirt).
 
 - `bash scripts/test_installer_symmetry.sh` => `passed=16 failed=0` (was 11 cases; +5 new)
 - `bash scripts/test_hibernate_guards.sh` => `passed=21 failed=0` (phase-33 ladder + literal cp/rm greps intact)
@@ -84,10 +84,10 @@ Ran in the main checkout under WSL (`core.autocrlf=true`; `test_display_fix_guar
 - `bash scripts/test_storage_cellular.sh --dry-run` => rc=0 (microsd 26/0, display 10/0, hibernate 21/0, installer 16/0)
 - `bash -n scripts/install_dkms.sh scripts/test_installer_symmetry.sh scripts/test_storage_cellular.sh` => rc=0
 
-`git status --porcelain` shows only pre-existing untracked planning files and the pre-existing `AUDIT_PROMPT.md` deletion; no modified tracked file and no EOL-only dirt.
+`git status --porcelain` shows only pre-existing untracked planning files and the pre-existing `AUDIT_PROMPT.md` deletion; no modified tracked source file and no EOL-only dirt.
 
 ---
 
-_Fixed: 2026-10-08T15:35:38Z_
+_Fixed: 2026-10-08T12:40:59Z_
 _Fixer: the agent (gsd-code-fixer)_
 _Iteration: 1_
