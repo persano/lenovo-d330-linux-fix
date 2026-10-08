@@ -64,14 +64,31 @@ cd lenovo-d330-linux-fix
 sudo ./scripts/install_dkms.sh --install
 ```
 
-Reboot the tablet. Suspend and resume will now work reliably.
+Reboot the tablet. Option 1 installs an out-of-tree DKMS module that verifies
+the DMI platform match and prints a breadcrumb in `dmesg`, together with the
+`i915 enable_psr=0 enable_fbc=0` parameters and the
+`fbcon=rotate:1 video=efifb:nobgrt` orientation / logo fixes. It does
+**not include** the 600 ms panel power-cycle clamp: no PM notifier event runs
+between panel power-off and panel power-on, so the module cannot enforce TCON
+discharge timing.
 
-### Option 2: Apply Kernel Patch (For Custom / Distribution Kernels)
+### Option 2: Apply the Kernel Clamp Patch (For Custom / Distribution Kernels)
+
+Option 2 applies `patches/d330_display_resume_fix.patch` to a kernel source
+tree; this is what delivers the in-driver PPS power-cycle clamp, automated via
+the installer:
 
 ```bash
-cd /usr/src/linux
-git apply /path/to/lenovo-d330-linux-fix/patches/d330_display_resume_fix.patch
+# --kernel-src points at your kernel source tree. The installer dry-runs the
+# patch first and warns (never fails) on a context mismatch.
+sudo ./scripts/install_dkms.sh --install --kernel-src /usr/src/linux
 ```
+
+The patch is gated by `patch -p1 --dry-run`. On stock mainline kernels the hunk
+context typically does not match, so the installer prints a `[WARN]` and skips
+the apply; the clamp must then be adapted and applied manually, and the kernel
+rebuilt and rebooted before it takes effect. Option 1 alone does not fix a
+latch-up panel.
 
 ---
 
