@@ -981,14 +981,18 @@ if [ "$DRY_RUN" = true ]; then
     log_warn "Operating in DRY-RUN mode. No files will be modified."
 fi
 
-# --verify and --dump-manifest are read-only diagnostics: they must run without
-# dkms/make/gcc and without root, so the install prerequisite gate is skipped.
-# (--uninstall gains the same rescue-shell bypass in Task 3 / M11.)
-if [ "$ACTION" = "verify" ] || [ "$ACTION" = "dump-manifest" ]; then
-    log_info "Read-only mode '$ACTION': skipping prerequisite and root checks."
-else
-    check_prerequisites
-fi
+# M11: only --install (and its dry-run) needs dkms/make/gcc and root. --uninstall
+# must run in a minimal rescue shell (root but no build tools), and --verify /
+# --dump-manifest are read-only, so all three bypass the prerequisite + EUID
+# gate; --install keeps both unchanged.
+case "$ACTION" in
+    install)
+        check_prerequisites
+        ;;
+    *)
+        log_info "Skipping prerequisite/root checks for '$ACTION' (rescue-shell / read-only mode); check_prerequisites runs only for install."
+        ;;
+esac
 
 case "$ACTION" in
     install) do_install ;;
