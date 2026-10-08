@@ -9,7 +9,7 @@ Homepage: https://github.com/lucasgabmoreno/linuxmint_lenovod330
 Package: lenovo-d330-fix
 Architecture: all
 Depends: ${misc:Depends}, dkms, tlp, pipewire, libinput-tools, python3
-Recommends: iio-sensor-proxy, v4l2loopback-dkms, thermald
+Recommends: iio-sensor-proxy, v4l2loopback-dkms, thermald, earlyoom, zram-generator, librnnoise-ladspa, vainfo, libglib2.0-bin, desktop-file-utils
 Description: Hardware parity and screen freeze fix for Lenovo IdeaPad D330-10IGL
  Complete hardware integration package for Lenovo IdeaPad D330-10IGL
  (Type 82H0, 81MD, 81H3). Includes i915 TCON power sequence delay,

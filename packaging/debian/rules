@@ -5,28 +5,28 @@
 override_dh_auto_install:
 	# Install tools
 	mkdir -p debian/lenovo-d330-fix/usr/local/bin
-	cp tools/d330-* debian/lenovo-d330-fix/usr/local/bin/ || true
+	cp tools/d330-* debian/lenovo-d330-fix/usr/local/bin/
 	# d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
 	# install the daemon as d330-auto-hibernate, mode 755.
 	mv debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate.py debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate
 	chmod 755 debian/lenovo-d330-fix/usr/local/bin/d330-auto-hibernate
 	# Install modprobe
 	mkdir -p debian/lenovo-d330-fix/etc/modprobe.d
-	cp patches/*/etc/modprobe.d/*.conf debian/lenovo-d330-fix/etc/modprobe.d/ || true
+	cp patches/*/etc/modprobe.d/*.conf debian/lenovo-d330-fix/etc/modprobe.d/
 	# Install udev
 	mkdir -p debian/lenovo-d330-fix/etc/udev/rules.d debian/lenovo-d330-fix/etc/udev/hwdb.d
-	cp patches/*/etc/udev/rules.d/*.rules debian/lenovo-d330-fix/etc/udev/rules.d/ || true
-	cp patches/*/etc/udev/hwdb.d/*.hwdb debian/lenovo-d330-fix/etc/udev/hwdb.d/ || true
+	cp patches/*/etc/udev/rules.d/*.rules debian/lenovo-d330-fix/etc/udev/rules.d/
+	cp patches/*/etc/udev/hwdb.d/*.hwdb debian/lenovo-d330-fix/etc/udev/hwdb.d/
 	# Install systemd
 	mkdir -p debian/lenovo-d330-fix/etc/systemd/system
-	cp patches/*/etc/systemd/system/*.service debian/lenovo-d330-fix/etc/systemd/system/ || true
+	cp patches/*/etc/systemd/system/*.service debian/lenovo-d330-fix/etc/systemd/system/
 	# Install systemd USER unit (tablet daemon); the deb postinst enables it with
 	# `systemctl --global enable`, which must find the unit at /usr/lib/systemd/user.
 	mkdir -p debian/lenovo-d330-fix/usr/lib/systemd/user
-	cp patches/*/usr/lib/systemd/user/*.service debian/lenovo-d330-fix/usr/lib/systemd/user/ || true
+	cp patches/*/usr/lib/systemd/user/*.service debian/lenovo-d330-fix/usr/lib/systemd/user/
 	# Install PipeWire filter-chain DSP fragments into the RUNNING daemon's
 	# pipewire.conf.d (Phase 38). patches/*/etc/pipewire/** was shipped by no
 	# packager before, so the now-active speaker/RNNoise graphs were missing from
 	# packaged installs. dh_install picks these up from the debian/<pkg> tree.
 	mkdir -p debian/lenovo-d330-fix/etc/pipewire/pipewire.conf.d
-	cp patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf debian/lenovo-d330-fix/etc/pipewire/pipewire.conf.d/ || true
+	cp patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf debian/lenovo-d330-fix/etc/pipewire/pipewire.conf.d/

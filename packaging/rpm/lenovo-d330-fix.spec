@@ -13,6 +13,14 @@ Requires:       pipewire
 Requires:       python3
 Requires:       libinput
 
+Recommends:     thermald
+Recommends:     earlyoom
+Recommends:     zram-generator
+Suggests:       librnnoise-ladspa
+Suggests:       libva-utils
+Suggests:       glib2
+Suggests:       desktop-file-utils
+
 %description
 Complete hardware integration package for Lenovo IdeaPad D330-10IGL
 (Type 82H0, 81MD, 81H3). Includes i915 TCON power sequence delay,
@@ -30,22 +38,22 @@ mkdir -p %{buildroot}/etc/udev/hwdb.d
 mkdir -p %{buildroot}/etc/systemd/system
 mkdir -p %{buildroot}/usr/lib/systemd/user
 
-cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/ || true
+cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/
 # d330-auto-hibernate.service ExecStart= points at the suffix-free name, so
 # install the daemon as /usr/local/bin/d330-auto-hibernate, mode 755.
 mv %{buildroot}/usr/local/bin/d330-auto-hibernate.py %{buildroot}/usr/local/bin/d330-auto-hibernate
 chmod 755 %{buildroot}/usr/local/bin/d330-auto-hibernate
-cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/ || true
-cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/ || true
-cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/ || true
-cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/system/ || true
+cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/
+cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/
+cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/
+cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/system/
 # systemd USER unit: %post enables it with `systemctl --global enable`, which
 # requires the unit under /usr/lib/systemd/user.
-cp %{_builddir}/patches/*/usr/lib/systemd/user/*.service %{buildroot}/usr/lib/systemd/user/ || true
+cp %{_builddir}/patches/*/usr/lib/systemd/user/*.service %{buildroot}/usr/lib/systemd/user/
 # PipeWire filter-chain DSP fragments (Phase 38): must land in the RUNNING
 # daemon's pipewire.conf.d, which no packager shipped before.
 mkdir -p %{buildroot}/etc/pipewire/pipewire.conf.d
-cp %{_builddir}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf %{buildroot}/etc/pipewire/pipewire.conf.d/ || true
+cp %{_builddir}/patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf %{buildroot}/etc/pipewire/pipewire.conf.d/
 
 %post
 systemd-hwdb update || true

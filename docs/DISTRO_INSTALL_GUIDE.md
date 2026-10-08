@@ -13,7 +13,7 @@ Works on all distributions with kernel headers:
 ```bash
 sudo ./scripts/install_dkms.sh --install
 ```
-The `lenovo_d330_fix.ko` module intercepts suspend/resume events and enforces the 600 ms discharge delay, while modprobe disables PSR/FBC.
+The DKMS `lenovo_d330_fix.ko` module is a DMI-matched diagnostic banner; it does not enforce the discharge delay. modprobe disables PSR/FBC, and the 600 ms clamp comes from the Option 2 kernel patch (`patches/d330_display_resume_fix.patch`).
 
 ### 2. Building Patched Kernel `.deb` (Ubuntu / Linux Mint / Debian)
 We will compile patched kernel packages (`linux-image-*.deb` and `linux-headers-*.deb`):
@@ -48,7 +48,9 @@ Using custom PKGBUILD:
 ```bash
 asp checkout linux
 cd linux/trunk
-# Add d330_display_resume_fix.patch to PKGBUILD prepare()
+# Add d330_display_resume_fix.patch to THIS distribution-kernel PKGBUILD's
+# prepare() step. It does not belong in this repository's
+# packaging/arch/PKGBUILD, which only ships configs/tools and never builds a kernel.
 makepkg -s -i
 ```
 
