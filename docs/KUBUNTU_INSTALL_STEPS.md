@@ -136,6 +136,9 @@ grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
   `Error 1`/`Error 2` (step 4d):** the tree has no `.config`. Run
   `cp "/boot/config-$(uname -r)" .config && make olddefconfig` before
   `make bindeb-pkg`.
+- **`security/apparmor/Kconfig:... warning: multi-line strings not supported`
+  during `make olddefconfig`:** benign Kconfig parser warning from Ubuntu's
+  AppArmor patch. It is not fatal; ignore it and continue the build.
 
 ```bash
 # 4d. seed .config from the running kernel, then build and install.
