@@ -187,8 +187,10 @@ Each entry follows: **Wrong** (observable defect), **Why** (impact), **Fix** (wh
 - **Fix:** Make the CPU performance cap AC-aware (100 on mains, 75 on battery) and re-apply it
   from a `SUBSYSTEM=="power_supply"` `ACTION=="change"` rule. Reduce udev to the eMMC host and the
   dock (two `power/control` lines) and make TLP the sole runtime-PM owner. Drop the sub-minimum
-  GPU minimum, document the GLK maximum (650) and boost (700). Replace `nowatchdog` with
-  `softlockup_panic=1` and `panic=10`. Point thermald at `x86_pkg_temp`, add numeric guards for
+  GPU minimum, document the GLK maximum (650) and boost (700). Remove `nowatchdog` and leave the
+  kernel watchdog defaults (a later review dropped the short-lived `softlockup_panic=1 panic=10`
+  because a transient boot soft lockup would panic and auto-reboot). Point thermald at
+  `x86_pkg_temp`, add numeric guards for
   PL1, PL2 and temperature, add an `ExecCondition` fallback, and declare thermald in debian
   `Recommends`.
 - **How:** One writer per knob; the perf cap is re-applied on power-source change; the thermal

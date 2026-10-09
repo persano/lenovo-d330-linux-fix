@@ -143,7 +143,7 @@ sc1_case "udev-hwdb-match" \
 sc1_case "power-stack" \
     "bash scripts/test_power_stack.sh" \
     "patches/fastboot/etc/default/grub.d/52-lenovo-d330-fastboot.cfg" \
-    's/softlockup_panic=1/softlockup_panic=0/'
+    's/no_timer_check/nowatchdog no_timer_check/'
 
 sc1_case "tray-applet" \
     "bash scripts/test_tray_applet.sh" \

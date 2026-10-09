@@ -105,9 +105,11 @@ guard_mountpoint_empty() {
 }
 
 # ------------------------------------------------------------------------------
-# Guard (b): the target must not be the root device or related to it, checked in
-# BOTH directions (root source longer than target AND root source shorter than
-# target). Root source resolution uses an explicit rc capture so a failing or
+# Guard (b): the target must not be the root device or related to it. Both paths
+# are canonicalized with realpath (so LUKS/LVM mapper nodes and /dev/disk/by-id
+# symlinks resolve to their real /dev node) and compared at the physical-disk
+# level via lsblk PKNAME, in BOTH prefix directions plus an equal-parent-disk
+# check. Root source resolution uses an explicit rc capture so a failing or
 # missing findmnt fails closed with its own message instead of aborting under
 # set -e before [GUARD] root-device: prints.
 # ------------------------------------------------------------------------------
@@ -119,19 +121,37 @@ guard_not_root_device() {
         log_err "[GUARD] root-device: FAIL (root source could not be resolved; findmnt rc=$rc)"
         return 1
     fi
-    case "$ROOT_SRC" in
-        "$TARGET_DEV"|"$TARGET_DEV"*)
-            log_err "[GUARD] root-device: FAIL (target is the root device or an ancestor of it: root=$ROOT_SRC target=$TARGET_DEV)"
+
+    # Canonicalize. Falls back to the raw string when realpath cannot resolve a
+    # not-yet-existing target (the destructive action may create the partition).
+    local REAL_ROOT REAL_TARGET
+    REAL_ROOT="$(realpath -- "$ROOT_SRC" 2>/dev/null || printf '%s' "$ROOT_SRC")"
+    REAL_TARGET="$(realpath -- "$TARGET_DEV" 2>/dev/null || printf '%s' "$TARGET_DEV")"
+
+    # Physical-disk level: PKNAME is the parent whole disk of a partition node.
+    local ROOT_DISK TARGET_DISK
+    ROOT_DISK="$(lsblk -nro PKNAME "$REAL_ROOT" 2>/dev/null | head -n1 || true)"
+    TARGET_DISK="$(lsblk -nro PKNAME "$REAL_TARGET" 2>/dev/null | head -n1 || true)"
+    [ -n "$ROOT_DISK" ] || ROOT_DISK="$(basename -- "$REAL_ROOT")"
+    [ -n "$TARGET_DISK" ] || TARGET_DISK="$(basename -- "$REAL_TARGET")"
+
+    case "$REAL_ROOT" in
+        "$REAL_TARGET"|"$REAL_TARGET"*)
+            log_err "[GUARD] root-device: FAIL (target is the root device or an ancestor of it: root=$REAL_ROOT target=$REAL_TARGET)"
             return 1
             ;;
     esac
-    case "$TARGET_DEV" in
-        "$ROOT_SRC"*)
-            log_err "[GUARD] root-device: FAIL (target is a descendant of the root device: root=$ROOT_SRC target=$TARGET_DEV)"
+    case "$REAL_TARGET" in
+        "$REAL_ROOT"*)
+            log_err "[GUARD] root-device: FAIL (target is a descendant of the root device: root=$REAL_ROOT target=$REAL_TARGET)"
             return 1
             ;;
     esac
-    log_ok "[GUARD] root-device: PASS (root=$ROOT_SRC target=$TARGET_DEV)"
+    if [ "$ROOT_DISK" = "$TARGET_DISK" ]; then
+        log_err "[GUARD] root-device: FAIL (target and root share physical disk $ROOT_DISK: root=$REAL_ROOT target=$REAL_TARGET)"
+        return 1
+    fi
+    log_ok "[GUARD] root-device: PASS (root=$REAL_ROOT target=$REAL_TARGET)"
 }
 
 # ------------------------------------------------------------------------------

@@ -5,8 +5,9 @@
 # Static guard suite (Phase 40, audit M13/M14): the power stack must have exactly
 # one writer per knob. TLP owns runtime PM (PCI/PCIe) + GPU freq + EPP/governor,
 # the udev rules are scoped to the controllers TLP does not manage, the CPU perf
-# cap is AC-aware and re-applied on mains-source change, `nowatchdog` is gone,
-# and the thermal fallback guards its arithmetic.
+# cap is AC-aware and re-applied on mains-source change, `nowatchdog` is gone
+# and no auto-panic watchdog override is set, and the thermal fallback guards its
+# arithmetic.
 #
 # Asserted:
 #   (1) tools/lenovo-d330-power-tune.sh reads AC state (by type == "Mains",
@@ -20,7 +21,7 @@
 #       PCI writer repo-wide is device-scoped (the IPU3 camera exception);
 #   (4) TLP declares RUNTIME_PM_ON_AC as the runtime-PM writer;
 #   (5) no rejected INTEL_GPU_MIN_FREQ_ON_AC=100, and MAX/BOOST are kept;
-#   (6) nowatchdog absent and softlockup_panic=1 + panic=10 present as real
+#   (6) nowatchdog absent and no auto-panic watchdog override in the real
 #       GRUB_CMDLINE_LINUX_DEFAULT tokens (comment text does not count);
 #   (7) d330-thermal-tune.sh has numeric guards before its arithmetic;
 #   (8) thermald thermal-conf.xml uses the real x86_pkg_temp zone type;
@@ -123,18 +124,18 @@ else
     fail "TLP GPU MAX/BOOST frequencies are missing"
 fi
 
-# (6) watchdog: nowatchdog gone, softlockup_panic=1 + panic=10 as real
-# GRUB_CMDLINE_LINUX_DEFAULT tokens (comment text does not satisfy these).
+# (6) watchdog: nowatchdog gone, and no auto-panic override (softlockup_panic /
+# panic=) in the real GRUB_CMDLINE_LINUX_DEFAULT line (comment text does not
+# satisfy these). Detection stays on; a lockup logs instead of panicking.
 if grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*nowatchdog' "$FASTBOOT_CFG"; then
     fail "fastboot cfg still disables watchdog detection with nowatchdog"
 else
     ok "no nowatchdog in fastboot cfg cmdline"
 fi
-if grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*softlockup_panic=1' "$FASTBOOT_CFG" \
-   && grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*panic=10' "$FASTBOOT_CFG"; then
-    ok "softlockup_panic=1 + panic=10 in cmdline (a hung boot panics then auto-reboots)"
+if grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*(softlockup_panic|panic=)' "$FASTBOOT_CFG"; then
+    fail "fastboot cfg carries an auto-panic watchdog override (softlockup_panic/panic=)"
 else
-    fail "softlockup_panic=1 and/or panic=10 missing from fastboot cfg cmdline"
+    ok "no auto-panic watchdog override in fastboot cfg cmdline (watchdog logs only)"
 fi
 
 # (7) thermal numeric guards (pl1/pl2 and thermal-zone temp); portable

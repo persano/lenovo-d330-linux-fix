@@ -4,10 +4,12 @@ Lenovo IdeaPad D330-10IGL Backlight PWM Frequency Scaling Utility
 Increases PWM dimming frequency from the OEM default (200 Hz) toward 1000 Hz
 to eliminate eye strain, headaches, and visible flicker at low brightness.
 
-Honesty contract: `--apply` only reports success after a real PCH/GMCH PWM
-register write that is confirmed by an `intel_reg` read-back delta. Without
-`intel_reg` it prints an explicit `[SKIP]` and exits non-zero. It never prints
-an unconditional `[OK]` for an operation that performed no write.
+Honesty contract: `--apply` only reports success when the divider field is
+confirmed correct by an `intel_reg` read-back, either from a real register write
+(0xbefore -> 0xafter) or because the register already held the target divider
+(a no-op re-run is idempotent success, not failure). Without `intel_reg` it
+prints an explicit `[SKIP]` and exits non-zero. It never prints an unconditional
+`[OK]` for an operation that performed no write and did not verify the target.
 """
 
 import sys
@@ -146,7 +148,15 @@ def apply_pwm_tuning():
             print(f"[OK] PWM {name}: 0x{before:08X} -> 0x{after:08X}")
             return
 
-        print(f"[FAIL] PWM register unchanged at {name} (0x{before:08X}); divider already {divider}?")
+        # Idempotent re-run: the divider field already equals the requested
+        # target, so there was nothing to change. Report success, not failure
+        # (the register content matches what --apply asked for).
+        if (after & 0xFFFF) == (divider & 0xFFFF):
+            print(f"[OK] PWM {name}: already at target divider (0x{after:08X})")
+            return
+
+        print(f"[FAIL] PWM register unchanged at {name} (0x{before:08X}); "
+              f"divider not applied (wanted 0x{divider & 0xFFFF:04X})")
         sys.exit(1)
 
     print("[FAIL] no known PWM register readable via intel_reg; nothing written")

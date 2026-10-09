@@ -4,7 +4,7 @@
 The repository includes automated CI/CD pipelines defined in `.github/workflows/`:
 1. **`build-packages.yml`**:
    - Triggers automatically when a version tag (`v*`) is pushed to git.
-   - Builds Debian `.deb` package (`lenovo-d330-fix_5.0.0_all.deb`).
+   - Builds Debian `.deb` package (`lenovo-d330-fix_7.0.0_all.deb`).
    - Packages the standalone DKMS kernel module into `lenovo-d330-fix-dkms.tar.gz`.
    - Computes cryptographic SHA256 checksums (`SHA256SUMS`).
    - Creates a GitHub Release and attaches the compiled artifacts for direct user download.

@@ -11,7 +11,7 @@
 #   2. eMMC I/O scheduler is mq-deadline in the udev rule and audit (not bfq)
 #   3. i915 enable_fbc=0 in the boot cfg, the modprobe conf and audit (not enable_fbc=1)
 #   4. panel_orientation is present in the boot cfg and audit
-#   5. softlockup_panic=1 present / nowatchdog absent in fastboot cfg and audit
+#   5. no watchdog override (no nowatchdog, no softlockup_panic/panic=) in fastboot cfg and audit
 #   6. no PWM 1000 Hz boot service (no tracked unit, audit documents removal)
 #   7. no GTK3 / AppIndicator tray claim (stdlib tray helper, no GTK imports)
 #   8. no iwlwifi / Intel Wi-Fi option (Realtek RTL8821CE only)
@@ -52,7 +52,7 @@ case "${1:-}" in
         echo "  2. mq-deadline         : $EMMC_RULE + $AUDIT"
         echo "  3. enable_fbc=0        : $BOOT_CFG + $MODPROBE_I915 + $AUDIT"
         echo "  4. panel_orientation   : $BOOT_CFG + $AUDIT"
-        echo "  5. softlockup_panic=1  : $FASTBOOT_CFG + $AUDIT"
+        echo "  5. no watchdog override: $FASTBOOT_CFG + $AUDIT"
         echo "  6. no PWM boot service : $PWM_SERVICE absent"
         echo "  7. no GTK/AppIndicator : $TRAY_TOOL + $AUDIT"
         echo "  8. no iwlwifi          : $WIRELESS_CONF + $AUDIT"
@@ -137,16 +137,16 @@ else
     fail "$AUDIT does not mention panel_orientation"
 fi
 
-# 5. softlockup_panic present / nowatchdog absent -----------------------------
-if grep -q 'softlockup_panic=1' "$FASTBOOT_CFG" && ! grep -q 'nowatchdog' "$FASTBOOT_CFG"; then
-    ok "fastboot-softlockup-panic"
+# 5. no watchdog override (nowatchdog removed, no auto-panic) -----------------
+if ! grep -Eq '^GRUB_CMDLINE_LINUX_DEFAULT=.*(nowatchdog|softlockup_panic|panic=)' "$FASTBOOT_CFG"; then
+    ok "fastboot-no-watchdog-override"
 else
-    fail "$FASTBOOT_CFG must set softlockup_panic=1 and not nowatchdog"
+    fail "$FASTBOOT_CFG cmdline must not set nowatchdog/softlockup_panic/panic="
 fi
-if grep -q 'softlockup_panic' "$AUDIT"; then
-    ok "audit-softlockup-panic"
+if grep -qi 'softlockup_panic' "$AUDIT"; then
+    fail "$AUDIT must not claim a softlockup_panic override"
 else
-    fail "$AUDIT must mention softlockup_panic"
+    ok "audit-no-watchdog-override"
 fi
 
 # 6. no PWM 1000 Hz boot service ---------------------------------------------

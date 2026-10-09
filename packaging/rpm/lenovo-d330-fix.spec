@@ -1,5 +1,5 @@
 Name:           lenovo-d330-fix
-Version:        5.0.0
+Version:        7.0.0
 Release:        1%{?dist}
 Summary:        Complete hardware integration and screen freeze fix for Lenovo IdeaPad D330
 
@@ -31,6 +31,9 @@ low-battery hibernation daemon, and sensor hysteresis.
 # No prep required for binary packaging
 
 %install
+# /usr/local/bin is a deliberate choice, not an oversight: the manual
+# scripts/install_dkms.sh installer and every shipped unit ExecStart use
+# /usr/local/bin; kept identical across deb/rpm/PKGBUILD for one source of truth.
 mkdir -p %{buildroot}/usr/local/bin
 mkdir -p %{buildroot}/etc/modprobe.d
 mkdir -p %{buildroot}/etc/udev/rules.d
@@ -88,5 +91,9 @@ systemctl enable d330-swapfile.service 2>/dev/null || true
 /etc/xdg/autostart/*
 
 %changelog
+* Thu Oct 08 2026 Antigravity Community <community@example.com> - 7.0.0-1
+- Milestone 7 (v7.0) audit remediation: watchdog cmdline override dropped,
+  tablet user unit niceness fixed, Wi-Fi resume carrier guard, PWM idempotency,
+  microSD root-device path canonicalization, version synced to 7.0.0.
 * Wed Oct 07 2026 Antigravity Community <community@example.com> - 5.0.0-1
 - Initial RPM package for Lenovo D330-10IGL parity

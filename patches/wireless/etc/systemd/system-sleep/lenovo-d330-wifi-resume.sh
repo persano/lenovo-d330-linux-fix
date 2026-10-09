@@ -32,6 +32,13 @@ case "${1:-}/${2:-}" in
                 break
             fi
 
+            # Healthy link: already associated, leave it untouched so an active
+            # VPN / SSH / sync session is not dropped (carrier 1 + operstate up).
+            if [ "$carrier" = "1" ] && [ "$operstate" = "up" ]; then
+                echo "[d330-wifi-resume] $ifname: link already up; skipping reconnect."
+                break
+            fi
+
             # Device present but link wedged - try a clean reconnect first,
             # falling back to a single radio bounce only if that fails.
             if command -v nmcli >/dev/null 2>&1; then

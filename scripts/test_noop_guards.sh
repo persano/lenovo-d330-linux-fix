@@ -12,7 +12,8 @@
 #   (c) `d330-sensor-filter.py` does not self-terminate: a `--monitor` run is
 #       still alive after 60 s (killed by `timeout`, rc 124), proving SC1;
 #   (d) `d330-backlight-pwm.py --apply` read-back delta: [OK] when a stub
-#       `intel_reg` write changes the value, [FAIL] + non-zero when it does not
+#       `intel_reg` write changes the value, [FAIL] + non-zero when it does not,
+#       and idempotent [OK] when the register already holds the target divider
 #       (also exercises the `name (0xADDR): 0xVALUE` value parser, CR-01).
 #
 # Modes: default runs every check; `--probe` prints what it would check.
@@ -176,6 +177,18 @@ STUB
         ok "pwm-readback-no-delta-fail (rc=$d2_rc)"
     else
         fail "PWM --apply did not report [FAIL]+non-zero on an unchanged register (rc=$d2_rc): $d2_out"
+    fi
+
+    # (d3) idempotent re-run: the register already holds the target divider, so
+    # a repeat --apply must be success (rc 0), not a no-change failure.
+    st3="$stub_dir/state-idem"
+    target_hex="$(printf '0x%X' $((24000000 / 1000)))"
+    d3_out="$(PATH="$stub_dir:$PATH" D330_STUB_STATE="$st3" D330_STUB_INITIAL="$target_hex" "$PY3" "$PWM_TOOL" --apply 2>&1)"
+    d3_rc=$?
+    if [ "$d3_rc" -eq 0 ] && printf '%s' "$d3_out" | grep -q 'already at target'; then
+        ok "pwm-idempotent-already-applied (rc=$d3_rc)"
+    else
+        fail "PWM --apply did not report idempotent success on an already-applied divider (rc=$d3_rc): $d3_out"
     fi
 
     rm -rf "$stub_dir"

@@ -1,0 +1,18 @@
+post_install() {
+    systemd-hwdb update || true
+    udevadm trigger || true
+    systemctl daemon-reload || true
+    # Enable all 8 shipped units (parity with install_dkms.sh and deb/rpm postinst).
+    systemctl --global enable d330-tablet-daemon.service || true
+    systemctl enable lenovo-d330-power.service || true
+    systemctl enable lenovo-d330-camera-loopback.service || true
+    systemctl enable d330-hardware-state.service || true
+    systemctl enable d330-sensor-filter.service || true
+    systemctl enable d330-thermal.service || true
+    systemctl enable d330-auto-hibernate.service || true
+    systemctl enable d330-swapfile.service || true
+}
+
+post_upgrade() {
+    post_install
+}

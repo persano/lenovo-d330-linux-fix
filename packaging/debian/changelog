@@ -1,3 +1,12 @@
+lenovo-d330-fix (7.0.0-1) unstable; urgency=medium
+
+  * Milestone 7 (v7.0) pre-deployment audit remediation. Watchdog kernel
+    cmdline override dropped, tablet daemon user unit niceness fixed, Wi-Fi
+    resume carrier guard, PWM apply idempotency, microSD root-device path
+    canonicalization, package version metadata synced to 7.0.0.
+
+ -- Antigravity Community <community@example.com>  Thu, 08 Oct 2026 12:00:00 +0000
+
 lenovo-d330-fix (5.0.0-1) unstable; urgency=medium
 
   * Release v5.0 full hardware parity package.

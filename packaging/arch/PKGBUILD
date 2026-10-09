@@ -1,11 +1,12 @@
 # Maintainer: Antigravity Community <community@example.com>
 pkgname=lenovo-d330-fix
-pkgver=5.0.0
+pkgver=7.0.0
 pkgrel=1
 pkgdesc="Complete hardware integration and screen freeze fix for Lenovo IdeaPad D330-10IGL"
 arch=('any')
 url="https://github.com/lucasgabmoreno/linuxmint_lenovod330"
 license=('GPL2')
+install=lenovo-d330-fix.install
 depends=('dkms' 'tlp' 'pipewire' 'python' 'libinput')
 optdepends=('iio-sensor-proxy: orientation and ambient light auto-rotation'
             'v4l2loopback-dkms: virtual loopback webcam bridge'
@@ -20,6 +21,10 @@ optdepends=('iio-sensor-proxy: orientation and ambient light auto-rotation'
 package() {
     # Install executables (d330-acpi-override.sh and d330-pen-config.sh are
     # development-only helpers — CHANGES_AUDIT.md 8.1 — and must not ship).
+    # NOTE: /usr/local/bin is a deliberate choice, not an oversight. The manual
+    # scripts/install_dkms.sh installer and every shipped unit ExecStart use
+    # /usr/local/bin; moving only the package to /usr/bin would split that
+    # contract. Kept identical across deb/rpm/PKGBUILD for one source of truth.
     install -d "${pkgdir}/usr/local/bin"
     install -m 755 "${srcdir}"/../tools/d330-* "${pkgdir}/usr/local/bin/"
     install -m 755 "${srcdir}"/../tools/lenovo-d330-power-tune.sh "${pkgdir}/usr/local/bin/"
@@ -62,23 +67,4 @@ package() {
     # Tray autostart entry (Exec=/usr/local/bin/d330-tray).
     install -d "${pkgdir}/etc/xdg/autostart"
     install -m 644 "${srcdir}"/../patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop "${pkgdir}/etc/xdg/autostart/"
-}
-
-post_install() {
-    systemd-hwdb update || true
-    udevadm trigger || true
-    systemctl daemon-reload || true
-    # Enable all 8 shipped units (parity with install_dkms.sh and deb/rpm postinst).
-    systemctl --global enable d330-tablet-daemon.service || true
-    systemctl enable lenovo-d330-power.service || true
-    systemctl enable lenovo-d330-camera-loopback.service || true
-    systemctl enable d330-hardware-state.service || true
-    systemctl enable d330-sensor-filter.service || true
-    systemctl enable d330-thermal.service || true
-    systemctl enable d330-auto-hibernate.service || true
-    systemctl enable d330-swapfile.service || true
-}
-
-post_upgrade() {
-    post_install
 }
