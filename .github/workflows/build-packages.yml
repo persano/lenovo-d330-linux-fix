@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Build Prerequisites
         run: |
@@ -75,7 +75,7 @@ jobs:
         run: tar -czf lenovo-d330-fix-dkms.tar.gz patches/dkms/
 
       - name: Upload Debian Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deb
           path: |
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Build Prerequisites
         run: |
@@ -110,7 +110,7 @@ jobs:
           ls -l dist/
 
       - name: Upload RPM Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rpm
           path: dist/*.rpm
@@ -128,7 +128,7 @@ jobs:
         run: pacman -Syu --noconfirm --needed git base-devel
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build Arch Package
         run: |
@@ -145,7 +145,7 @@ jobs:
           ls -l dist/
 
       - name: Upload Arch Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: arch
           path: dist/*.pkg.tar.*
@@ -159,7 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
@@ -171,7 +171,7 @@ jobs:
           cat SHA256SUMS
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/**
         env:
