@@ -288,6 +288,34 @@ ssh <user>@<tablet-ip> 'sudo systemctl suspend'      # wake with the power butto
 ssh <user>@<tablet-ip> 'sudo journalctl -b -k --no-pager | tail -400'
 ```
 
+## 9. Recover a dark screen without rebooting
+
+`/usr/local/bin/d330-refresh-screen` cycles the panel output to recover a
+latched-dark screen. It works on KDE/KWin Wayland (`kscreen-doctor`), wlroots
+(`wlr-randr`) and X11 (`xrandr`); this is the community
+`lucasgabmoreno/linuxmint_lenovod330` workaround made session-aware (its
+original was X11-only and does nothing on Wayland).
+
+Keep the deployed copy current:
+
+```bash
+cd ~/lenovo-d330-linux-fix && git pull --ff-only
+sudo cp tools/d330-refresh-screen.sh /usr/local/bin/d330-refresh-screen
+sudo chmod +x /usr/local/bin/d330-refresh-screen
+sudo apt install -y kscreen     # provides kscreen-doctor on KDE Wayland
+```
+
+Run it and read the result (the same lines are appended to
+`$XDG_RUNTIME_DIR/d330-refresh-screen.log`):
+
+```bash
+/usr/local/bin/d330-refresh-screen --hold
+```
+
+Bind it to a key: System Settings > Keyboard > Shortcuts > Add Command, with
+`/usr/local/bin/d330-refresh-screen --hold`. It only re-drives a live display
+server; it cannot revive a pipe the kernel failed to power on.
+
 ---
 
 ## Notes and troubleshooting
@@ -340,15 +368,8 @@ ssh <user>@<tablet-ip> 'sudo journalctl -b -k --no-pager | tail -400'
   or not the diff applied, so confirm `dmesg | grep -i "Lenovo D330 PPS"` is
   non-empty and that step 4c's three greps printed hits. If DMI does not match
   (`"82H0"` / `"Lenovo ideapad D330-10IGL"`), the quirk is skipped by design.
-- **Recover a screen that latched dark:** `/usr/local/bin/d330-refresh-screen`
-  cycles the panel output (KDE Wayland via `kscreen-doctor`, wlroots via
-  `wlr-randr`, X11 via `xrandr`) and appends to
-  `$XDG_RUNTIME_DIR/d330-refresh-screen.log`. This is the community
-  `lucasgabmoreno/linuxmint_lenovod330` workaround, made session-aware (its
-  original was X11-only and does nothing on Wayland). For a keyboard shortcut:
-  System Settings > Keyboard > Shortcuts > Add Command, with
-  `/usr/local/bin/d330-refresh-screen --hold`. If `kscreen-doctor` is missing on
-  Wayland/KDE, `sudo apt install kscreen`. Note this only re-drives a live
-  display server; it cannot revive a pipe the kernel failed to power on.
+- **Recover a screen that latched dark:** run `/usr/local/bin/d330-refresh-screen`;
+  see section 9. It re-drives a live display server and cannot revive a pipe the
+  kernel failed to power on.
 - **Uninstall everything:** `sudo ./scripts/install_dkms.sh --uninstall`
   (removes configs, units and the deployed files listed in the manifest).
