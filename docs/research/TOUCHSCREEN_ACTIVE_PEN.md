@@ -16,20 +16,23 @@ The Lenovo IdeaPad D330-10IGL (`82H0`) and D330-10IGM (`81H3`, `81MD`) utilize a
 
 ---
 
-## 2. Coordinate Transformation Mathematics
+## 2. Coordinate Transformation
 
-Libinput and X11 use an affine transformation matrix:
+Libinput and X11 both use an affine transformation matrix:
 $$\begin{pmatrix} x' \\ y' \\ 1 \end{pmatrix} = \begin{pmatrix} c_0 & c_1 & c_2 \\ c_3 & c_4 & c_5 \\ 0 & 0 & 1 \end{pmatrix} \begin{pmatrix} x \\ y \\ 1 \end{pmatrix}$$
 
-For a $90^\circ$ clockwise rotation from physical portrait to logical landscape:
-- $x' = 0 \cdot x + 1 \cdot y + 0$
-- $y' = -1 \cdot x + 0 \cdot y + 1$
+The panel is natively portrait and its rotation is reported to userspace by the
+DRM connector (`video=DSI-1:panel_orientation=right_side_up`).
 
-Therefore:
-$$\text{LIBINPUT\_CALIBRATION\_MATRIX} = \text{"0 1 0 -1 0 1"}$$
-
-And for X11 `TransformationMatrix`:
-$$\text{"0 1 0 -1 0 1 0 0 1"}$$
+- **Wayland (KWin, Mutter):** the compositor folds the panel orientation into the
+  output transform and rotates absolute input devices to match, so the
+  touchscreen must NOT carry its own rotation matrix. The shipped
+  `LIBINPUT_CALIBRATION_MATRIX` is therefore the identity `1 0 0 0 1 0`. A
+  $90^\circ$ matrix here rotates touch a second time, i.e. $90^\circ + 90^\circ =
+  180^\circ$ (inverted touch).
+- **X11:** the X server does not apply the panel orientation to input, so
+  `patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf` carries the
+  $90^\circ$ transform `0 1 0 -1 0 1 0 0 1` ($x' = y$, $y' = 1 - x$).
 
 ---
 
@@ -38,11 +41,11 @@ $$\text{"0 1 0 -1 0 1 0 0 1"}$$
 1. **Kernel DMI Quirk Patch** (`patches/touchscreen/d330_touchscreen_dmi.patch`):
    - Adds DMI matching entries to `drivers/platform/x86/touchscreen_dmi.c` for Machine Types `82H0`, `81MD`, and `81H3`.
    - Populates device properties `touchscreen-swapped-x-y`, `touchscreen-inverted-y`, and `touchscreen-stylus-supported`.
+   - **Do not apply this on a Wayland compositor that already rotates input from `panel_orientation`** (KWin, Mutter): the kernel transform and the compositor transform stack, giving the same inverted-touch bug as a duplicate `LIBINPUT_CALIBRATION_MATRIX`. It is not installed by `scripts/install_dkms.sh`.
 2. **Udev Rules & HWDB** (`patches/touchscreen/etc/udev/`):
-   - `62-lenovo-d330-touchscreen.hwdb`: Direct hardware database matching by DMI.
-   - `90-lenovo-d330-touchscreen.rules`: Fallback runtime rule applying `LIBINPUT_CALIBRATION_MATRIX` and palm rejection properties (`LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=120`, `LIBINPUT_ATTR_PALM_SIZE_THRESHOLD=12`).
+   - `62-lenovo-d330-touchscreen.hwdb` and `90-lenovo-d330-touchscreen.rules` apply an **identity** `LIBINPUT_CALIBRATION_MATRIX` (`1 0 0 0 1 0`) on Wayland, deliberately neutral so it does not stack with the compositor's panel-orientation rotation.
 3. **X11 InputClass Configuration** (`patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf`):
-   - Applies matching affine transformation matrix for Xorg server sessions and sets standard stylus pressure curve.
+   - Applies the $90^\circ$ affine transformation matrix for Xorg sessions and sets a standard stylus pressure curve.
 4. **Sleep/Wake Stabilization Hook** (`patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh`):
    - Performs sysfs unbind and rebind cycle on `/sys/bus/i2c/drivers/goodix/` upon system resume, resetting the controller hardware registers and restoring touch and pen events seamlessly.
 

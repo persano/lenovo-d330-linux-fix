@@ -68,40 +68,67 @@ you have no network during install; you can build it later with
 
 ## 4. Apply the display fix and rebuild the kernel
 
-This is the step that actually stops the panel latching dark after suspend.
+This is the step that actually stops the panel latching dark after suspend. Run
+it from a scratch directory and use absolute paths: `apt source` extracts the
+kernel tree next to wherever you are, so a relative `../lenovo-d330-linux-fix/...`
+patch path normally points at nothing and `patch` fails to find the file.
 
 ```bash
-# 4a. enable source package repositories (Kubuntu 24.04+ uses the deb822 format)
+# Set these two paths for your machine.
+REPO="$HOME/lenovo-d330-linux-fix"   # where you cloned this repository
+WORK="$HOME/d330-kernel"             # scratch dir for the kernel source
+mkdir -p "$WORK" && cd "$WORK"
+```
+
+```bash
+# 4a. enable source package repositories, then refresh
 sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 sudo apt update
-sudo apt build-dep -y linux
-
-# 4b. fetch the kernel source for the running kernel
-apt source linux-image-unsigned-$(uname -r)
-# If that package name 404s, list candidates and pick the matching one:
-#   apt-cache search '^linux.*source' ; apt source linux            (or linux-hwe-6.x)
-cd linux-*/
 ```
 
 ```bash
-# 4c. gate the patch BEFORE applying it
-patch -p1 --dry-run < ../lenovo-d330-linux-fix/patches/d330_display_resume_fix.patch
+# 4b. fetch the source package your running kernel came from
+SRC_PKG="$(dpkg-query -W -f='${Source}' "linux-image-$(uname -r)" 2>/dev/null | awk '{print $1}')"
+SRC_PKG="${SRC_PKG:-linux}"
+echo "kernel source package: $SRC_PKG"
+sudo apt build-dep -y "$SRC_PKG"
+apt source "$SRC_PKG"
+cd "${SRC_PKG}"-*
 ```
 
-- **Clean dry-run:** apply it.
-  ```bash
-  patch -p1 < ../lenovo-d330-linux-fix/patches/d330_display_resume_fix.patch
-  ```
-- **Rejects (expected on a very new kernel):** open
-  `drivers/gpu/drm/i915/display/intel_pps.c` and adapt the hunk by hand so the
-  panel power-cycle path enforces a delay of at least 600 ms, then continue.
+```bash
+# 4c. gate the patch, apply it, then PROVE it landed before you build
+PATCH="$REPO/patches/d330_display_resume_fix.patch"
+patch -p1 --dry-run --batch < "$PATCH" || echo ">>> DO NOT BUILD: patch does not apply cleanly; see below"
+
+patch -p1 --batch < "$PATCH"
+
+# All three greps must print a hit. If they do not, the kernel will NOT contain
+# the fix even though it is still named -d330-fix.
+grep -R "QUIRK_INCREASE_PPS_CYCLE_DELAY" drivers/gpu/drm/i915/display/
+grep -R "lenovo_ideapad_d330_10igl_800x1280" drivers/gpu/drm/
+grep -R "Lenovo D330 PPS power-cycle" drivers/gpu/drm/i915/
+```
+
+- **Dry-run fails (context mismatch on a very new kernel):** do **not** build.
+  `patch` leaves the rejected hunks in `*.rej` files next to the targets. Merge
+  each hunk by hand into `drivers/gpu/drm/drm_panel_orientation_quirks.c`,
+  `drivers/gpu/drm/i915/display/intel_quirks.{c,h}` and
+  `drivers/gpu/drm/i915/display/intel_pps.c`, then re-run the three greps. The
+  hunks add the `lenovo_ideapad_d330_10igl_*` DMI entries, the
+  `QUIRK_INCREASE_PPS_CYCLE_DELAY` enum + quirk hook, and the >= 600 ms clamp
+  inside `intel_pps_init_delays()`.
 
 ```bash
 # 4d. build and install
 make -j"$(nproc)" bindeb-pkg LOCALVERSION=-d330-fix
+ls -lh ../linux-image-*-d330-fix_*.deb ../linux-headers-*-d330-fix_*.deb
 sudo dpkg -i ../linux-image-*-d330-fix_*.deb ../linux-headers-*-d330-fix_*.deb
 sudo update-grub
 ```
+
+If `apt build-dep` fails, install the prerequisites by hand:
+`sudo apt install -y build-essential libssl-dev bc flex bison rsync libelf-dev dwarves cpio zstd`.
 
 ## 5. Reboot
 
@@ -123,12 +150,21 @@ dkms status -m lenovo-d330-fix -v 1.0.0
 # expect: lenovo-d330-fix/1.0.0, <kernel>, x86_64: installed
 ```
 
-**Display fix (the important one):**
+**Display fix (the important one):** a rebuilt kernel named `-d330-fix` is not
+proof the patch is in, so check the DMI match and the driver's own log lines.
 ```bash
+cat /sys/class/dmi/id/product_name /sys/class/dmi/id/product_version
+# the patch matches product_name containing "82H0" or product_version containing
+# "Lenovo ideapad D330-10IGL"; if neither matches, the quirk never runs
 uname -r                                     # must end in -d330-fix
-dmesg | grep lenovo_d330_fix
+dmesg | grep -i "Lenovo D330 PPS"            # proves the clamp patch is live
+dmesg | grep -i "Clamping PPS power-cycle"   # the 600 ms clamp was applied
+dmesg | grep lenovo_d330_fix                 # DKMS banner module (Option 1)
 sudo ./scripts/test_resume_loop.sh --cycles 5 --sleep 10
 ```
+If the `Lenovo D330 PPS` / `Clamping PPS` lines are absent, the kernel booted
+without the patch: go back to step 4 and make sure the three greps printed hits
+before the build.
 
 **Touchscreen / touchpad:**
 ```bash
@@ -145,9 +181,12 @@ wpctl status | grep -i "Lenovo D330 Clean"
 ## 7. Wayland finishing touches
 
 - Confirm the session: `echo $XDG_SESSION_TYPE` should print `wayland`.
-- Touch alignment is automatic (udev `LIBINPUT_CALIBRATION_MATRIX`). Palm and
-  pressure thresholds come from `/usr/share/libinput/60-lenovo-d330.quirks`,
-  which libinput reads on Wayland too.
+- Touch needs no calibration matrix on Wayland: the compositor already rotates
+  absolute input from the panel orientation (`panel_orientation=...` in the boot
+  cmdline), so the shipped `LIBINPUT_CALIBRATION_MATRIX` is the identity ("no
+  extra transform"). Palm and pressure thresholds come from
+  `/usr/share/libinput/60-lenovo-d330.quirks`, which libinput reads on Wayland
+  too.
 - Set **tap-to-click, natural scrolling and clickfinger** in System Settings >
   Input Devices. The X11 file `60-lenovo-d330-touchpad-pen.conf` is ignored on
   Wayland; those are compositor preferences.
@@ -173,6 +212,15 @@ wpctl status | grep -i "Lenovo D330 Clean"
   `/var/lib/dkms/lenovo-d330-fix/1.0.0/build/make.log`. The module is a
   DMI-matched diagnostic banner; the real fix is the kernel patch, so this does
   not block the display fix.
+- **Touch is inverted (180 deg) or rotated on Wayland:** a calibration matrix is
+  being applied *and* the compositor is rotating input from `panel_orientation`,
+  so touch is turned twice. The shipped matrix is the identity for exactly this
+  reason. Check `udevadm info /dev/input/event* | grep -i LIBINPUT_CALIBRATION`
+  and confirm it reads `1 0 0 0 1 0`; if an old `0 1 0 -1 0 1` is still there,
+  remove it and run `sudo udevadm control --reload && sudo udevadm trigger`, then
+  rebind the touchscreen (`i2c` unbind/bind, or the sleep hook). Add a rotation
+  matrix only if your compositor does not rotate input; X11 keeps its
+  `TransformationMatrix` in `50-touchscreen-d330.conf`.
 - **No touchscreen calibration:** check
   `/usr/share/libinput/60-lenovo-d330.quirks` and
   `/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules` exist, then
@@ -195,7 +243,10 @@ wpctl status | grep -i "Lenovo D330 Clean"
   kernel package was upgraded but not rebooted. Compare `uname -r` with
   `ls /lib/modules` and reboot; if it persists,
   `sudo apt install --reinstall "linux-modules-$(uname -r)"`.
-- **Screen still dark after resume:** the patched kernel is not the one running.
-  Check `uname -r` ends in `-d330-fix`.
+- **Screen still dark after resume, even though `uname -r` ends in `-d330-fix`:**
+  the patch is not in the booted kernel. A rebuild is named `-d330-fix` whether
+  or not the diff applied, so confirm `dmesg | grep -i "Lenovo D330 PPS"` is
+  non-empty and that step 4c's three greps printed hits. If DMI does not match
+  (`"82H0"` / `"Lenovo ideapad D330-10IGL"`), the quirk is skipped by design.
 - **Uninstall everything:** `sudo ./scripts/install_dkms.sh --uninstall`
   (removes configs, units and the deployed files listed in the manifest).

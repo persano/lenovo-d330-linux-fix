@@ -8,5 +8,5 @@ Provides libinput model quirks (X11 and Wayland), X11 gestures configuration, an
 - `tools/d330-pen-config.sh`: Pen and touchpad diagnostic script.
 
 ## Wayland notes
-- Calibration matrices are udev properties (`LIBINPUT_CALIBRATION_MATRIX`), applied by libinput on X11 and Wayland alike.
+- Calibration matrices are udev properties (`LIBINPUT_CALIBRATION_MATRIX`). On Wayland the compositor already rotates absolute input from the panel orientation, so the shipped touchscreen matrix is the identity; only X11 needs a rotation (`50-touchscreen-d330.conf`).
 - Tapping, natural scrolling, clickfinger, accel and the pen pressure CURVE have no libinput/udev equivalent; set them in the compositor on Wayland.

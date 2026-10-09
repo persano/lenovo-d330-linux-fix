@@ -5,9 +5,10 @@
 # the X11 libinput driver -- unlike the X11-only xorg.conf.d options shipped
 # alongside this tree.
 #
-# Only model ATTRIBUTES belong here. The touchscreen calibration matrix stays in
-# patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules, because
-# a matrix is a udev property (LIBINPUT_CALIBRATION_MATRIX), not a quirks key.
+# Only model ATTRIBUTES belong here. The touchscreen calibration matrix lives in
+# patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules (a udev
+# property, not a quirks key) and is the identity on Wayland -- the compositor
+# applies the panel orientation to input itself.
 #
 # Tapping / natural-scroll / clickfinger / accel and the pen pressure CURVE are
 # user preferences: set them in the compositor (KDE: System Settings > Input

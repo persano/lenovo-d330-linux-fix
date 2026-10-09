@@ -59,14 +59,15 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 ### 3.1 Touchscreen & Active Stylus Matrix Alignment
 * **Why**: Rotating the display 90 degrees rotates the video frame, but the Goodix I2C digitizer (`GDIX1001`) reports raw physical coordinates. Without coordinate transformation, touches and pen strokes land 90 degrees away from the cursor. Additionally, after S2idle resume, the Goodix controller frequently desynchronizes I2C bus communications, leading to unresponsive touch.
 * **How Decided**:
-  - Configure `libinput` via udev hwdb and X11/Wayland input matrices: Coordinate Transformation Matrix `0 1 0 -1 0 1 0 0 1` (maps portrait sensor to landscape desktop).
+  - Wayland compositors (KWin, Mutter) fold the panel orientation reported by the DRM connector (`video=DSI-1:panel_orientation=right_side_up`) into the output transform and already rotate absolute input, so no matrix is applied on Wayland. Shipping one there stacks with the compositor (90 deg + 90 deg = 180 deg) and gives inverted touch.
+  - X11 has no panel-orientation handling for input, so the xorg.conf matrix `0 1 0 -1 0 1 0 0 1` (90-degree) is applied only there.
   - Add kernel device unbind/rebind resume script targeting I2C Goodix device on bus `i2c-GDIX1001:00`.
 * **What Done**:
-  - `patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb`: Defines `LIBINPUT_CALIBRATION_MATRIX=0 1 0 -1 0 1`.
+  - `patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb`: Defines the identity `LIBINPUT_CALIBRATION_MATRIX=1 0 0 0 1 0` (Wayland: compositor supplies the orientation, so no extra transform).
   - `patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf`: Sets `TransformationMatrix 0 1 0 -1 0 1 0 0 1` and `EmulateThirdButton` (750ms long-press right-click).
   - `patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh`: Resets Goodix I2C driver on wakeup.
 * **Auditor Verification Points**:
-  - Check whether the matrix orientation matches Wayland compositors (GNOME Mutter / KDE KWin read `LIBINPUT_CALIBRATION_MATRIX` from udev hwdb automatically, whereas X11 reads `xorg.conf.d`). Both are provided.
+  - Confirm the Wayland matrix is the identity and the rotation is applied exactly once (by the compositor); X11 keeps the 90-degree matrix in `xorg.conf.d`.
 
 ### 3.2 Detachable Dock & Tablet Mode Daemon
 * **Why**: The D330 is a 2-in-1 detachable. When the tablet is unlatched or folded back, the physical keyboard and touchpad are disconnected or disabled. Desktop environments must immediately disable touchpad/mouse inputs, switch to on-screen keyboard (OSK), and enable automatic screen rotation based on the accelerometer.
@@ -387,7 +388,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/dkms/` | `/usr/src/lenovo-d330-1.0.0/` | Standalone DKMS helper module |
 | `patches/dkms/etc/modprobe.d/lenovo-d330-i915.conf` | `/etc/modprobe.d/` | DRM & PPS display parameters |
 | `patches/dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb` | `/etc/udev/hwdb.d/` | Accelerometer mount matrix |
-| `patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb` | `/etc/udev/hwdb.d/` | Goodix touchscreen calibration matrix |
+| `patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb` | `/etc/udev/hwdb.d/` | Goodix touchscreen identity matrix (Wayland) |
 | `patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules` | `/etc/udev/rules.d/` | Touchscreen udev device matching |
 | `patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf` | `/etc/X11/xorg.conf.d/` | X11 touch matrix & long-press right-click |
 | `patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh`| `/usr/lib/systemd/system-sleep/` | Goodix I2C reset on wake |
