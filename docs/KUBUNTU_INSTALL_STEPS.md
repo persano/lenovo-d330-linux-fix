@@ -249,8 +249,44 @@ wpctl status | grep -i "Lenovo D330 Clean"
 - Select the denoised microphone:
   ```bash
   wpctl status
-  wpctl set-default <id-of-"Lenovo D330 Clean Microphone">
-  ```
+   wpctl set-default <id-of-"Lenovo D330 Clean Microphone">
+   ```
+
+## 8. Diagnose the screen fix over SSH
+
+If the panel latches dark after suspend/resume you cannot read the logs on the
+tablet itself, so capture them from another machine over SSH. Run this on the
+tablet **before** the screen test:
+
+```bash
+sudo apt install -y openssh-server
+sudo systemctl enable --now ssh
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+curl -fsSL https://gist.github.com/persano/40255d28213dc5d6f720056c28631c4a/raw >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+ip -4 -o addr show scope global | awk '{print $2, $4}'   # note the LAN IP
+```
+
+The `curl` line authorizes a single diagnostic public key (`d330-diag`); its
+private key is held by the machine doing the debugging. Remove that line from
+`~/.ssh/authorized_keys` when you are done.
+
+From the debugging machine, after a failed resume:
+
+```bash
+ssh <user>@<tablet-ip> 'uname -r; \
+  sudo dmesg | grep -iE "Lenovo D330 PPS"; \
+  sudo dmesg -T | tail -300; \
+  grep -H . /sys/class/drm/*/status; \
+  for b in /sys/class/backlight/*; do echo "$b=$(cat $b/brightness)/$(cat $b/max_brightness)"; done'
+```
+
+To suspend the tablet and read the resume log while the panel is still dark:
+
+```bash
+ssh <user>@<tablet-ip> 'sudo systemctl suspend'      # wake with the power button
+ssh <user>@<tablet-ip> 'sudo journalctl -b -k --no-pager | tail -400'
+```
 
 ---
 
