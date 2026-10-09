@@ -229,11 +229,12 @@ wpctl status | grep -i "Lenovo D330 Clean"
 - **RNNoise source missing in `wpctl status`:** the plugin is optional
   (`flags = [ nofail ]`). Run `scripts/build_rnnoise_ladspa.sh --install`, then
   `systemctl --user restart pipewire pipewire-pulse`.
-- **`d330-swapfile.service` failed:** the unit logs either a free-space warning
-  or an FS warning. Hibernation resume needs a swap file on **ext4**; on a
-  btrfs, xfs or zfs root the unit now says so explicitly and stays failed by
-  design. Suspend (S2idle) still works, so this only matters if you want
-  hibernate. Inspect it with `journalctl -u d330-swapfile.service -b`.
+- **`d330-swapfile.service` warning:** hibernation resume needs a swap file on
+  **ext4**. On a btrfs, xfs or zfs root the unit logs a `[WARN]` and skips
+  cleanly (it no longer fails), so `systemctl --failed` stays empty. Suspend
+  (S2idle) still works, so this only matters if you want hibernation. On ext4,
+  a free-space or `swapon` failure still fails the unit. Inspect it with
+  `journalctl -u d330-swapfile.service -b`.
 - **`libkmod: ... ignoring bad line starting with 'options'`:** caused by bare
   no-parameter `options <module>` lines in the shipped camera and cellular
   `modprobe.d` files, fixed in current `main`. `git pull --ff-only`, re-run the
