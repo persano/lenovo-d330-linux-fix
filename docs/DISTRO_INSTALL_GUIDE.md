@@ -23,7 +23,7 @@ We will compile patched kernel packages (`linux-image-*.deb` and `linux-headers-
 ```bash
 # 0. Install the kernel build toolchain (minimal images ship none of it).
 sudo apt install -y build-essential dpkg-dev debhelper fakeroot dh-python \
-    libssl-dev bc flex bison rsync libelf-dev dwarves cpio zstd
+    libssl-dev libdw-dev bc flex bison rsync libelf-dev dwarves cpio zstd
 
 # 1. Fetch the UNSIGNED kernel source (the running image is often a signed
 #    wrapper whose source tree has no drivers/)

@@ -120,7 +120,7 @@ sudo apt update
 # default, and the `apt build-dep` in 4b below does not always succeed; run
 # this first so the build works either way.
 sudo apt install -y build-essential dpkg-dev debhelper fakeroot dh-python \
-    libssl-dev bc flex bison rsync libelf-dev dwarves cpio zstd
+    libssl-dev libdw-dev bc flex bison rsync libelf-dev dwarves cpio zstd
 ```
 
 ```bash

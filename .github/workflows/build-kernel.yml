@@ -41,7 +41,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential dpkg-dev debhelper fakeroot dh-python libssl-dev \
-            bc flex bison rsync libelf-dev dwarves cpio zstd kmod \
+            libdw-dev bc flex bison rsync libelf-dev dwarves cpio zstd kmod \
             ca-certificates
 
       - name: Add target Ubuntu sources (deb + deb-src)
