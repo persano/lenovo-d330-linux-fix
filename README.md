@@ -31,7 +31,7 @@ Reverse engineering of the official Lenovo Windows 10 driver baseline (`igdkmd64
 
 | Deliverable | Path | Description |
 | :--- | :--- | :--- |
-| **Unified Kernel Patch** | [`patches/d330_display_resume_fix.patch`](patches/d330_display_resume_fix.patch) | Mainline patch for `drm_panel_orientation_quirks.c`, `intel_quirks.c`, and `intel_pps.c` enforcing $\ge 600\text{ ms}$ PPS cycle delay. |
+| **Unified Kernel Patch** | [`patches/d330_display_resume_fix.patch`](patches/d330_display_resume_fix.patch) | DMI-matched clamp of `panel_power_cycle_delay` to $\ge 600\text{ ms}$ in `intel_pps.c` (orientation comes from the boot cmdline, so this no longer patches `drm_panel_orientation_quirks.c`). |
 | **Standalone DKMS Module** | [`patches/dkms/lenovo-d330-fix/`](patches/dkms/lenovo-d330-fix/) | Out-of-tree kernel module (`lenovo_d330_fix.ko`) that prints a DMI-matched banner/breadcrumb; it does NOT enforce TCON discharge timing — the Option 2 kernel clamp patch delivers that. |
 | **Touchscreen & Touchpad Calibration** | [`patches/touchscreen/`](patches/touchscreen/) & [`patches/touchpad_pen/`](patches/touchpad_pen/) | Goodix I2C touch matrix (identity on Wayland, where the compositor applies the panel orientation; the 90-deg transform is X11-only), libinput model quirks for palm/pressure, Active Pen thresholds, and sleep unbind/bind recovery hook. |
 | **Tablet Mode Daemon** | [`patches/dock/`](patches/dock/) & [`tools/d330-tablet-daemon.py`](tools/d330-tablet-daemon.py) | Intel HID switch handler managing orientation lock, touchpad gate, and virtual keyboard on dock/undock. |

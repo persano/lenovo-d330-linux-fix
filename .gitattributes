@@ -1,3 +1,5 @@
 # Shell scripts must be LF in the working tree so WSL/Git-Bash can execute
 # them; the repo is developed on Windows with core.autocrlf=true.
 *.sh text eol=lf
+# Kernel patches must stay LF or `patch`/`git apply` reject them.
+*.patch text eol=lf

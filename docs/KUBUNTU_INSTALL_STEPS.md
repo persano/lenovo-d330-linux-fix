@@ -87,9 +87,12 @@ sudo apt update
 ```
 
 ```bash
-# 4b. fetch the source package your running kernel came from
-SRC_PKG="$(dpkg-query -W -f='${Source}' "linux-image-$(uname -r)" 2>/dev/null | awk '{print $1}')"
-SRC_PKG="${SRC_PKG:-linux}"
+# 4b. fetch the UNSIGNED kernel source. The running kernel image is often the
+# signed wrapper (Source: linux-signed-*), whose source tree has no drivers/;
+# the real kernel source package sits behind linux-image-unsigned-*, or is
+# 'linux' itself.
+SRC_PKG="$(dpkg-query -W -f='${Source}' "linux-image-unsigned-$(uname -r)" 2>/dev/null | awk '{print $1}')"
+case "$SRC_PKG" in ""|*signed*) SRC_PKG=linux ;; esac
 echo "kernel source package: $SRC_PKG"
 sudo apt build-dep -y "$SRC_PKG"
 apt source "$SRC_PKG"
@@ -103,21 +106,19 @@ patch -p1 --dry-run --batch < "$PATCH" || echo ">>> DO NOT BUILD: patch does not
 
 patch -p1 --batch < "$PATCH"
 
-# All three greps must print a hit. If they do not, the kernel will NOT contain
-# the fix even though it is still named -d330-fix.
-grep -R "QUIRK_INCREASE_PPS_CYCLE_DELAY" drivers/gpu/drm/i915/display/
-grep -R "lenovo_ideapad_d330_10igl_800x1280" drivers/gpu/drm/
-grep -R "Lenovo D330 PPS power-cycle" drivers/gpu/drm/i915/
+# Both greps must print a hit. If they do not, the kernel will NOT contain the
+# fix even though it is still named -d330-fix.
+grep -R "d330_pps_quirk" drivers/gpu/drm/i915/display/intel_pps.c
+grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
 ```
 
 - **Dry-run fails (context mismatch on a very new kernel):** do **not** build.
-  `patch` leaves the rejected hunks in `*.rej` files next to the targets. Merge
-  each hunk by hand into `drivers/gpu/drm/drm_panel_orientation_quirks.c`,
-  `drivers/gpu/drm/i915/display/intel_quirks.{c,h}` and
-  `drivers/gpu/drm/i915/display/intel_pps.c`, then re-run the three greps. The
-  hunks add the `lenovo_ideapad_d330_10igl_*` DMI entries, the
-  `QUIRK_INCREASE_PPS_CYCLE_DELAY` enum + quirk hook, and the >= 600 ms clamp
-  inside `intel_pps_init_delays()`.
+  `patch` leaves the rejected hunks in a `.rej` file next to the target. Open
+  `drivers/gpu/drm/i915/display/intel_pps.c`, add `#include <linux/dmi.h>` if it
+  is missing, add the `d330_pps_quirk[]` DMI table, and in the function that
+  assigns `intel_dp->pps.panel_power_cycle_delay` clamp that value to `600` (it
+  is in milliseconds) when `dmi_check_system(d330_pps_quirk)` matches. Then
+  re-run the two greps above.
 
 ```bash
 # 4d. build and install
@@ -157,14 +158,14 @@ cat /sys/class/dmi/id/product_name /sys/class/dmi/id/product_version
 # the patch matches product_name containing "82H0" or product_version containing
 # "Lenovo ideapad D330-10IGL"; if neither matches, the quirk never runs
 uname -r                                     # must end in -d330-fix
-dmesg | grep -i "Lenovo D330 PPS"            # proves the clamp patch is live
-dmesg | grep -i "Clamping PPS power-cycle"   # the 600 ms clamp was applied
+dmesg | grep -i "Lenovo D330 PPS"            # proves the DMI match + patch are live
+dmesg | grep -i "clamping power-cycle"       # the 600 ms clamp was applied
 dmesg | grep lenovo_d330_fix                 # DKMS banner module (Option 1)
 sudo ./scripts/test_resume_loop.sh --cycles 5 --sleep 10
 ```
-If the `Lenovo D330 PPS` / `Clamping PPS` lines are absent, the kernel booted
-without the patch: go back to step 4 and make sure the three greps printed hits
-before the build.
+If the `Lenovo D330 PPS` / `clamping power-cycle` lines are absent, the kernel
+booted without the patch: go back to step 4 and make sure the two greps printed
+hits before the build.
 
 **Touchscreen / touchpad:**
 ```bash

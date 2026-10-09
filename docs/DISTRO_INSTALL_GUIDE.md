@@ -21,10 +21,11 @@ The DKMS `lenovo_d330_fix.ko` module is a DMI-matched diagnostic banner; it does
 ### 2. Building Patched Kernel `.deb` (Ubuntu / Linux Mint / Debian)
 We will compile patched kernel packages (`linux-image-*.deb` and `linux-headers-*.deb`). Run this in a scratch directory, not inside the repo, and reference the patch by absolute path:
 ```bash
-# 1. Fetch the source package behind your running kernel
+# 1. Fetch the UNSIGNED kernel source (the running image is often a signed
+#    wrapper whose source tree has no drivers/)
 WORK="$HOME/d330-kernel"; mkdir -p "$WORK" && cd "$WORK"
-SRC_PKG="$(dpkg-query -W -f='${Source}' "linux-image-$(uname -r)" 2>/dev/null | awk '{print $1}')"
-SRC_PKG="${SRC_PKG:-linux}"
+SRC_PKG="$(dpkg-query -W -f='${Source}' "linux-image-unsigned-$(uname -r)" 2>/dev/null | awk '{print $1}')"
+case "$SRC_PKG" in ""|*signed*) SRC_PKG=linux ;; esac
 sudo apt build-dep -y "$SRC_PKG"
 apt source "$SRC_PKG"
 cd "${SRC_PKG}"-*

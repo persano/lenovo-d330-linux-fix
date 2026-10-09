@@ -8,9 +8,8 @@ This directory contains the patches, out-of-tree DKMS module, and configuration 
 
 1. **Kernel Patch (`d330_display_resume_fix.patch`)**:
    - Upstream-targeted unified patch for the Linux DRM subsystem.
-   - Adds DMI table entry for Type `82H0` to `drivers/gpu/drm/drm_panel_orientation_quirks.c`.
-   - Introduces `QUIRK_INCREASE_PPS_CYCLE_DELAY` in `drivers/gpu/drm/i915/display/intel_quirks.c`.
-   - Clamps minimum `panel_power_cycle_delay` to $\ge 600\text{ ms}$ in `drivers/gpu/drm/i915/display/intel_pps.c` to prevent timing controller (TCON) electrical latch-up.
+   - Adds `#include <linux/dmi.h>`, a `d330_pps_quirk[]` DMI table, and clamps `panel_power_cycle_delay` to $\ge 600\text{ ms}$ in `drivers/gpu/drm/i915/display/intel_pps.c` when the D330 DMI matches, preventing timing controller (TCON) electrical latch-up.
+   - Panel orientation is supplied by the `video=...:panel_orientation=right_side_up` boot option, so the patch no longer touches `drm_panel_orientation_quirks.c` or `intel_quirks.c`.
 
 2. **Standalone DKMS Package (`dkms/lenovo-d330-fix/`)**:
    - Out-of-tree kernel module (`lenovo_d330_fix.ko`) for distribution kernels (Ubuntu, Mint, Debian, Arch, Fedora).
