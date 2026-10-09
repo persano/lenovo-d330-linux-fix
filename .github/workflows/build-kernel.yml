@@ -1,0 +1,146 @@
+name: Build Patched Kernel (.deb)
+
+# Manual dispatch only. A kernel build is heavy (~40 min) and is pinned to one
+# Ubuntu release + kernel ABI. Run it once per `uname -r` you want a kernel for,
+# then download the .deb and install it on the tablet. This exists because the
+# D330 (Celeron N4020, 4 GB) takes hours to compile a kernel locally.
+on:
+  workflow_dispatch:
+    inputs:
+      kernel_version:
+        description: 'Target kernel from `uname -r` (e.g. 7.0.0-38-generic)'
+        required: true
+        default: '7.0.0-38-generic'
+      ubuntu_release:
+        description: 'Ubuntu codename from `lsb_release -cs` (e.g. questing)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      BUILD: ${{ runner.temp }}/kbuild
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Free disk space
+        run: |
+          set -euxo pipefail
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/lib/jvm \
+            /usr/local/lib/node_modules
+          df -h /
+
+      - name: Install build toolchain
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential dpkg-dev debhelper fakeroot dh-python libssl-dev \
+            bc flex bison rsync libelf-dev dwarves cpio zstd kmod \
+            ca-certificates
+
+      - name: Add target Ubuntu sources (deb + deb-src)
+        env:
+          REL: ${{ inputs.ubuntu_release }}
+        run: |
+          set -euxo pipefail
+          sudo tee /etc/apt/sources.list.d/target.sources >/dev/null <<EOF
+          Types: deb deb-src
+          URIs: http://archive.ubuntu.com/ubuntu
+          Suites: ${REL} ${REL}-updates ${REL}-security
+          Components: main universe
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+          sudo apt-get update
+
+      - name: Resolve exact source version and extract its config
+        env:
+          KV: ${{ inputs.kernel_version }}
+        run: |
+          set -euxo pipefail
+          mkdir -p "$BUILD" && cd "$BUILD"
+          # The running image is usually the signed wrapper; prefer the unsigned
+          # package, fall back to the signed one. Either carries /boot/config-*.
+          IMG="linux-image-unsigned-${KV}"
+          if ! apt-get download "$IMG"; then
+            IMG="linux-image-${KV}"
+            apt-get download "$IMG"
+          fi
+          DEB="$(ls -1 "${IMG}"_*.deb | head -1)"
+          SRC_VER="$(dpkg-deb -f "$DEB" Version)"
+          echo "SRC_VER=${SRC_VER}" >> "$GITHUB_ENV"
+          dpkg-deb -x "$DEB" cfg
+          CFG="$(ls -1 cfg/boot/config-* | head -1)"
+          cp "$CFG" "$BUILD/kernel.config"
+          echo "source version: ${SRC_VER} (from ${DEB})"
+          echo "config: ${CFG}"
+
+      - name: Fetch kernel source
+        run: |
+          set -euxo pipefail
+          cd "$BUILD"
+          apt-get source "linux=${SRC_VER}"
+          SRC="$(ls -d linux-*/ | head -1)"
+          echo "SRC=${BUILD}/${SRC}" >> "$GITHUB_ENV"
+
+      - name: Apply the display fix and prove it landed
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          patch -p1 --batch < "$GITHUB_WORKSPACE/patches/d330_display_resume_fix.patch"
+          grep -R "d330_pps_quirk" drivers/gpu/drm/i915/display/intel_pps.c
+          grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
+
+      - name: Configure (seeded from the target kernel, no debug info)
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          cp "$BUILD/kernel.config" .config
+          # Strip debug info and the git-version suffix: the runner has only
+          # ~14 GB of disk, and the result stays a normal bootable kernel.
+          scripts/config --enable DEBUG_INFO_NONE || true
+          scripts/config --disable DEBUG_INFO_BTF || true
+          scripts/config --disable GDB_SCRIPTS || true
+          scripts/config --disable LOCALVERSION_AUTO || true
+          # Drop the distro signing-cert paths: bindeb-pkg replaces debian/,
+          # which is exactly where those Canonical cert files live.
+          scripts/config --set-str SYSTEM_TRUSTED_KEYS "" || true
+          scripts/config --set-str SYSTEM_REVOCATION_KEYS "" || true
+          make olddefconfig
+
+      - name: Build kernel .deb packages
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          rm -rf debian
+          make -j"$(nproc)" bindeb-pkg LOCALVERSION=-d330-fix
+          ls -lh "$RUNNER_TEMP"/linux-image-*-d330-fix_*.deb \
+                 "$RUNNER_TEMP"/linux-headers-*-d330-fix_*.deb
+
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: kernel-deb
+          path: |
+            ${{ runner.temp }}/linux-image-*-d330-fix_*.deb
+            ${{ runner.temp }}/linux-headers-*-d330-fix_*.deb
+            ${{ runner.temp }}/kbuild/kernel.config
+
+      - name: Publish kernel release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: kernel-${{ inputs.kernel_version }}
+          name: Patched kernel for ${{ inputs.kernel_version }}
+          prerelease: true
+          files: |
+            ${{ runner.temp }}/linux-image-*-d330-fix_*.deb
+            ${{ runner.temp }}/linux-headers-*-d330-fix_*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

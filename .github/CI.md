@@ -7,5 +7,10 @@ Contains automated build and release workflows:
   manually via `workflow_dispatch`.
 - `workflows/build-iso.yml`: builds a remastered bootable Live ISO image
   (manual dispatch).
+- `workflows/build-kernel.yml`: builds the **patched kernel** `.deb` for one
+  specific Ubuntu kernel version in CI (manual dispatch, inputs
+  `kernel_version` + `ubuntu_release`), so the tablet never has to compile a
+  kernel. Publishes `linux-image-*-d330-fix_*.deb` under a `kernel-<version>`
+  release.
 
 The project README lives at the repository root (`README.md`).

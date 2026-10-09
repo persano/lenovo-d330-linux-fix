@@ -66,12 +66,41 @@ sudo ./scripts/install_dkms.sh --install --with-rnnoise
 you have no network during install; you can build it later with
 `scripts/build_rnnoise_ladspa.sh --install`.
 
-## 4. Apply the display fix and rebuild the kernel
+## 4. Apply the display fix
 
-This is the step that actually stops the panel latching dark after suspend. Run
-it from a scratch directory and use absolute paths: `apt source` extracts the
-kernel tree next to wherever you are, so a relative `../lenovo-d330-linux-fix/...`
-patch path normally points at nothing and `patch` fails to find the file.
+The fix is a 600 ms TCON power-sequence clamp in
+`drivers/gpu/drm/i915/display/intel_pps.c`. Pick one option.
+
+### Option A (recommended on the tablet): download the prebuilt kernel
+
+The D330 takes hours to compile a kernel. Build it once in GitHub Actions and
+install the resulting `.deb`. First note your values:
+
+```bash
+uname -r          # your kernel version, e.g. 7.0.0-38-generic
+lsb_release -cs   # your Ubuntu codename, e.g. questing
+```
+
+1. On GitHub open **Actions** → **Build Patched Kernel (.deb)** → **Run
+   workflow**, and enter those two values.
+2. When the run finishes (~40 min), open the release tagged
+   `kernel-<your uname -r>` and download `linux-image-*-d330-fix_*.deb` and
+   `linux-headers-*-d330-fix_*.deb` (also stored as the `kernel-deb` artifact).
+3. Install and update GRUB:
+   ```bash
+   sudo apt install -y ./linux-image-*-d330-fix_*.deb ./linux-headers-*-d330-fix_*.deb
+   sudo update-grub
+   ```
+4. The kernel is unsigned, so the Secure Boot caveat in step 0 applies. The
+   version is tied to that exact `uname -r`; after a kernel update, re-run the
+   workflow. Continue at **step 5**.
+
+### Option B: build the kernel on the machine
+
+This also stops the panel latching dark after suspend. Run it from a scratch
+directory and use absolute paths: `apt source` extracts the kernel tree next to
+wherever you are, so a relative `../lenovo-d330-linux-fix/...` patch path
+normally points at nothing and `patch` fails to find the file.
 
 ```bash
 # Set these two paths for your machine.
