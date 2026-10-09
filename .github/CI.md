@@ -12,5 +12,8 @@ Contains automated build and release workflows:
   `kernel_version` + `ubuntu_release`), so the tablet never has to compile a
   kernel. Publishes `linux-image-*-d330-fix_*.deb` under a `kernel-<version>`
   release.
+- `workflows/lint-workflows.yml`: runs `actionlint` on the workflow files so a
+  schema-invalid workflow cannot be merged (a bad one shows up as a failed,
+  job-less run named after the file).
 
 The project README lives at the repository root (`README.md`).

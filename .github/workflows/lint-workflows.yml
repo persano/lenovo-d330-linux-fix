@@ -1,0 +1,28 @@
+name: Lint Workflows
+
+# GitHub rejects a workflow whose schema is invalid by creating a failed,
+# job-less run named after the file. `scripts/test_ci_workflows.sh` only checks
+# the required keys, so actionlint covers the rest (context availability, etc.).
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Run actionlint
+        run: |
+          set -euo pipefail
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
