@@ -42,7 +42,7 @@ Reverse engineering of the official Lenovo Windows 10 driver baseline (`igdkmd64
 | **Modprobe Config** | [`patches/dkms/etc/modprobe.d/`](patches/dkms/etc/modprobe.d/) | `i915 enable_psr=0 enable_fbc=0` to eliminate GLK pipe freeze. |
 | **ChromeOS Patches** | [`patches/chromeos/`](patches/chromeos/) | Kernel patches for `chromeos-5.15` and `chromeos-6.6`+ branches. |
 | **Android-x86 / Bliss OS** | [`patches/android/`](patches/android/) | Kernel patches (5.15 & 6.6) and sensor HAL matrix configs for Android. |
-| **Distro Install Guide** | [`docs/DISTRO_INSTALL_GUIDE.md`](docs/DISTRO_INSTALL_GUIDE.md) | Guide for Ubuntu/Mint .deb rebuilds, Fedora RPMs, Arch PKGBUILD, and ISO modification. |
+| **Distro Install Guide** | [`docs/DISTRO_INSTALL_GUIDE.md`](docs/DISTRO_INSTALL_GUIDE.md) | Guide for Ubuntu/Mint .deb rebuilds, Fedora RPMs, Arch PKGBUILD, and ISO modification. Step-by-step **Kubuntu 26.04 / Wayland** walkthrough in [`docs/KUBUNTU_INSTALL_STEPS.md`](docs/KUBUNTU_INSTALL_STEPS.md). |
 | **Automated Installer** | [`scripts/install_dkms.sh`](scripts/install_dkms.sh) | Zero-friction installation (`--install`, `--uninstall`, `--verify`, `--dry-run`, `--with-rnnoise`). |
 | **Diagnostic Test Suite** | [`scripts/`](scripts/) | Test harnesses for resume loop, touch calibration, dock switching, audio, and battery telemetry. |
 | **Differential RE Suite** | [`tools/`](tools/) | Static driver analyzer, Ghidra export script, and PPS timing model. |
@@ -116,6 +116,7 @@ dmesg | grep lenovo_d330_fix
 ├── .gsd/                 # GSD autonomous state management & worklogs
 ├── docs/
 │   ├── DISTRO_INSTALL_GUIDE.md  # Ubuntu/Mint, Fedora, Arch and ISO guidance
+│   ├── KUBUNTU_INSTALL_STEPS.md # Step-by-step Kubuntu 26.04 / Wayland walkthrough
 │   ├── research/        # Prior art and community findings analysis
 │   ├── dumps/           # Hardware extraction procedures & dump archives
 │   └── windows_analysis/# igdkmd64.sys vs i915 differential analysis

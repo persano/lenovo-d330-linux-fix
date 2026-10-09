@@ -2,6 +2,9 @@
 
 This guide outlines the workflows we will execute once you choose your target distribution (Linux Mint, Ubuntu, Debian, Fedora, Arch, ChromeOS Flex, or Android-x86/Bliss OS).
 
+> For a copy-paste walkthrough on a fresh **Kubuntu 26.04** install (Wayland,
+> touch/touchpad, RNNoise), see [`KUBUNTU_INSTALL_STEPS.md`](KUBUNTU_INSTALL_STEPS.md).
+
 ---
 
 ## Strategy A: Overwrite Kernel on an Already Installed System
