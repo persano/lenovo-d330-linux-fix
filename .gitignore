@@ -10,3 +10,9 @@ Thumbs.db
 __pycache__/
 *.pyc
 .serena/
+
+# Local tool state (not part of the shipped project)
+opencode.json
+.gsd/config.json
+.gsd/estimation-calibration.json
+.gsd/research/
