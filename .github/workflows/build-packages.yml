@@ -6,8 +6,20 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build-packages:
+  # ---------------------------------------------------------------------------
+  # Debian / Ubuntu package + the DKMS source tarball.
+  #
+  # The binary control MUST be generated, not copied: packaging/debian/control
+  # is a *source* control file (Source stanza first) and dpkg-deb requires a
+  # *binary* control starting with `Package:`. The previous copy produced
+  # "missing 'Package' field" and failed the whole run. dpkg-gencontrol reads
+  # debian/control + debian/changelog and emits the correct binary control.
+  # ---------------------------------------------------------------------------
+  build-deb:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -16,20 +28,38 @@ jobs:
       - name: Install Build Prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y debhelper dpkg-dev rpm
+          sudo apt-get install -y dpkg-dev
 
       - name: Build Debian (.deb) Package
         run: |
-          mkdir -p build/deb/DEBIAN build/deb/usr/local/bin build/deb/etc/modprobe.d build/deb/etc/udev/rules.d build/deb/etc/udev/hwdb.d build/deb/etc/systemd/system build/deb/usr/lib/systemd/user build/deb/etc/pipewire/pipewire.conf.d build/deb/etc/xdg/autostart
+          set -euo pipefail
+          VERSION="$(dpkg-parsechangelog -lpackaging/debian/changelog -S Version)"
+          DEB="lenovo-d330-fix_${VERSION}_all.deb"
+          echo "DEB_FILE=$DEB" >> "$GITHUB_ENV"
+
+          mkdir -p build/deb/DEBIAN build/deb/usr/local/bin \
+                   build/deb/etc/modprobe.d build/deb/etc/udev/rules.d \
+                   build/deb/etc/udev/hwdb.d build/deb/etc/systemd/system \
+                   build/deb/usr/lib/systemd/user \
+                   build/deb/etc/pipewire/pipewire.conf.d build/deb/etc/xdg/autostart
+
+          # Binary control from the source control + changelog (substvars expanded).
+          rm -rf debian
+          cp -r packaging/debian debian
+          dpkg-gencontrol -plenovo-d330-fix -Pbuild/deb
+          rm -rf debian
+
+          cp packaging/debian/postinst build/deb/DEBIAN/postinst
+          chmod 755 build/deb/DEBIAN/postinst
+
           # /usr/local/bin is a deliberate choice (parity with install_dkms.sh and
           # every shipped unit ExecStart); kept identical across deb/rpm/PKGBUILD.
-          cp packaging/debian/control packaging/debian/postinst build/deb/DEBIAN/
-          chmod 755 build/deb/DEBIAN/postinst
           cp tools/d330-* build/deb/usr/local/bin/
           cp tools/lenovo-d330-power-tune.sh build/deb/usr/local/bin/
           rm -f build/deb/usr/local/bin/d330-acpi-override.sh build/deb/usr/local/bin/d330-pen-config.sh
           for f in d330-tablet-daemon.py d330-sensor-filter.py d330-tray.py d330-auto-hibernate.py d330-refresh-screen.sh d330-microsd-setup.sh d330-thermal-tune.sh d330-fastboot-tune.sh d330-vaapi-check.sh lenovo-d330-power-tune.sh; do mv "build/deb/usr/local/bin/$f" "build/deb/usr/local/bin/${f%.*}"; done
           chmod 755 build/deb/usr/local/bin/*
+
           cp patches/*/etc/modprobe.d/*.conf build/deb/etc/modprobe.d/
           cp patches/*/etc/udev/rules.d/*.rules build/deb/etc/udev/rules.d/
           cp patches/*/etc/udev/hwdb.d/*.hwdb build/deb/etc/udev/hwdb.d/
@@ -37,32 +67,112 @@ jobs:
           cp patches/*/usr/lib/systemd/user/*.service build/deb/usr/lib/systemd/user/
           cp patches/audio_dsp/etc/pipewire/pipewire.conf.d/*.conf build/deb/etc/pipewire/pipewire.conf.d/
           cp patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop build/deb/etc/xdg/autostart/
-          dpkg-deb --build build/deb lenovo-d330-fix_7.0.0_all.deb
+
+          chmod 0755 build/deb/DEBIAN
+          dpkg-deb --build --root-owner-group build/deb "$DEB"
 
       - name: Bundle DKMS Tarball
+        run: tar -czf lenovo-d330-fix-dkms.tar.gz patches/dkms/
+
+      - name: Upload Debian Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: |
+            lenovo-d330-fix_*.deb
+            lenovo-d330-fix-dkms.tar.gz
+
+  # ---------------------------------------------------------------------------
+  # RPM (Fedora / openSUSE). rpmbuild is run with _builddir pointed at the repo
+  # root so the spec's %{_builddir}/tools and %{_builddir}/patches resolve.
+  # ---------------------------------------------------------------------------
+  build-rpm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Prerequisites
         run: |
-          tar -czf lenovo-d330-fix-dkms.tar.gz patches/dkms/
+          sudo apt-get update
+          sudo apt-get install -y rpm
+
+      - name: Build RPM Package
+        run: |
+          set -euo pipefail
+          mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          rpmbuild -bb \
+            --define "_topdir $PWD/rpmbuild" \
+            --define "_builddir $PWD" \
+            packaging/rpm/lenovo-d330-fix.spec
+          mkdir -p dist
+          find rpmbuild/RPMS -name '*.rpm' -exec cp {} dist/ \;
+          ls -l dist/
+
+      - name: Upload RPM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm
+          path: dist/*.rpm
+
+  # ---------------------------------------------------------------------------
+  # Arch Linux package (PKGBUILD). makepkg refuses to run as root, so build as
+  # an unprivileged user in a staging tree where ${srcdir}/../tools resolves.
+  # ---------------------------------------------------------------------------
+  build-arch:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install git and base-devel
+        run: pacman -Syu --noconfirm --needed git base-devel
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Arch Package
+        run: |
+          set -euo pipefail
+          useradd -m builder
+          BUILD="$GITHUB_WORKSPACE/.archbuild"
+          mkdir -p "$BUILD"
+          cp packaging/arch/PKGBUILD packaging/arch/lenovo-d330-fix.install "$BUILD/"
+          cp -r tools patches "$BUILD/"
+          chown -R builder "$BUILD"
+          su builder -c "cd '$BUILD' && makepkg -f --nodeps --noconfirm"
+          mkdir -p dist
+          cp "$BUILD"/*.pkg.tar.* dist/
+          ls -l dist/
+
+      - name: Upload Arch Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch
+          path: dist/*.pkg.tar.*
+
+  # ---------------------------------------------------------------------------
+  # Checksum every artifact and, on a tag, publish them all as a release.
+  # ---------------------------------------------------------------------------
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-deb, build-rpm, build-arch]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
 
       - name: Generate SHA256 Checksums
         run: |
-          sha256sum lenovo-d330-fix_7.0.0_all.deb lenovo-d330-fix-dkms.tar.gz > SHA256SUMS
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: packages
-          path: |
-            lenovo-d330-fix_7.0.0_all.deb
-            lenovo-d330-fix-dkms.tar.gz
-            SHA256SUMS
+          cd dist
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            lenovo-d330-fix_7.0.0_all.deb
-            lenovo-d330-fix-dkms.tar.gz
-            SHA256SUMS
+          files: dist/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
