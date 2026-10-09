@@ -113,11 +113,33 @@ Select the `-d330-fix` kernel in the GRUB menu if it is not chosen by default.
 
 ## 6. Verify
 
+The installer runs under `set -euo pipefail` and stops at the first fatal step,
+so confirm it reached its final step and returned to the prompt before checking
+the pieces below.
+
+**Installer completed / DKMS module built:**
 ```bash
+dkms status -m lenovo-d330-fix -v 1.0.0
+# expect: lenovo-d330-fix/1.0.0, <kernel>, x86_64: installed
+```
+
+**Display fix (the important one):**
+```bash
+uname -r                                     # must end in -d330-fix
 dmesg | grep lenovo_d330_fix
 sudo ./scripts/test_resume_loop.sh --cycles 5 --sleep 10
+```
+
+**Touchscreen / touchpad:**
+```bash
 sudo ./scripts/test_touch_calibration.sh
+```
+
+**RNNoise denoiser:**
+```bash
 scripts/test_mic_rnnoise.sh --probe
+# expect: [OK] Found plugin: /usr/lib/ladspa/librnnoise_ladspa.so
+wpctl status | grep -i "Lenovo D330 Clean"
 ```
 
 ## 7. Wayland finishing touches
@@ -143,6 +165,14 @@ scripts/test_mic_rnnoise.sh --probe
 - **Kernel updates:** any `apt upgrade` that replaces the kernel drops the clamp.
   Rebuild the patched kernel or pin the working version. The DKMS module itself
   is rebuilt automatically by DKMS.
+- **Installer stopped at `dkms build` (e.g. "BUILD_EXCLUSIVE ... does not match
+  this kernel/arch/config"):** the DKMS module refuses the running kernel. Update
+  the repo (`git pull --ff-only`) first; the supported range is 5.15-9.x. Then
+  re-run the installer and check `dkms status -m lenovo-d330-fix -v 1.0.0`.
+- **DKMS module failed to compile on a very new kernel:** inspect
+  `/var/lib/dkms/lenovo-d330-fix/1.0.0/build/make.log`. The module is a
+  DMI-matched diagnostic banner; the real fix is the kernel patch, so this does
+  not block the display fix.
 - **No touchscreen calibration:** check
   `/usr/share/libinput/60-lenovo-d330.quirks` and
   `/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules` exist, then
