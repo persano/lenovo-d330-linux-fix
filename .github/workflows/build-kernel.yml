@@ -73,11 +73,13 @@ jobs:
             IMG="linux-image-${KV}"
             apt-get download "$IMG"
           fi
-          DEB="$(ls -1 "${IMG}"_*.deb | head -1)"
+          set -- "${IMG}"_*.deb
+          DEB="$1"
           SRC_VER="$(dpkg-deb -f "$DEB" Version)"
           echo "SRC_VER=${SRC_VER}" >> "$GITHUB_ENV"
           dpkg-deb -x "$DEB" cfg
-          CFG="$(ls -1 cfg/boot/config-* | head -1)"
+          set -- cfg/boot/config-*
+          CFG="$1"
           cp "$CFG" "$BUILD/kernel.config"
           echo "source version: ${SRC_VER} (from ${DEB})"
           echo "config: ${CFG}"
@@ -87,7 +89,8 @@ jobs:
           set -euxo pipefail
           cd "$BUILD"
           apt-get source "linux=${SRC_VER}"
-          SRC="$(ls -d linux-*/ | head -1)"
+          set -- linux-*/
+          SRC="$1"
           echo "SRC=${BUILD}/${SRC}" >> "$GITHUB_ENV"
 
       - name: Apply the display fix and prove it landed
