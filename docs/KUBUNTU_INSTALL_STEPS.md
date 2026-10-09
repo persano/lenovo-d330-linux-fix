@@ -34,12 +34,14 @@ kernel patch. The DKMS module is only a DMI-matched diagnostic banner.
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 sudo apt install -y dkms build-essential "linux-headers-$(uname -r)" git cmake
-sudo apt install -y iio-sensor-proxy v4l2loopback-dkms thermald earlyoom zram-generator \
-  librnnoise0 vainfo libglib2.0-bin tlp pipewire libinput-tools python3
+sudo apt install -y iio-sensor-proxy v4l2loopback-dkms thermald earlyoom systemd-zram-generator \
+  vainfo libglib2.0-bin tlp pipewire libinput-tools python3
 ```
 
 `cmake` + `git` are for the RNNoise build; the rest satisfy the package's
-runtime recommendations.
+runtime recommendations. On Ubuntu/Debian the zram package is
+`systemd-zram-generator` (not `zram-generator`); there is no `librnnoise0` — the
+denoiser plugin is built from source in step 3.
 
 ## 2. Get the repository
 

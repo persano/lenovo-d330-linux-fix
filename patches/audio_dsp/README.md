@@ -28,11 +28,11 @@ routed explicitly:
   internal DMIC array.
 
 ## Dependencies
-- The mic graph needs the LADSPA plugin `librnnoise_ladspa.so`. No distro packages it: Debian/Ubuntu
-  `librnnoise0` and Arch `rnnoise` ship only the base RNNoise library, not the LADSPA plugin. Build
-  and install the plugin manually (drop `librnnoise_ladspa.so` into `/usr/lib/ladspa` or
-  `/usr/lib/<triplet>/ladspa`). The dependency is OPTIONAL: the filter-chain module is loaded with
-  `flags = [ nofail ]`, so a host without the plugin keeps running and the denoiser stays inactive.
+- The mic graph needs the LADSPA plugin `librnnoise_ladspa.so`. No distro packages it (the base
+  RNNoise library ships, not the LADSPA plugin). Build it with
+  `scripts/build_rnnoise_ladspa.sh --install` (installs into `/usr/lib/ladspa`). The dependency is
+  OPTIONAL: the filter-chain module is loaded with `flags = [ nofail ]`, so a host without the
+  plugin keeps running and the denoiser stays inactive.
 - Only the widely supported `VAD Threshold (%)` control is set. The VAD grace-period controls are
   version-dependent (present only in newer librnnoise builds) and are intentionally omitted so the
   graph also loads against older packages.

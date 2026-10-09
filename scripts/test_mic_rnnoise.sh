@@ -121,7 +121,7 @@ if plugin_path="$(find_rnnoise_plugin "$D330_LADSPA_DIRS")"; then
     echo "  [OK] Found plugin: $plugin_path"
 else
     echo "  [FAIL] librnnoise_ladspa.so not found in: $D330_LADSPA_DIRS" >&2
-    echo "         Install it via: apt install librnnoise-ladspa" >&2
+    echo "         Install it via: scripts/build_rnnoise_ladspa.sh --install" >&2
     exit 1
 fi
 
