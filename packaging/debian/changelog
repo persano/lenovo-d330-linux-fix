@@ -1,3 +1,17 @@
+lenovo-d330-fix (7.1.0-1) unstable; urgency=medium
+
+  * Wayland touch/touchpad parity. The palm/pressure thresholds were set as
+    LIBINPUT_ATTR_* udev/hwdb properties, which libinput does not read; they now
+    live in a libinput quirks file (/usr/share/libinput/60-lenovo-d330.quirks)
+    read by libinput itself, so they apply under Wayland compositors too. The
+    dead 63-lenovo-d330-touchpad-pen.hwdb is removed. The calibration matrix
+    stays a udev property (LIBINPUT_CALIBRATION_MATRIX).
+  * RNNoise LADSPA denoiser is now built from pinned source:
+    scripts/build_rnnoise_ladspa.sh (werman/noise-suppression-for-voice v1.21),
+    plus installer --with-rnnoise.
+
+ -- Antigravity Community <community@example.com>  Thu, 09 Oct 2026 12:00:00 +0000
+
 lenovo-d330-fix (7.0.0-1) unstable; urgency=medium
 
   * Milestone 7 (v7.0) pre-deployment audit remediation. Watchdog kernel

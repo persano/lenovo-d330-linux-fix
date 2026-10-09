@@ -50,9 +50,24 @@ echo "=========================================================="
 
 if [[ "$MODE" == "dry-run" ]]; then
     echo "[DRY-RUN] Verifying Touchpad and Active Pen configurations..."
-    echo "  - Touchpad: Tapping enabled, Natural Scrolling, DWT active, clickfinger"
-    echo "  - Active Pen: Matrix '0 1 0 -1 0 1 0 0 1', dual barrel buttons"
-    echo "  - hwdb: 63-lenovo-d330-touchpad-pen.hwdb"
+    ok=0
+    for f in \
+        "patches/touchpad_pen/usr/share/libinput/60-lenovo-d330.quirks" \
+        "patches/touchpad_pen/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf"; do
+        if [ -f "$f" ]; then
+            echo "  [OK]   $f"
+        else
+            echo "  [FAIL] $f" >&2
+            ok=1
+        fi
+    done
+    echo "  - libinput attrs (pressure/palm) apply on X11 and Wayland: 60-lenovo-d330.quirks"
+    echo "  - Tapping/natural scroll/DWT/clickfinger are compositor settings on Wayland (KDE/GNOME)."
+    echo "  - Active Pen: 90-degree matrix in the udev rule; pressure CURVE is X11-only."
+    if [ "$ok" -ne 0 ]; then
+        echo "[FAIL] Touchpad/Pen configuration files missing." >&2
+        exit 1
+    fi
     echo "[DRY-RUN] Configuration verified successfully."
     exit 0
 fi

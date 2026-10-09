@@ -39,6 +39,10 @@ override_dh_auto_install:
 	mkdir -p debian/lenovo-d330-fix/etc/udev/rules.d debian/lenovo-d330-fix/etc/udev/hwdb.d
 	cp patches/*/etc/udev/rules.d/*.rules debian/lenovo-d330-fix/etc/udev/rules.d/
 	cp patches/*/etc/udev/hwdb.d/*.hwdb debian/lenovo-d330-fix/etc/udev/hwdb.d/
+	# libinput model quirks (pressure/palm thresholds): libinput reads these
+	# itself, so they apply under Wayland compositors as well as X11.
+	mkdir -p debian/lenovo-d330-fix/usr/share/libinput
+	cp patches/*/usr/share/libinput/*.quirks debian/lenovo-d330-fix/usr/share/libinput/
 	# Install systemd
 	mkdir -p debian/lenovo-d330-fix/etc/systemd/system
 	cp patches/*/etc/systemd/system/*.service debian/lenovo-d330-fix/etc/systemd/system/

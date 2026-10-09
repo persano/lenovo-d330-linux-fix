@@ -391,7 +391,7 @@ This document catalogs every single configuration, patch, script, daemon, and dr
 | `patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules` | `/etc/udev/rules.d/` | Touchscreen udev device matching |
 | `patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf` | `/etc/X11/xorg.conf.d/` | X11 touch matrix & long-press right-click |
 | `patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh`| `/usr/lib/systemd/system-sleep/` | Goodix I2C reset on wake |
-| `patches/touchpad_pen/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb` | `/etc/udev/hwdb.d/` | Active pen stylus calibration |
+| `patches/touchpad_pen/usr/share/libinput/60-lenovo-d330.quirks` | `/usr/share/libinput/` | libinput model attrs (touchpad/touchscreen palm, pen pressure); X11 + Wayland |
 | `patches/touchpad_pen/etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf` | `/etc/X11/xorg.conf.d/` | Touchpad & Active pen button mapping |
 | `patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules` | `/etc/udev/rules.d/` | POGO dock udev triggers |
 | `patches/dock/usr/lib/systemd/user/d330-tablet-daemon.service` | `/usr/lib/systemd/user/` | Tablet mode daemon (systemd user unit, `WantedBy=default.target`) |

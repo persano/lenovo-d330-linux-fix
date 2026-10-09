@@ -94,6 +94,9 @@ validate_rnnoise_structure() {
     ck  "documents librnnoise-ladspa package dependency"      grep -q 'librnnoise-ladspa' "$rnnoise_conf"
     ckn "omits version-dependent VAD grace controls"          grep -qE 'Retroactive VAD Grace|VAD Grace Period' "$rnnoise_conf"
     ck  "legacy filter-chain.conf.d copy removed"             test ! -e "$legacy_conf"
+    ck  "pinned RNNoise build script present"                 test -f "scripts/build_rnnoise_ladspa.sh"
+    ck  "RNNoise build script pins a SHA-256"                 grep -q 'RNNOISE_SHA256=' scripts/build_rnnoise_ladspa.sh
+    ck  "installer exposes --with-rnnoise"                    grep -q -- '--with-rnnoise' scripts/install_dkms.sh
 
     echo ""
     echo "=========================================================="

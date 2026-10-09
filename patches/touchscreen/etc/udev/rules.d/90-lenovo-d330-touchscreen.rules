@@ -3,11 +3,13 @@
 
 # Apply coordinate transformation matrix for landscape orientation match
 # Portrait physical panel 800x1280 rotated 90 deg clockwise to 1280x800:
-# [0, 1, 0; -1, 0, 1] translates touch input into correct landscape coordinates
+# [0, 1, 0; -1, 0, 1] translates touch input into correct landscape coordinates.
+# This is a udev property, honored by libinput on both X11 and Wayland.
+# Palm pressure/size thresholds are NOT set here: libinput reads model
+# attributes from quirks files, not udev properties -- see
+# patches/touchpad_pen/usr/share/libinput/60-lenovo-d330.quirks.
 ACTION=="add|change", KERNEL=="event*", ATTRS{name}=="Goodix Capacitive TouchScreen*", \
-    ENV{LIBINPUT_CALIBRATION_MATRIX}="0 1 0 -1 0 1", \
-    ENV{LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD}="120", \
-    ENV{LIBINPUT_ATTR_PALM_SIZE_THRESHOLD}="12"
+    ENV{LIBINPUT_CALIBRATION_MATRIX}="0 1 0 -1 0 1"
 
 # Active Stylus / Pen match
 ACTION=="add|change", KERNEL=="event*", ATTRS{name}=="*Pen*|*Stylus*|*GDIX1001*Pen*", \

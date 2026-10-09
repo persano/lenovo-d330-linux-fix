@@ -33,16 +33,17 @@ Reverse engineering of the official Lenovo Windows 10 driver baseline (`igdkmd64
 | :--- | :--- | :--- |
 | **Unified Kernel Patch** | [`patches/d330_display_resume_fix.patch`](patches/d330_display_resume_fix.patch) | Mainline patch for `drm_panel_orientation_quirks.c`, `intel_quirks.c`, and `intel_pps.c` enforcing $\ge 600\text{ ms}$ PPS cycle delay. |
 | **Standalone DKMS Module** | [`patches/dkms/lenovo-d330-fix/`](patches/dkms/lenovo-d330-fix/) | Out-of-tree kernel module (`lenovo_d330_fix.ko`) that prints a DMI-matched banner/breadcrumb; it does NOT enforce TCON discharge timing — the Option 2 kernel clamp patch delivers that. |
-| **Touchscreen Calibration** | [`patches/touchscreen/`](patches/touchscreen/) | Goodix I2C touch calibration matrix, Active Pen stylus thresholds, and sleep unbind/bind recovery hook. |
+| **Touchscreen & Touchpad Calibration** | [`patches/touchscreen/`](patches/touchscreen/) & [`patches/touchpad_pen/`](patches/touchpad_pen/) | Goodix I2C touch matrix (udev `LIBINPUT_CALIBRATION_MATRIX`, X11 and Wayland), libinput model quirks for palm/pressure, Active Pen thresholds, and sleep unbind/bind recovery hook. |
 | **Tablet Mode Daemon** | [`patches/dock/`](patches/dock/) & [`tools/d330-tablet-daemon.py`](tools/d330-tablet-daemon.py) | Intel HID switch handler managing orientation lock, touchpad gate, and virtual keyboard on dock/undock. |
 | **Audio UCM2 Profiles** | [`patches/audio/ucm2/`](patches/audio/ucm2/) | ALSA UCM2 profiles fixing SOF DSP audio routing, headphone jack auto-mute, and internal digital microphones. |
+| **RNNoise Mic Denoiser** | [`scripts/build_rnnoise_ladspa.sh`](scripts/build_rnnoise_ladspa.sh) | Builds `librnnoise_ladspa.so` from pinned source so the PipeWire AI mic denoiser works where no distro package ships the plugin. |
 | **Battery & Power Tuning** | [`patches/power/`](patches/power/) & [`tools/lenovo-d330-power-tune.sh`](tools/lenovo-d330-power-tune.sh) | Fanless 6W Intel P-State/EPP tuning, TLP presets, and runtime PM doubling battery runtime. |
 | **Hardware DB Rules** | [`patches/dkms/etc/udev/hwdb.d/`](patches/dkms/etc/udev/hwdb.d/) | Bosch `BOSC0200` accelerometer mount matrix calibration (`0, 1, 0; -1, 0, 0; 0, 0, 1`). |
 | **Modprobe Config** | [`patches/dkms/etc/modprobe.d/`](patches/dkms/etc/modprobe.d/) | `i915 enable_psr=0 enable_fbc=0` to eliminate GLK pipe freeze. |
 | **ChromeOS Patches** | [`patches/chromeos/`](patches/chromeos/) | Kernel patches for `chromeos-5.15` and `chromeos-6.6`+ branches. |
 | **Android-x86 / Bliss OS** | [`patches/android/`](patches/android/) | Kernel patches (5.15 & 6.6) and sensor HAL matrix configs for Android. |
 | **Distro Install Guide** | [`docs/DISTRO_INSTALL_GUIDE.md`](docs/DISTRO_INSTALL_GUIDE.md) | Guide for Ubuntu/Mint .deb rebuilds, Fedora RPMs, Arch PKGBUILD, and ISO modification. |
-| **Automated Installer** | [`scripts/install_dkms.sh`](scripts/install_dkms.sh) | Zero-friction installation script (`--install`, `--uninstall`, `--dry-run`). |
+| **Automated Installer** | [`scripts/install_dkms.sh`](scripts/install_dkms.sh) | Zero-friction installation (`--install`, `--uninstall`, `--verify`, `--dry-run`, `--with-rnnoise`). |
 | **Diagnostic Test Suite** | [`scripts/`](scripts/) | Test harnesses for resume loop, touch calibration, dock switching, audio, and battery telemetry. |
 | **Differential RE Suite** | [`tools/`](tools/) | Static driver analyzer, Ghidra export script, and PPS timing model. |
 

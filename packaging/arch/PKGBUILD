@@ -1,6 +1,6 @@
 # Maintainer: Antigravity Community <community@example.com>
 pkgname=lenovo-d330-fix
-pkgver=7.0.0
+pkgver=7.1.0
 pkgrel=1
 pkgdesc="Complete hardware integration and screen freeze fix for Lenovo IdeaPad D330-10IGL"
 arch=('any')
@@ -48,6 +48,11 @@ package() {
     install -d "${pkgdir}/etc/udev/hwdb.d"
     install -m 644 "${srcdir}"/../patches/*/etc/udev/rules.d/*.rules "${pkgdir}/etc/udev/rules.d/"
     install -m 644 "${srcdir}"/../patches/*/etc/udev/hwdb.d/*.hwdb "${pkgdir}/etc/udev/hwdb.d/"
+
+    # libinput model quirks (pressure/palm thresholds): read by libinput itself,
+    # so they apply under Wayland compositors as well as X11.
+    install -d "${pkgdir}/usr/share/libinput"
+    install -m 644 "${srcdir}"/../patches/*/usr/share/libinput/*.quirks "${pkgdir}/usr/share/libinput/"
 
     # Install systemd
     install -d "${pkgdir}/etc/systemd/system"

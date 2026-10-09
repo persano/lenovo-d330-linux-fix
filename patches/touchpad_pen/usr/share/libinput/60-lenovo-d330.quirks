@@ -1,0 +1,38 @@
+# Lenovo IdeaPad D330-10IGL libinput model quirks.
+#
+# libinput reads this file (from /usr/share/libinput/*.quirks) itself, so these
+# attributes apply under Wayland compositors (KWin, GNOME, wlroots) as well as
+# the X11 libinput driver -- unlike the X11-only xorg.conf.d options shipped
+# alongside this tree.
+#
+# Only model ATTRIBUTES belong here. The touchscreen calibration matrix stays in
+# patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules, because
+# a matrix is a udev property (LIBINPUT_CALIBRATION_MATRIX), not a quirks key.
+#
+# Tapping / natural-scroll / clickfinger / accel and the pen pressure CURVE are
+# user preferences: set them in the compositor (KDE: System Settings > Input
+# Devices; GNOME: Settings > Mouse & Touchpad). No libinput mechanism forces
+# them, on Wayland or X11.
+
+# Goodix I2C touchscreen (GDIX1001): palm rejection thresholds.
+[Lenovo D330 Goodix Touchscreen]
+MatchUdevType=touchscreen
+MatchName=Goodix*
+AttrPalmPressureThreshold=120
+AttrPalmSizeThreshold=12
+
+# Detachable dock touchpad (Lenovo USB vendor 17EF): pressure + palm thresholds.
+[Lenovo D330 Dock Touchpad]
+MatchUdevType=touchpad
+MatchBus=usb
+MatchVendor=0x17EF
+AttrPressureRange=25:75
+AttrPalmPressureThreshold=100
+AttrPalmSizeThreshold=10
+
+# Goodix Active Pen digitizer: pressure range.
+# Pen pressure CURVE (the X11 PressureCurve option) has no libinput equivalent.
+[Lenovo D330 Active Pen]
+MatchUdevType=tablet
+MatchName=*Pen*
+AttrPressureRange=10:1024

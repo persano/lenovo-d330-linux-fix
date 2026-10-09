@@ -1,5 +1,5 @@
 Name:           lenovo-d330-fix
-Version:        7.0.0
+Version:        7.1.0
 Release:        1%{?dist}
 Summary:        Complete hardware integration and screen freeze fix for Lenovo IdeaPad D330
 
@@ -55,6 +55,10 @@ cp %{_builddir}/patches/hardware_controls/etc/xdg/autostart/d330-tray.desktop %{
 cp %{_builddir}/patches/*/etc/modprobe.d/*.conf %{buildroot}/etc/modprobe.d/
 cp %{_builddir}/patches/*/etc/udev/rules.d/*.rules %{buildroot}/etc/udev/rules.d/
 cp %{_builddir}/patches/*/etc/udev/hwdb.d/*.hwdb %{buildroot}/etc/udev/hwdb.d/
+# libinput model quirks (pressure/palm thresholds): read by libinput itself, so
+# they apply under Wayland compositors as well as X11.
+mkdir -p %{buildroot}/usr/share/libinput
+cp %{_builddir}/patches/*/usr/share/libinput/*.quirks %{buildroot}/usr/share/libinput/
 cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/system/
 # systemd USER unit: %post enables it with `systemctl --global enable`, which
 # requires the unit under /usr/lib/systemd/user.
@@ -85,12 +89,19 @@ systemctl enable d330-swapfile.service 2>/dev/null || true
 /etc/modprobe.d/*
 /etc/udev/rules.d/*
 /etc/udev/hwdb.d/*
+/usr/share/libinput/*
 /etc/systemd/system/*
 /usr/lib/systemd/user/*
 /etc/pipewire/pipewire.conf.d/*
 /etc/xdg/autostart/*
 
 %changelog
+* Thu Oct 09 2026 Antigravity Community <community@example.com> - 7.1.0-1
+- Wayland touch/touchpad parity: libinput quirks file for palm/pressure
+  thresholds (X11 + Wayland); removed inert LIBINPUT_ATTR_* udev/hwdb
+  properties and the dead 63-lenovo-d330-touchpad-pen.hwdb.
+- RNNoise LADSPA denoiser built from pinned source (v1.21) via
+  scripts/build_rnnoise_ladspa.sh and installer --with-rnnoise.
 * Thu Oct 08 2026 Antigravity Community <community@example.com> - 7.0.0-1
 - Milestone 7 (v7.0) audit remediation: watchdog cmdline override dropped,
   tablet user unit niceness fixed, Wi-Fi resume carrier guard, PWM idempotency,

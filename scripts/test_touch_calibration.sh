@@ -59,6 +59,7 @@ if [ $DRY_RUN -eq 1 ]; then
         "$SCRIPT_DIR/patches/touchscreen/etc/X11/xorg.conf.d/50-touchscreen-d330.conf" \
         "$SCRIPT_DIR/patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules" \
         "$SCRIPT_DIR/patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb" \
+        "$SCRIPT_DIR/patches/touchpad_pen/usr/share/libinput/60-lenovo-d330.quirks" \
         "$SCRIPT_DIR/patches/touchscreen/etc/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh"; do
         if [ -f "$f" ]; then
             log_ok "Shipped config present: $f"

@@ -49,6 +49,10 @@ Options:
                 Option 2: apply patches/d330_display_resume_fix.patch to the
                 kernel source tree at PATH. Gated by `patch -p1 --dry-run`;
                 a context mismatch warns and never fails the install.
+  --with-rnnoise
+                Also build and install librnnoise_ladspa.so from pinned source
+                (needs network + build tools) so the PipeWire mic denoiser is
+                available where no distro package ships the plugin.
   -h, --help    Display this help message
 EOF
 }
@@ -95,7 +99,7 @@ deploy_manifest() {
 /etc/modprobe.d/lenovo-d330-wireless.conf	file
 /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb	file
 /etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb	file
-/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb	file
+/usr/share/libinput/60-lenovo-d330.quirks	file
 /etc/udev/rules.d/90-lenovo-d330-touchscreen.rules	file
 /etc/udev/rules.d/85-lenovo-d330-dock.rules	file
 /etc/udev/rules.d/95-lenovo-d330-power.rules	file
@@ -208,7 +212,7 @@ check_prerequisites() {
     done
     if [ "$rnnoise_found" != true ]; then
         log_warn "librnnoise_ladspa.so not found (/usr/lib/ladspa, /usr/lib/*/ladspa)."
-        log_warn "RNNoise mic denoiser stays inactive; build/install librnnoise_ladspa.so manually (not distro-packaged)."
+        log_warn "RNNoise mic denoiser stays inactive; build it with scripts/build_rnnoise_ladspa.sh --install (or re-run install with --with-rnnoise)."
     else
         log_ok "librnnoise_ladspa.so found; RNNoise mic denoiser available."
     fi
@@ -371,12 +375,15 @@ do_install() {
     # 4. Deploy udev rules and hardware databases
     log_info "Deploying udev rules and hwdb entries..."
     if [ "$DRY_RUN" = false ]; then
-        mkdir -p /etc/udev/hwdb.d /etc/udev/rules.d
+        mkdir -p /etc/udev/hwdb.d /etc/udev/rules.d /usr/share/libinput
         cp "${REPO_ROOT}/patches/dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb" /etc/udev/hwdb.d/
         [ -f "${REPO_ROOT}/patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb" ] && \
             cp "${REPO_ROOT}/patches/touchscreen/etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb" /etc/udev/hwdb.d/
-        [ -f "${REPO_ROOT}/patches/touchpad_pen/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb" ] && \
-            cp "${REPO_ROOT}/patches/touchpad_pen/etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb" /etc/udev/hwdb.d/
+        # libinput model quirks (pressure/palm thresholds): libinput reads these
+        # itself, so they apply under Wayland compositors (KWin/GNOME) too. The
+        # calibration matrix stays a udev property in the .rules file above.
+        [ -f "${REPO_ROOT}/patches/touchpad_pen/usr/share/libinput/60-lenovo-d330.quirks" ] && \
+            cp "${REPO_ROOT}/patches/touchpad_pen/usr/share/libinput/60-lenovo-d330.quirks" /usr/share/libinput/
         [ -f "${REPO_ROOT}/patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules" ] && \
             cp "${REPO_ROOT}/patches/touchscreen/etc/udev/rules.d/90-lenovo-d330-touchscreen.rules" /etc/udev/rules.d/
         [ -f "${REPO_ROOT}/patches/dock/etc/udev/rules.d/85-lenovo-d330-dock.rules" ] && \
@@ -742,6 +749,24 @@ do_install() {
         fi
     fi
 
+    # 7b. Optional RNNoise LADSPA build (--with-rnnoise). The PipeWire graph in
+    # step 7 carries flags=[nofail], so a missing plugin is non-fatal; this
+    # builds it from pinned source when no distro package provides it.
+    if [ "$WITH_RNNOISE" = true ]; then
+        if [ ! -f "${REPO_ROOT}/scripts/build_rnnoise_ladspa.sh" ]; then
+            log_warn "--with-rnnoise given but scripts/build_rnnoise_ladspa.sh is missing; skipping."
+        elif [ "$DRY_RUN" = true ]; then
+            bash "${REPO_ROOT}/scripts/build_rnnoise_ladspa.sh" --dry-run || true
+        else
+            log_info "Building librnnoise_ladspa.so from pinned source (--with-rnnoise)..."
+            if bash "${REPO_ROOT}/scripts/build_rnnoise_ladspa.sh" --install; then
+                log_ok "RNNoise LADSPA plugin installed."
+            else
+                log_warn "RNNoise LADSPA build failed; mic denoiser stays inactive. Install continues."
+            fi
+        fi
+    fi
+
     # 8. Deploy TLP & Color Management configuration
     if [ "$DRY_RUN" = false ]; then
         if [ -d "/etc/tlp.d" ]; then
@@ -819,7 +844,7 @@ do_uninstall() {
         rm -f /etc/modprobe.d/lenovo-d330-wireless.conf
         rm -f /etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb
         rm -f /etc/udev/hwdb.d/62-lenovo-d330-touchscreen.hwdb
-        rm -f /etc/udev/hwdb.d/63-lenovo-d330-touchpad-pen.hwdb
+        rm -f /usr/share/libinput/60-lenovo-d330.quirks
         rm -f /etc/udev/rules.d/90-lenovo-d330-touchscreen.rules
         rm -f /etc/udev/rules.d/85-lenovo-d330-dock.rules
         rm -f /etc/udev/rules.d/95-lenovo-d330-power.rules
@@ -1158,6 +1183,7 @@ do_verify() {
 ACTION="install"
 DRY_RUN=false
 KERNEL_SRC=""
+WITH_RNNOISE=false
 VERIFY_ROOT="/"
 VERIFY_REMOVED=false
 
@@ -1183,6 +1209,7 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             KERNEL_SRC="$2"; shift 2 ;;
+        --with-rnnoise) WITH_RNNOISE=true; shift ;;
         -h|--help) usage; exit 0 ;;
         *) log_err "Unknown argument: $1"; usage; exit 1 ;;
     esac
