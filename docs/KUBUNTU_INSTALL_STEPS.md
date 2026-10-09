@@ -87,6 +87,14 @@ sudo apt update
 ```
 
 ```bash
+# 4a2. install the kernel build toolchain. Kubuntu ships none of it by
+# default, and the `apt build-dep` in 4b below does not always succeed; run
+# this first so the build works either way.
+sudo apt install -y build-essential dpkg-dev debhelper fakeroot dh-python \
+    libssl-dev bc flex bison rsync libelf-dev dwarves cpio zstd
+```
+
+```bash
 # 4b. fetch the UNSIGNED kernel source. The running kernel image is often the
 # signed wrapper (Source: linux-signed-*), whose source tree has no drivers/;
 # the real kernel source package sits behind linux-image-unsigned-*, or is
@@ -124,17 +132,26 @@ grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
 - **`cd: too many arguments` (step 4b):** the `${SRC_PKG}-*` glob matched more
   than one extracted tree. Run `ls -d */` in `$WORK` and `cd` into the freshly
   extracted `${SRC_PKG}-*` directory by name.
+- **`include/config/auto.conf.cmd: No such file or directory` / Makefile
+  `Error 1`/`Error 2` (step 4d):** the tree has no `.config`. Run
+  `cp "/boot/config-$(uname -r)" .config && make olddefconfig` before
+  `make bindeb-pkg`.
 
 ```bash
-# 4d. build and install
+# 4d. seed .config from the running kernel, then build and install.
+# bindeb-pkg needs a CONFIGURED tree; without .config it dies with
+# "include/config/auto.conf.cmd: No such file or directory" (Makefile Error 1/2).
+cp "/boot/config-$(uname -r)" .config
+make olddefconfig
 make -j"$(nproc)" bindeb-pkg LOCALVERSION=-d330-fix
 ls -lh ../linux-image-*-d330-fix_*.deb ../linux-headers-*-d330-fix_*.deb
 sudo dpkg -i ../linux-image-*-d330-fix_*.deb ../linux-headers-*-d330-fix_*.deb
 sudo update-grub
 ```
 
-If `apt build-dep` fails, install the prerequisites by hand:
-`sudo apt install -y build-essential libssl-dev bc flex bison rsync libelf-dev dwarves cpio zstd`.
+The build toolchain is installed in step 4a2, so `apt build-dep` failing in
+step 4b is not fatal. If a package is still reported missing, re-run the 4a2
+`apt install` line.
 
 ## 5. Reboot
 

@@ -21,6 +21,10 @@ The DKMS `lenovo_d330_fix.ko` module is a DMI-matched diagnostic banner; it does
 ### 2. Building Patched Kernel `.deb` (Ubuntu / Linux Mint / Debian)
 We will compile patched kernel packages (`linux-image-*.deb` and `linux-headers-*.deb`). Run this in a scratch directory, not inside the repo, and reference the patch by absolute path:
 ```bash
+# 0. Install the kernel build toolchain (minimal images ship none of it).
+sudo apt install -y build-essential dpkg-dev debhelper fakeroot dh-python \
+    libssl-dev bc flex bison rsync libelf-dev dwarves cpio zstd
+
 # 1. Fetch the UNSIGNED kernel source (the running image is often a signed
 #    wrapper whose source tree has no drivers/)
 WORK="$HOME/d330-kernel"; mkdir -p "$WORK" && cd "$WORK"
@@ -36,7 +40,11 @@ cd "$SRC_DIR"
 patch -p1 --dry-run < /path/to/lenovo-d330-linux-screen-fix/patches/d330_display_resume_fix.patch
 patch -p1           < /path/to/lenovo-d330-linux-screen-fix/patches/d330_display_resume_fix.patch
 
-# 3. Fast compile .deb packages
+# 3. Seed .config from the running kernel (bindeb-pkg needs a configured
+#    tree; without it: "include/config/auto.conf.cmd: No such file or
+#    directory"), then compile the .deb packages.
+cp "/boot/config-$(uname -r)" .config
+make olddefconfig
 make bindeb-pkg -j$(nproc) LOCALVERSION=-d330-fix
 
 # 4. Install over active system
