@@ -28,7 +28,9 @@ SRC_PKG="$(dpkg-query -W -f='${Source}' "linux-image-unsigned-$(uname -r)" 2>/de
 case "$SRC_PKG" in ""|*signed*) SRC_PKG=linux ;; esac
 sudo apt build-dep -y "$SRC_PKG"
 apt source "$SRC_PKG"
-cd "${SRC_PKG}"-*
+SRC_DIR="$(ls -d "${SRC_PKG}"-*/ 2>/dev/null | head -1)"
+[ -n "$SRC_DIR" ] || echo ">>> no ${SRC_PKG}-* source dir; check the apt source output above"
+cd "$SRC_DIR"
 
 # 2. Apply patch (dry-run first; a clean dry-run is required before building)
 patch -p1 --dry-run < /path/to/lenovo-d330-linux-screen-fix/patches/d330_display_resume_fix.patch

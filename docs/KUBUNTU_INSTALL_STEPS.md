@@ -96,7 +96,9 @@ case "$SRC_PKG" in ""|*signed*) SRC_PKG=linux ;; esac
 echo "kernel source package: $SRC_PKG"
 sudo apt build-dep -y "$SRC_PKG"
 apt source "$SRC_PKG"
-cd "${SRC_PKG}"-*
+SRC_DIR="$(ls -d "${SRC_PKG}"-*/ 2>/dev/null | head -1)"
+[ -n "$SRC_DIR" ] || echo ">>> no ${SRC_PKG}-* source dir; check the apt source output above"
+cd "$SRC_DIR"
 ```
 
 ```bash
@@ -119,6 +121,9 @@ grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
   assigns `intel_dp->pps.panel_power_cycle_delay` clamp that value to `600` (it
   is in milliseconds) when `dmi_check_system(d330_pps_quirk)` matches. Then
   re-run the two greps above.
+- **`cd: too many arguments` (step 4b):** the `${SRC_PKG}-*` glob matched more
+  than one extracted tree. Run `ls -d */` in `$WORK` and `cd` into the freshly
+  extracted `${SRC_PKG}-*` directory by name.
 
 ```bash
 # 4d. build and install
