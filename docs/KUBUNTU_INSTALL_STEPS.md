@@ -180,6 +180,21 @@ wpctl status | grep -i "Lenovo D330 Clean"
 - **RNNoise source missing in `wpctl status`:** the plugin is optional
   (`flags = [ nofail ]`). Run `scripts/build_rnnoise_ladspa.sh --install`, then
   `systemctl --user restart pipewire pipewire-pulse`.
+- **`d330-swapfile.service` failed:** the unit logs either a free-space warning
+  or an FS warning. Hibernation resume needs a swap file on **ext4**; on a
+  btrfs, xfs or zfs root the unit now says so explicitly and stays failed by
+  design. Suspend (S2idle) still works, so this only matters if you want
+  hibernate. Inspect it with `journalctl -u d330-swapfile.service -b`.
+- **`libkmod: ... ignoring bad line starting with 'options'`:** caused by bare
+  no-parameter `options <module>` lines in the shipped camera and cellular
+  `modprobe.d` files, fixed in current `main`. `git pull --ff-only`, re-run the
+  installer, then `sudo systemctl restart systemd-modules-load`. Find any other
+  offender with `grep -rnE '^options[[:space:]]+[^[:space:]]+$' /etc/modprobe.d`.
+- **`could not get modinfo from tls: exec format error`:** not from this repo.
+  The running kernel and `/lib/modules` are out of sync, usually because a
+  kernel package was upgraded but not rebooted. Compare `uname -r` with
+  `ls /lib/modules` and reboot; if it persists,
+  `sudo apt install --reinstall "linux-modules-$(uname -r)"`.
 - **Screen still dark after resume:** the patched kernel is not the one running.
   Check `uname -r` ends in `-d330-fix`.
 - **Uninstall everything:** `sudo ./scripts/install_dkms.sh --uninstall`
