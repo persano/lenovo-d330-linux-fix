@@ -66,21 +66,25 @@ jobs:
           BUILD="$RUNNER_TEMP/kbuild"
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
           mkdir -p "$BUILD" && cd "$BUILD"
-          # The running image is usually the signed wrapper; prefer the unsigned
-          # package, fall back to the signed one. Either carries /boot/config-*.
-          IMG="linux-image-unsigned-${KV}"
-          if ! apt-get download "$IMG"; then
-            IMG="linux-image-${KV}"
-            apt-get download "$IMG"
+          # /boot/config-* moved between releases: resolute (26.04) ships it in
+          # linux-modules-*, older kernels in linux-image-unsigned-*. Try each.
+          CFG=""
+          for IMG in "linux-modules-${KV}" "linux-image-unsigned-${KV}" "linux-image-${KV}"; do
+            apt-get download "$IMG" || continue
+            set -- "${IMG}"_*.deb
+            DEB="$1"
+            SRC_VER="$(dpkg-deb -f "$DEB" Version)"
+            rm -rf cfg
+            dpkg-deb -x "$DEB" cfg
+            set -- cfg/boot/config-*
+            if [ -e "$1" ]; then CFG="$1"; break; fi
+          done
+          if [ -z "$CFG" ]; then
+            echo ">>> no /boot/config-* found in any package for ${KV}" >&2
+            exit 1
           fi
-          set -- "${IMG}"_*.deb
-          DEB="$1"
-          SRC_VER="$(dpkg-deb -f "$DEB" Version)"
-          echo "SRC_VER=${SRC_VER}" >> "$GITHUB_ENV"
-          dpkg-deb -x "$DEB" cfg
-          set -- cfg/boot/config-*
-          CFG="$1"
           cp "$CFG" "$BUILD/kernel.config"
+          echo "SRC_VER=${SRC_VER}" >> "$GITHUB_ENV"
           echo "source version: ${SRC_VER} (from ${DEB})"
           echo "config: ${CFG}"
 
