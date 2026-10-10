@@ -8,8 +8,8 @@ This directory contains the patches, out-of-tree DKMS module, and configuration 
 
 1. **Kernel Patch (`d330_display_resume_fix.patch`)**:
    - Upstream-targeted unified patch for the Linux DRM subsystem.
-   - Adds `#include <linux/dmi.h>`, a `d330_pps_quirk[]` DMI table, and clamps `panel_power_cycle_delay` to $\ge 600\text{ ms}$ in `drivers/gpu/drm/i915/display/intel_pps.c` when the D330 DMI matches, preventing timing controller (TCON) electrical latch-up.
-   - Panel orientation is supplied by the `video=...:panel_orientation=right_side_up` boot option, so the patch no longer touches `drm_panel_orientation_quirks.c` or `intel_quirks.c`.
+   - Stops `drivers/gpu/drm/i915/display/skl_universal_plane.c` from advertising render-compressed (CCS) modifiers on the D330 (`82H0`) via a DMI check. The panel is natively portrait, so userspace scans out rotated 90/270 degrees; `skl_plane_check_fb()` rejects a CCS framebuffer combined with that rotation, which makes every resume atomic commit fail with `-EINVAL` and leaves the display black. Without CCS advertised, userspace falls back to a Y-tiled surface and the commit succeeds.
+   - This fixes only the plane-level rejection. A separate DSI panel power/sequencing issue on resume is still open; see `docs/research/DISPLAY_RESUME_CCS_MODIFIER.md`.
 
 2. **Standalone DKMS Package (`dkms/lenovo-d330-fix/`)**:
    - Out-of-tree kernel module (`lenovo_d330_fix.ko`) for distribution kernels (Ubuntu, Mint, Debian, Arch, Fedora).

@@ -1,5 +1,14 @@
 # Differential Analysis: Windows WDDM (`igdkmd64.sys`) vs. Linux `i915` Display Resume Pipeline
 
+> **SUPERSEDED / PARTLY INVALID.** This document was written before on-device
+> testing. Its central premises are wrong: the D330-10IGL panel is **MIPI-DSI**
+> (not eDP), the VBT reports a 500 ms power-cycle delay (not 200 ms), and the
+> resume failure is **not** PPS/TCON timing. The real root cause (rotation +
+> render-compressed framebuffer rejected by `skl_plane_check_fb()`) and the
+> current status are documented in
+> [`../research/DISPLAY_RESUME_CCS_MODIFIER.md`](../research/DISPLAY_RESUME_CCS_MODIFIER.md).
+> Treat the Windows callback sections below as background only.
+
 **Target Device**: Lenovo IdeaPad D330-10IGL (Type 82H0)  
 **SoC / Architecture**: Intel Gemini Lake Refresh (Celeron N4020 / UHD Graphics 600, DevID `0x3185`)  
 **Subsystem**: Display Panel Power Sequencing (PPS), WDDM DDI Callbacks, ACPI / GPIO Power Rail Control

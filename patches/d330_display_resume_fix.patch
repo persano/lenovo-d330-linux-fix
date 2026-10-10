@@ -1,79 +1,56 @@
 From: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
-Subject: [PATCH] drm/i915: clamp PPS power-cycle delay to >=600ms on Lenovo IdeaPad D330
+Subject: [PATCH] drm/i915: do not advertise render-compressed (CCS) modifiers on Lenovo IdeaPad D330
 
-The Lenovo IdeaPad D330-10IGL (82H0) and -10IGM (81H3/81MD) use a natively
-portrait panel whose TCON needs a minimum PPS power-cycle delay (T11+T12) of
-about 600ms before VDD is re-asserted. The VBT reports a shorter value on these
-units, so a fast suspend/resume can latch the panel dark. Clamp the value to
->=600ms when the platform matches, via a DMI check.
+The Lenovo IdeaPad D330-10IGL (82H0) has a natively portrait panel that
+userspace scans out rotated 90 or 270 degrees. i915 rejects a
+render-compressed (CCS) scanout framebuffer combined with such a rotation in
+skl_plane_check_fb() ("RC support only with 0/180 degree rotation ..."), so
+every atomic commit that installs a rotated, CCS-backed primary plane fails
+with -EINVAL. On resume the compositor recreates its framebuffer this way and
+the repeated failed commit leaves the display black.
 
-Only drivers/gpu/drm/i915/display/intel_pps.c is touched; the panel orientation
-is handled by the video=...:panel_orientation=right_side_up boot option, so no
-drm_panel_orientation_quirks.c change is needed. Targets the current i915 PPS
-API (pps_init_delays()/pps_units_to_msecs()); on older trees adapt the hunk to
-that tree's panel_power_cycle_delay assignment.
+The plane still advertises CCS for XRGB/ARGB8888 in
+skl_plane_format_mod_supported(), so compositors keep choosing it. Stop
+advertising CCS on this platform; userspace then falls back to a Y-tiled
+surface, which does support 90/270 rotation, and the resume commit succeeds.
+
+Note: this only removes the plane-level rejection. A separate DSI panel
+power/sequencing issue on resume (LP_RX_TIMEOUT, panel stays dark with no
+image) is tracked separately and is not addressed here.
 
 Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
 ---
- drivers/gpu/drm/i915/display/intel_pps.c | 35 ++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ drivers/gpu/drm/i915/display/skl_universal_plane.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/gpu/drm/i915/display/intel_pps.c b/drivers/gpu/drm/i915/display/intel_pps.c
---- a/drivers/gpu/drm/i915/display/intel_pps.c
-+++ b/drivers/gpu/drm/i915/display/intel_pps.c
-@@ -4,6 +4,7 @@
+diff --git a/drivers/gpu/drm/i915/display/skl_universal_plane.c b/drivers/gpu/drm/i915/display/skl_universal_plane.c
+index 746e942..45334d2 100644
+--- a/drivers/gpu/drm/i915/display/skl_universal_plane.c
++++ b/drivers/gpu/drm/i915/display/skl_universal_plane.c
+@@ -3,6 +3,8 @@
+  * Copyright © 2020 Intel Corporation
   */
  
- #include <linux/debugfs.h>
 +#include <linux/dmi.h>
- #include <linux/iopoll.h>
- 
- #include <drm/drm_print.h>
-@@ -1511,6 +1512,27 @@
- 	intel_pps_dump_state(intel_dp, "spec", spec);
- }
- 
-+/*
-+ * Lenovo IdeaPad D330-10IGL (82H0) / -10IGM (81H3/81MD): the portrait panel's
-+ * TCON needs a >= 600ms PPS power-cycle delay to avoid latching dark on
-+ * resume; the VBT reports a shorter value, so clamp it here.
-+ */
-+static const struct dmi_system_id d330_pps_quirk[] = {
-+	{
-+		.matches = {
-+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
-+			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGL"),
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "82H0"),
-+		},
-+	},
-+	{ }
-+};
 +
- static void pps_init_delays(struct intel_dp *intel_dp)
+ #include <drm/drm_atomic_helper.h>
+ #include <drm/drm_blend.h>
+ #include <drm/drm_damage_helper.h>
+@@ -2532,6 +2534,17 @@ static bool skl_plane_format_mod_supported(struct drm_plane *_plane,
  {
- 	struct intel_display *display = to_intel_display(intel_dp);
-@@ -1545,6 +1567,19 @@
- 	intel_dp->pps.panel_power_down_delay = pps_units_to_msecs(final->power_down);
- 	intel_dp->pps.panel_power_cycle_delay = pps_units_to_msecs(final->power_cycle);
+ 	struct intel_plane *plane = to_intel_plane(_plane);
  
-+	if (dmi_check_system(d330_pps_quirk)) {
-+		if (intel_dp->pps.panel_power_cycle_delay < 600) {
-+			drm_info(display->drm,
-+				 "Lenovo D330 PPS: clamping power-cycle delay to 600ms (was %dms)\n",
-+				 intel_dp->pps.panel_power_cycle_delay);
-+			intel_dp->pps.panel_power_cycle_delay = 600;
-+		} else {
-+			drm_info(display->drm,
-+				 "Lenovo D330 PPS: power-cycle delay already %dms\n",
-+				 intel_dp->pps.panel_power_cycle_delay);
-+		}
-+	}
++	/*
++	 * Lenovo IdeaPad D330-10IGL: a CCS (render-compressed) framebuffer
++	 * cannot be scanned out with 90/270 rotation (skl_plane_check_fb
++	 * rejects it), so KWin's portrait output fails every atomic commit
++	 * after resume. Keep CCS out of this plane's IN_FORMATS so the
++	 * compositor picks a Y-tiled surface instead.
++	 */
++	if (dmi_match(DMI_PRODUCT_NAME, "82H0") &&
++	    intel_fb_is_ccs_modifier(modifier))
++		return false;
 +
- 	drm_dbg_kms(display->drm,
- 		    "panel power up delay %d, power down delay %d, power cycle delay %d\n",
- 		    intel_dp->pps.panel_power_up_delay,
+ 	if (!intel_fb_plane_supports_modifier(plane, modifier))
+ 		return false;
+ 
