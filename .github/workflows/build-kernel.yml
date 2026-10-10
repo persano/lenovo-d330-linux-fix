@@ -127,17 +127,21 @@ jobs:
           set -euxo pipefail
           cd "$SRC"
           rm -rf debian
-          make -j"$(nproc)" bindeb-pkg LOCALVERSION=-d330-fix
-          ls -lh "$RUNNER_TEMP"/linux-image-*-d330-fix_*.deb \
-                 "$RUNNER_TEMP"/linux-headers-*-d330-fix_*.deb
+          # DPKG_FLAGS=-d skips dpkg-checkbuilddeps, which chokes on the
+          # generated debian/control's libdw-dev:native build-dep.
+          make -j"$(nproc)" bindeb-pkg LOCALVERSION=-d330-fix DPKG_FLAGS=-d
+          # bindeb-pkg drops the .debs in the parent of the source tree
+          # (= $BUILD), not in $RUNNER_TEMP.
+          ls -lh "$BUILD"/linux-image-*-d330-fix_*.deb \
+                 "$BUILD"/linux-headers-*-d330-fix_*.deb
 
       - name: Upload kernel artifacts
         uses: actions/upload-artifact@v7
         with:
           name: kernel-deb
           path: |
-            ${{ runner.temp }}/linux-image-*-d330-fix_*.deb
-            ${{ runner.temp }}/linux-headers-*-d330-fix_*.deb
+            ${{ runner.temp }}/kbuild/linux-image-*-d330-fix_*.deb
+            ${{ runner.temp }}/kbuild/linux-headers-*-d330-fix_*.deb
             ${{ runner.temp }}/kbuild/kernel.config
 
       - name: Publish kernel release
@@ -147,7 +151,7 @@ jobs:
           name: Patched kernel for ${{ inputs.kernel_version }}
           prerelease: true
           files: |
-            ${{ runner.temp }}/linux-image-*-d330-fix_*.deb
-            ${{ runner.temp }}/linux-headers-*-d330-fix_*.deb
+            ${{ runner.temp }}/kbuild/linux-image-*-d330-fix_*.deb
+            ${{ runner.temp }}/kbuild/linux-headers-*-d330-fix_*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
