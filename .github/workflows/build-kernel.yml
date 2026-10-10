@@ -101,9 +101,9 @@ jobs:
         run: |
           set -euxo pipefail
           cd "$SRC"
-          patch -p1 --batch < "$GITHUB_WORKSPACE/patches/d330_display_resume_fix.patch"
-          grep -R "d330_pps_quirk" drivers/gpu/drm/i915/display/intel_pps.c
-          grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_display_resume_fix.patch"
+          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          grep -R 'intel_fb_is_ccs_modifier(modifier)' drivers/gpu/drm/i915/display/skl_universal_plane.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
