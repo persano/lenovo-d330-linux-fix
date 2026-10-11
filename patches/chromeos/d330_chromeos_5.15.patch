@@ -6,13 +6,24 @@ Fixes black screen / panel latch-up on wake from Modern Standby / S0ix on
 Lenovo IdeaPad D330-10IGL (Type 82H0, Intel Gemini Lake Refresh UHD 600)
 running ChromeOS kernel 5.15.
 
+The primary fix is the skl_universal_plane.c hunk: the panel is natively
+portrait, so userspace scans out rotated 90/270 degrees, and i915 rejects a
+render-compressed (CCS) scanout framebuffer combined with that rotation in
+skl_plane_check_fb() ("RC support only with 0/180 degree rotation"), which
+makes every atomic commit fail with -EINVAL and leaves the display black. Stop
+advertising CCS on 82H0 so userspace falls back to a Y-tiled surface. The PPS
+delay and orientation quirks below are kept as a hedge; on-device tracing found
+the resume path already runs the full panel power sequence, so the PPS clamp is
+not the cause (see docs/research/DISPLAY_RESUME_CCS_MODIFIER.md).
+
 Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
 ---
- drivers/gpu/drm/drm_panel_orientation_quirks.c | 14 ++++++++++++++
- drivers/gpu/drm/i915/display/intel_pps.c       |  9 +++++++++
- drivers/gpu/drm/i915/display/intel_quirks.c    | 16 ++++++++++++++++
- drivers/gpu/drm/i915/display/intel_quirks.h    |  1 +
- 4 files changed, 40 insertions(+)
+ drivers/gpu/drm/drm_panel_orientation_quirks.c     | 14 ++++++++++++++
+ drivers/gpu/drm/i915/display/intel_pps.c           |  9 +++++++++
+ drivers/gpu/drm/i915/display/intel_quirks.c        | 16 ++++++++++++++++
+ drivers/gpu/drm/i915/display/intel_quirks.h        |  1 +
+ drivers/gpu/drm/i915/display/skl_universal_plane.c | 13 +++++++++++++
+ 5 files changed, 53 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_panel_orientation_quirks.c b/drivers/gpu/drm/drm_panel_orientation_quirks.c
 index 8e45f91a2..9a61b8f01 100644
@@ -112,5 +123,38 @@ index b737d90e1..d5537ef81 100644
  };
  
  void intel_init_quirks(struct drm_i915_private *i915);
+diff --git a/drivers/gpu/drm/i915/display/skl_universal_plane.c b/drivers/gpu/drm/i915/display/skl_universal_plane.c
+index 6c8f0a1b2..4d9e2f3a4 100644
+--- a/drivers/gpu/drm/i915/display/skl_universal_plane.c
++++ b/drivers/gpu/drm/i915/display/skl_universal_plane.c
+@@ -3,6 +3,8 @@
+  * Copyright © 2020 Intel Corporation
+  */
+ 
++#include <linux/dmi.h>
++
+ #include <drm/drm_atomic_helper.h>
+ #include <drm/drm_damage_helper.h>
+ #include <drm/drm_fourcc.h>
+@@ -1843,8 +1845,19 @@ static bool skl_plane_format_mod_supported(struct drm_plane *_plane,
+ 					   u32 format, u64 modifier)
+ {
+ 	struct intel_plane *plane = to_intel_plane(_plane);
+ 
++	/*
++	 * Lenovo IdeaPad D330-10IGL: a CCS (render-compressed) framebuffer
++	 * cannot be scanned out with 90/270 rotation (skl_plane_check_fb
++	 * rejects it), so the portrait output fails every atomic commit
++	 * after resume. Keep CCS out of this plane's IN_FORMATS so the
++	 * compositor picks a Y-tiled surface instead.
++	 */
++	if (dmi_match(DMI_PRODUCT_NAME, "82H0") &&
++	    is_ccs_modifier(modifier))
++		return false;
++
+ 	switch (modifier) {
+ 	case DRM_FORMAT_MOD_LINEAR:
+ 	case I915_FORMAT_MOD_X_TILED:
+ 	case I915_FORMAT_MOD_Y_TILED:
 -- 
 2.43.0

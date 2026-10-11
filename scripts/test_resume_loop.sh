@@ -8,8 +8,8 @@
 # Executes repeated RTC-wake sleep cycles and verifies display engine health:
 # - Tests S3 / S0ix sleep via rtcwake
 # - Checks dmesg for i915 pipe freeze, FIFO underrun, or GPU hang
-# - Checks lenovo_d330_fix suspend/resume breadcrumbs (banner only; the PPS
-#   clamp is delivered by the Option 2 kernel patch, not this module)
+# - Checks lenovo_d330_fix suspend/resume breadcrumbs (banner only; the real
+#   fix is the Option 2 kernel patch, not this module)
 # - Verifies DRM connector status post-resume
 # ==============================================================================
 
@@ -138,7 +138,7 @@ for ((i = 1; i <= CYCLES; i++)); do
     # Inspect kernel log since wake
     new_dmesg=$(dmesg | tail -n "+$((dmesg_pre + 1))")
     cycle_errors=$(echo "$new_dmesg" | grep -Ei "pipe .* underrun|gpu hang|drm:.*error|i915.*timed out" || true)
-    timing_logs=$(echo "$new_dmesg" | grep -Ei "lenovo_d330_fix|Enforcing TCON" || true)
+    timing_logs=$(echo "$new_dmesg" | grep -Ei "lenovo_d330_fix" || true)
 
     if [ -n "$timing_logs" ]; then
         echo "    [+] Quirk Driver Action:" | tee -a "$LOG_FILE"

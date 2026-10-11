@@ -14,13 +14,13 @@ This directory contains the patches, out-of-tree DKMS module, and configuration 
 2. **Standalone DKMS Package (`dkms/lenovo-d330-fix/`)**:
    - Out-of-tree kernel module (`lenovo_d330_fix.ko`) for distribution kernels (Ubuntu, Mint, Debian, Arch, Fedora).
    - Verifies the DMI platform match and prints honest suspend/resume breadcrumbs (banner only).
-   - Does NOT enforce a TCON discharge delay: there is no PM notifier event between panel power-off and panel power-on, so the module cannot clamp PPS timing. The 600 ms clamp is delivered by the optional kernel patch (Option 2).
+   - Does NOT fix the display: the DRM fix (stop advertising CCS on `82H0`) lives in the kernel driver and is delivered by the optional kernel patch (Option 2). This module only prints breadcrumbs.
    - `power_cycle_delay_ms` is retained as a no-op for compatibility only; changing it has no effect.
 
 3. **System Configuration Profiles**:
    - `dkms/etc/modprobe.d/lenovo-d330-i915.conf`: Disables PSR and FBC on Gemini Lake Refresh UHD 600 to prevent package C-state pipe lockups.
    - `dkms/etc/udev/hwdb.d/61-lenovo-d330-sensor.hwdb`: Calibrates Bosch `BOSC0200` accelerometer mount matrix (`0, 1, 0; -1, 0, 0; 0, 0, 1`) to match logical orientation.
-   - `dkms/etc/systemd/system/`: the echo-only DKMS resume service unit was removed in phase 34 (it only logged connector status, no real recovery; display resume is handled by i915 params + the optional kernel clamp patch).
+   - `dkms/etc/systemd/system/`: the echo-only DKMS resume service unit was removed in phase 34 (it only logged connector status, no real recovery; display resume is handled by i915 params + the optional kernel patch).
 
 4. **Automation Scripts**:
    - `scripts/install_dkms.sh`: Automated installer and uninstaller (`--install`, `--uninstall`, `--dry-run`).

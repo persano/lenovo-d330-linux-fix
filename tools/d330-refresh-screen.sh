@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Lenovo IdeaPad D330-10IGL Emergency Screen Refresh Utility
-# Recovers from a display freeze, TCON electrical latch-up, or black screen.
+# Recovers from a display freeze or black screen.
 # Can be bound to a keyboard shortcut or invoked from SSH / TTY.
 #
 # Session coverage: KDE/KWin Wayland (kscreen-doctor), wlroots Wayland

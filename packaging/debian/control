@@ -12,6 +12,6 @@ Depends: ${misc:Depends}, dkms, tlp, pipewire, libinput-tools, python3
 Recommends: iio-sensor-proxy, v4l2loopback-dkms, thermald, earlyoom, systemd-zram-generator, vainfo, libglib2.0-bin, desktop-file-utils
 Description: Hardware parity and screen freeze fix for Lenovo IdeaPad D330-10IGL
  Complete hardware integration package for Lenovo IdeaPad D330-10IGL
- (Type 82H0, 81MD, 81H3). Includes i915 TCON power sequence delay,
+ (Type 82H0, 81MD, 81H3). Includes i915 display resume fix (no CCS on 82H0),
  Goodix touch calibration, ALSA UCM2 audio profiles, tablet dock daemon,
  low-battery hibernation daemon, and sensor hysteresis.

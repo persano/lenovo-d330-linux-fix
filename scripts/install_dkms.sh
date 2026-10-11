@@ -222,7 +222,7 @@ check_prerequisites() {
 }
 
 # ------------------------------------------------------------------------------
-# run_kernel_src_step: optional Option 2 clamp-patch step (Phase 34).
+# run_kernel_src_step: optional Option 2 kernel-patch step (Phase 34).
 #
 # Applies patches/d330_display_resume_fix.patch to an operator-supplied kernel
 # source tree. Gated behind `patch -p1 --dry-run`: on stock kernels the hunk
@@ -235,11 +235,11 @@ run_kernel_src_step() {
     local patch_file="${REPO_ROOT}/patches/d330_display_resume_fix.patch"
 
     if [ ! -d "$kernel_src" ]; then
-        log_warn "--kernel-src '$kernel_src' is not a directory; skipping clamp patch."
+        log_warn "--kernel-src '$kernel_src' is not a directory; skipping display patch."
         return 0
     fi
     if [ ! -f "$patch_file" ]; then
-        log_warn "clamp patch not found at '$patch_file'; skipping."
+        log_warn "display patch not found at '$patch_file'; skipping."
         return 0
     fi
 
@@ -252,42 +252,42 @@ run_kernel_src_step() {
         looks_like_kernel=true
     fi
     if [ "$looks_like_kernel" != true ]; then
-        log_warn "'$kernel_src' does not look like a kernel source tree (no Kconfig / VERSION Makefile); skipping clamp patch."
+        log_warn "'$kernel_src' does not look like a kernel source tree (no Kconfig / VERSION Makefile); skipping display patch."
         return 0
     fi
 
     if ! command -v patch >/dev/null 2>&1; then
-        log_warn "'patch' is not installed; skipping clamp patch."
+        log_warn "'patch' is not installed; skipping display patch."
         return 0
     fi
 
-    log_info "Probing clamp patch against kernel tree '$kernel_src' (patch -p1 --dry-run)..."
+    log_info "Probing display patch against kernel tree '$kernel_src' (patch -p1 --dry-run)..."
     local dry_rc=0
-    # WR-04: no --forward here -- with it, an already-clamped tree reports
-    # "Skipping patch" and returns non-zero, producing a false "clamp NOT
+    # WR-04: no --forward here -- with it, an already-patched tree reports
+    # "Skipping patch" and returns non-zero, producing a false "fix NOT
     # delivered" warning. Plain --dry-run only gates on context applicability.
     patch -p1 -d "$kernel_src" --dry-run --batch < "$patch_file" >/dev/null 2>&1 || dry_rc=$?
 
     if [ "$dry_rc" -ne 0 ]; then
-        log_warn "Clamp patch does NOT apply to '$kernel_src' (context mismatch; rc=$dry_rc)."
-        log_warn "The running kernel does not match the patch context, so the 600 ms PPS clamp is NOT delivered."
+        log_warn "Display patch does NOT apply to '$kernel_src' (context mismatch; rc=$dry_rc)."
+        log_warn "The running kernel does not match the patch context, so the display fix (do not advertise CCS on 82H0) is NOT delivered."
         log_warn "Option 2 must be applied manually after adapting the hunks to your kernel tree; install continues."
         return 0
     fi
 
-    log_ok "Clamp patch dry-run succeeded against '$kernel_src'."
+    log_ok "Display patch dry-run succeeded against '$kernel_src'."
     if [ "$DRY_RUN" = true ]; then
-        log_info "[DRY-RUN] Would apply clamp patch to '$kernel_src'; skipping real apply."
+        log_info "[DRY-RUN] Would apply display patch to '$kernel_src'; skipping real apply."
         return 0
     fi
 
     local apply_rc=0
     patch -p1 -d "$kernel_src" --forward --batch < "$patch_file" >/dev/null 2>&1 || apply_rc=$?
     if [ "$apply_rc" -ne 0 ]; then
-        log_warn "Clamp patch real apply failed (rc=$apply_rc); skipping. Install continues."
+        log_warn "Display patch real apply failed (rc=$apply_rc); skipping. Install continues."
         return 0
     fi
-    log_ok "Applied clamp patch to '$kernel_src'."
+    log_ok "Applied display patch to '$kernel_src'."
     log_warn "The running kernel is unaffected until you rebuild and reinstall it, then reboot."
     return 0
 }
@@ -346,11 +346,11 @@ do_install() {
         log_ok "DKMS module installed successfully."
     fi
 
-    # 2b. Optional Option 2 clamp patch (Phase 34): only when --kernel-src given.
+    # 2b. Optional Option 2 display patch (Phase 34): only when --kernel-src given.
     if [ -n "${KERNEL_SRC:-}" ]; then
         run_kernel_src_step "$KERNEL_SRC"
     else
-        log_info "Clamp patch not applied (no --kernel-src given); Option 1 ships the DMI banner module only."
+        log_info "Display patch not applied (no --kernel-src given); Option 1 ships the DMI banner module only."
     fi
 
     # 3. Deploy modprobe configurations (graphics, audio, power)

@@ -23,7 +23,7 @@ Suggests:       desktop-file-utils
 
 %description
 Complete hardware integration package for Lenovo IdeaPad D330-10IGL
-(Type 82H0, 81MD, 81H3). Includes i915 TCON power sequence delay,
+(Type 82H0, 81MD, 81H3). Includes i915 display resume fix (no CCS on 82H0),
 Goodix touch calibration, ALSA UCM2 audio profiles, tablet dock daemon,
 low-battery hibernation daemon, and sensor hysteresis.
 

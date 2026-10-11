@@ -124,6 +124,15 @@ In upstream Linux (`drivers/gpu/drm/drm_panel_orientation_quirks.c`):
 - Furthermore, orientation quirks only fix userspace orientation; they do **not** fix the underlying panel power cycle timing (`panel_power_cycle_delay`) or MIPI DSI / eDP reset sequencing after suspend.
 
 ## 4. Root Cause Hypotheses for Engineering Phase
+
+> **Superseded (pre-tracing hypotheses).** On-device work found the fixed cause
+> is a DRM issue (i915 rejects a render-compressed CCS framebuffer combined with
+> 90/270 rotation), and the resume path already runs the full DSI power sequence
+> with a 500 ms VBT power cycle. See
+> [`DISPLAY_RESUME_CCS_MODIFIER.md`](DISPLAY_RESUME_CCS_MODIFIER.md) and
+> [`DSI_RESUME_TRACE_ANALYSIS.md`](DSI_RESUME_TRACE_ANALYSIS.md). Kept as prior
+> art.
+
 1. **Panel Power Cycle Timing Delay (t11_t12)**: The LCD timing controller requires a mandatory minimum power-off delay (typically 500ms) before re-applying VDD. Linux `i915` defaults or VBT values may be too short (e.g. 200ms), causing TCON lockup on fast resume.
 2. **Backlight PWM / GPIO Enable Sequencing**: Windows driver (`igdkmd64.sys`) controls backlight enable via GPIO lines or specific PWM sequences before VDD or in strict coordination with panel reset. Linux i915 may sequence backlight enable prior to stable panel link training.
 3. **Intel S0ix Modern Standby vs S3**: Lenovo BIOS defaults to Modern Standby (PEP / S0ix). Linux kernel suspend defaults may trigger partial S3 / S0ix mismatch, leaving the display controller rails unpowered upon resume.

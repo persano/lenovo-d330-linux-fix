@@ -4,7 +4,7 @@
 [![Hardware: Lenovo D330-10IGL](https://img.shields.io/badge/Hardware-Lenovo%20D330--10IGL%20(82H0)-green.svg)](docs/windows_analysis/RESUME_SEQUENCE.md)
 [![SoC: Intel Gemini Lake Refresh](https://img.shields.io/badge/SoC-Intel%20Gemini%20Lake%20Refresh-orange.svg)](docs/research/COMMUNITY_FINDINGS.md)
 
-Production-grade Linux display resume fix, panel power sequencing (PPS) quirk, and orientation calibration for the **Lenovo IdeaPad D330-10IGL** (Machine Type `82H0`, Intel Celeron N4020 / N4120, Intel UHD Graphics 600) and related D330-10IGM models (`81H3`, `81MD`).
+Production-grade Linux display resume fix, panel orientation, and power parity for the **Lenovo IdeaPad D330-10IGL** (Machine Type `82H0`, Intel Celeron N4020 / N4120, Intel UHD Graphics 600) and related D330-10IGM models (`81H3`, `81MD`).
 
 ---
 
@@ -17,13 +17,32 @@ Under standard Linux distributions (Ubuntu, Debian, Linux Mint, Fedora, Arch), t
 
 ---
 
-## Root Cause Discovered
+## Root Cause
 
-Reverse engineering of the official Lenovo Windows 10 driver baseline (`igdkmd64.sys`) and comparison against the Linux kernel `intel_pps.c` driver revealed:
-- **TCON Charge Dissipation ($t_{11}\text{-}t_{12}$)**: The internal panel Timing Controller requires a mandatory minimum power-down duration of **500 ms** before $V_{\text{DD}}$ can be safely re-asserted.
-- **Windows Enforces 500 ms**: The Windows OEM INF programs `PanelPowerCycleDelay = 500 ms`.
-- **Linux Defaults to 200 ms**: Linux `intel_pps.c` fell back to 200 ms, triggering electrical latch-up in the TCON during rapid suspend/resume.
-- **Gemini Lake PSR Lockup**: Hardware Panel Self-Refresh (PSR) causes Gen9 display pipe lockups upon exiting package C-states.
+The D330-10IGL has a natively portrait 800x1280 **MIPI-DSI** panel that userspace
+scans out rotated 90/270 degrees. On-device tracing found two separate issues
+(full write-up: `docs/research/DISPLAY_RESUME_CCS_MODIFIER.md` and
+`docs/research/DSI_RESUME_TRACE_ANALYSIS.md`):
+
+1. **Fixed: CCS framebuffer rejected with rotation.** i915 rejects a
+   render-compressed (CCS) scanout framebuffer combined with 90/270 rotation in
+   `skl_plane_check_fb()` (`RC support only with 0/180 degree rotation`), so
+   every atomic commit that installs a rotated, CCS-backed primary plane fails
+   with `-EINVAL`. KWin picks a CCS framebuffer, so its resume commit fails and
+   the display stays black. Not advertising CCS on `82H0`
+   (`skl_universal_plane.c`) makes userspace fall back to a Y-tiled surface and
+   the commit succeeds.
+2. **Open: the DSI panel can still come back lit but blank after resume.**
+   i915 runs the full DSI power-on sequence on resume and every host register
+   (DSI link, panel power, PLL, CDCLK, PHY) is byte-identical to a working
+   state, so no host-side register write fixes it. A full i915 re-init (PCI
+   unbind/bind) restores the panel and ships as the fallback
+   `scripts/d330-display-reload.sh`.
+
+The older "500 ms TCON / `intel_pps.c` latch-up" theory is **disproven**: the
+panel is DSI (not eDP), the VBT already reports a 500 ms power cycle, and the
+PPS path is not involved. See the superseded note in
+`docs/windows_analysis/RESUME_SEQUENCE.md`.
 
 ---
 
@@ -31,8 +50,8 @@ Reverse engineering of the official Lenovo Windows 10 driver baseline (`igdkmd64
 
 | Deliverable | Path | Description |
 | :--- | :--- | :--- |
-| **Unified Kernel Patch** | [`patches/d330_display_resume_fix.patch`](patches/d330_display_resume_fix.patch) | DMI-matched clamp of `panel_power_cycle_delay` to $\ge 600\text{ ms}$ in `intel_pps.c` (orientation comes from the boot cmdline, so this no longer patches `drm_panel_orientation_quirks.c`). |
-| **Standalone DKMS Module** | [`patches/dkms/lenovo-d330-fix/`](patches/dkms/lenovo-d330-fix/) | Out-of-tree kernel module (`lenovo_d330_fix.ko`) that prints a DMI-matched banner/breadcrumb; it does NOT enforce TCON discharge timing — the Option 2 kernel clamp patch delivers that. |
+| **Unified Kernel Patch** | [`patches/d330_display_resume_fix.patch`](patches/d330_display_resume_fix.patch) | DMI-matched (`82H0`) stop of CCS modifier advertisement in `skl_universal_plane.c`, so a rotated 90/270 scanout falls back to a Y-tiled surface and the resume commit succeeds (orientation comes from the boot cmdline, so this does not patch `drm_panel_orientation_quirks.c`). |
+| **Standalone DKMS Module** | [`patches/dkms/lenovo-d330-fix/`](patches/dkms/lenovo-d330-fix/) | Out-of-tree kernel module (`lenovo_d330_fix.ko`) that prints a DMI-matched banner/breadcrumb only; it does not touch the display driver, so the more complete fix is the Option 2 kernel patch. |
 | **Touchscreen & Touchpad Calibration** | [`patches/touchscreen/`](patches/touchscreen/) & [`patches/touchpad_pen/`](patches/touchpad_pen/) | Goodix I2C touch matrix (identity on Wayland, where the compositor applies the panel orientation; the 90-deg transform is X11-only), libinput model quirks for palm/pressure, Active Pen thresholds, and sleep unbind/bind recovery hook. |
 | **Tablet Mode Daemon** | [`patches/dock/`](patches/dock/) & [`tools/d330-tablet-daemon.py`](tools/d330-tablet-daemon.py) | Intel HID switch handler managing orientation lock, touchpad gate, and virtual keyboard on dock/undock. |
 | **Audio UCM2 Profiles** | [`patches/audio/ucm2/`](patches/audio/ucm2/) | ALSA UCM2 profiles fixing SOF DSP audio routing, headphone jack auto-mute, and internal digital microphones. |
@@ -68,16 +87,15 @@ sudo ./scripts/install_dkms.sh --install
 Reboot the tablet. Option 1 installs an out-of-tree DKMS module that verifies
 the DMI platform match and prints a breadcrumb in `dmesg`, together with the
 `i915 enable_psr=0 enable_fbc=0` parameters and the
-`fbcon=rotate:1 video=efifb:nobgrt` orientation / logo fixes. It does
-**not include** the 600 ms panel power-cycle clamp: no PM notifier event runs
-between panel power-off and panel power-on, so the module cannot enforce TCON
-discharge timing.
+`fbcon=rotate:1 video=efifb:nobgrt` orientation / logo fixes. It does **not include
+the kernel fix**: the CCS/rotation rejection lives in the DRM driver
+(`skl_universal_plane.c`), which an out-of-tree module cannot change, so
+Option 1 alone does not fix the black screen.
 
-### Option 2: Apply the Kernel Clamp Patch (For Custom / Distribution Kernels)
+### Option 2: Apply the Kernel Patch (For Custom / Distribution Kernels)
 
 Option 2 applies `patches/d330_display_resume_fix.patch` to a kernel source
-tree; this is what delivers the in-driver PPS power-cycle clamp, automated via
-the installer:
+tree; this is the real fix, automated via the installer:
 
 ```bash
 # --kernel-src points at your kernel source tree. The installer dry-runs the
@@ -87,9 +105,9 @@ sudo ./scripts/install_dkms.sh --install --kernel-src /usr/src/linux
 
 The patch is gated by `patch -p1 --dry-run`. On stock mainline kernels the hunk
 context typically does not match, so the installer prints a `[WARN]` and skips
-the apply; the clamp must then be adapted and applied manually, and the kernel
-rebuilt and rebooted before it takes effect. Option 1 alone does not fix a
-latch-up panel.
+the apply; the patch must then be adapted and applied manually, and the kernel
+rebuilt and rebooted before it takes effect. Option 1 alone does not fix the
+black screen.
 
 ---
 

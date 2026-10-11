@@ -1,7 +1,7 @@
 # Kubuntu Install Steps for the Lenovo IdeaPad D330-10IGL
 
 A copy-paste procedure to bring a fresh **Kubuntu 26.04** install on the D330
-(`82H0`, `81MD`, `81H3`) to full parity, including the screen latch-up fix,
+(`82H0`, `81MD`, `81H3`) to full parity, including the screen-resume fix,
 touch/touchpad under **Wayland**, and the RNNoise mic denoiser.
 
 This is the walkthrough version of `docs/DISTRO_INSTALL_GUIDE.md`; that file
@@ -11,14 +11,17 @@ covers the other distros and the ISO-remaster path.
 
 ## What this gets you
 
-- `patches/d330_display_resume_fix.patch`: the real fix, a 600 ms TCON
-  power-sequence clamp in `drivers/gpu/drm/i915/display/intel_pps.c`.
+- `patches/d330_display_resume_fix.patch`: the real fix, a DMI-gated (`82H0`)
+  stop of render-compressed (CCS) modifier advertisement in
+  `drivers/gpu/drm/i915/display/skl_universal_plane.c`, so a rotated 90/270
+  scanout falls back to a Y-tiled surface and the resume commit succeeds.
 - The standalone DKMS module, modprobe `i915.enable_psr=0 enable_fbc=0`, boot
   orientation, udev/hwdb, libinput quirks, systemd units, TLP/thermal/zram,
   PipeWire DSP and the RNNoise mic denoiser.
 
-What the installer does **not** do: enforce the 600 ms clamp. That requires the
-kernel patch. The DKMS module is only a DMI-matched diagnostic banner.
+What the installer does **not** do: apply the kernel patch. That has to be in
+your booted kernel (Option A or B below). The DKMS module is only a DMI-matched
+diagnostic banner.
 
 ---
 
@@ -68,8 +71,8 @@ you have no network during install; you can build it later with
 
 ## 4. Apply the display fix
 
-The fix is a 600 ms TCON power-sequence clamp in
-`drivers/gpu/drm/i915/display/intel_pps.c`. Pick one option.
+The fix stops i915 advertising CCS on `82H0` in
+`drivers/gpu/drm/i915/display/skl_universal_plane.c`. Pick one option.
 
 ### Option A (recommended on the tablet): download the prebuilt kernel
 
@@ -97,7 +100,7 @@ lsb_release -cs   # your Ubuntu codename, e.g. questing
 
 ### Option B: build the kernel on the machine
 
-This also stops the panel latching dark after suspend. Run it from a scratch
+This puts the fix directly in the booted kernel. Run it from a scratch
 directory and use absolute paths: `apt source` extracts the kernel tree next to
 wherever you are, so a relative `../lenovo-d330-linux-fix/...` patch path
 normally points at nothing and `patch` fails to find the file.
@@ -147,17 +150,18 @@ patch -p1 --batch < "$PATCH"
 
 # Both greps must print a hit. If they do not, the kernel will NOT contain the
 # fix even though it is still named -d330-fix.
-grep -R "d330_pps_quirk" drivers/gpu/drm/i915/display/intel_pps.c
-grep -R "Lenovo D330 PPS" drivers/gpu/drm/i915/display/intel_pps.c
+grep -n 'Lenovo IdeaPad D330-10IGL' drivers/gpu/drm/i915/display/skl_universal_plane.c
+grep -n '82H0' drivers/gpu/drm/i915/display/skl_universal_plane.c
 ```
 
 - **Dry-run fails (context mismatch on a very new kernel):** do **not** build.
   `patch` leaves the rejected hunks in a `.rej` file next to the target. Open
-  `drivers/gpu/drm/i915/display/intel_pps.c`, add `#include <linux/dmi.h>` if it
-  is missing, add the `d330_pps_quirk[]` DMI table, and in the function that
-  assigns `intel_dp->pps.panel_power_cycle_delay` clamp that value to `600` (it
-  is in milliseconds) when `dmi_check_system(d330_pps_quirk)` matches. Then
-  re-run the two greps above.
+  `drivers/gpu/drm/i915/display/skl_universal_plane.c`, add
+  `#include <linux/dmi.h>` if it is missing, and at the top of
+  `skl_plane_format_mod_supported()` add the early return
+  `if (dmi_match(DMI_PRODUCT_NAME, "82H0") && intel_fb_is_ccs_modifier(modifier)) return false;`
+  (kernels before ~6.0 call the helper `is_ccs_modifier()`). Then re-run the two
+  greps above.
 - **`cd: too many arguments` (step 4b):** the `${SRC_PKG}-*` glob matched more
   than one extracted tree. Run `ls -d */` in `$WORK` and `cd` into the freshly
   extracted `${SRC_PKG}-*` directory by name.
@@ -205,21 +209,21 @@ dkms status -m lenovo-d330-fix -v 1.0.0
 # expect: lenovo-d330-fix/1.0.0, <kernel>, x86_64: installed
 ```
 
-**Display fix (the important one):** a rebuilt kernel named `-d330-fix` is not
-proof the patch is in, so check the DMI match and the driver's own log lines.
+**Display fix (the important one):** the CCS fix is silent at runtime, so it
+does not show up in `dmesg`. A rebuilt kernel named `-d330-fix` is not proof it
+is in; the check is that step 4c's source greps hit and that the failing commit
+is gone.
 ```bash
-cat /sys/class/dmi/id/product_name /sys/class/dmi/id/product_version
-# the patch matches product_name containing "82H0" or product_version containing
-# "Lenovo ideapad D330-10IGL"; if neither matches, the quirk never runs
-uname -r                                     # must end in -d330-fix
-dmesg | grep -i "Lenovo D330 PPS"            # proves the DMI match + patch are live
-dmesg | grep -i "clamping power-cycle"       # the 600 ms clamp was applied
-dmesg | grep lenovo_d330_fix                 # DKMS banner module (Option 1)
+uname -r                                             # must end in -d330-fix
+cat /sys/class/dmi/id/product_name                   # the patch matches "82H0"
+dmesg | grep -iE 'RC support only|skl_plane_check'   # expect NO output
+dmesg | grep lenovo_d330_fix                         # DKMS banner module (Option 1)
 sudo ./scripts/test_resume_loop.sh --cycles 5 --sleep 10
 ```
-If the `Lenovo D330 PPS` / `clamping power-cycle` lines are absent, the kernel
-booted without the patch: go back to step 4 and make sure the two greps printed
-hits before the build.
+Before the fix the atomic commit fails and `dmesg` (with `drm.debug` on) shows
+`RC support only with 0/180 degree rotation`; after the fix that line is gone.
+If it is still there, the kernel booted without the patch: go back to step 4 and
+make sure the two greps printed hits before the build.
 
 **Touchscreen / touchpad:**
 ```bash
@@ -254,7 +258,7 @@ wpctl status | grep -i "Lenovo D330 Clean"
 
 ## 8. Diagnose the screen fix over SSH
 
-If the panel latches dark after suspend/resume you cannot read the logs on the
+If the panel comes back dark after suspend/resume you cannot read the logs on the
 tablet itself, so capture them from another machine over SSH. Run this on the
 tablet **before** the screen test:
 
@@ -275,7 +279,7 @@ From the debugging machine, after a failed resume:
 
 ```bash
 ssh <user>@<tablet-ip> 'uname -r; \
-  sudo dmesg | grep -iE "Lenovo D330 PPS"; \
+  sudo dmesg | grep -iE "RC support only|skl_plane_check"; \
   sudo dmesg -T | tail -300; \
   grep -H . /sys/class/drm/*/status; \
   for b in /sys/class/backlight/*; do echo "$b=$(cat $b/brightness)/$(cat $b/max_brightness)"; done'
@@ -290,13 +294,24 @@ ssh <user>@<tablet-ip> 'sudo journalctl -b -k --no-pager | tail -400'
 
 ## 9. Recover a dark screen without rebooting
 
-`/usr/local/bin/d330-refresh-screen` cycles the panel output to recover a
-latched-dark screen. It works on KDE/KWin Wayland (`kscreen-doctor`), wlroots
-(`wlr-randr`) and X11 (`xrandr`); this is the community
-`lucasgabmoreno/linuxmint_lenovod330` workaround made session-aware (its
-original was X11-only and does nothing on Wayland).
+If the panel still comes back blank after a resume, the reliable recovery is a
+full i915 re-init: a PCI unbind/bind of the GPU, which re-runs the panel init.
 
-Keep the deployed copy current:
+```bash
+sudo ./scripts/d330-display-reload.sh
+```
+
+It is inherently dirty: the running Wayland session cannot survive the GPU
+teardown (its DRM fd dies with the device), so the display manager restarts and
+you log back in. That is the trade for recovering without a reboot.
+
+The lighter `/usr/local/bin/d330-refresh-screen` only re-drives an already-live
+display server (`kscreen-doctor` on KDE/KWin Wayland, `wlr-randr`, `xrandr`).
+It cannot revive a panel the kernel failed to bring up, so it usually does
+nothing for this failure; it is kept for the community X11 freeze case it was
+written for.
+
+Keep the deployed copies current:
 
 ```bash
 cd ~/lenovo-d330-linux-fix && git pull --ff-only
@@ -320,7 +335,7 @@ server; it cannot revive a pipe the kernel failed to power on.
 
 ## Notes and troubleshooting
 
-- **Kernel updates:** any `apt upgrade` that replaces the kernel drops the clamp.
+- **Kernel updates:** any `apt upgrade` that replaces the kernel drops the fix.
   Rebuild the patched kernel or pin the working version. The DKMS module itself
   is rebuilt automatically by DKMS.
 - **Installer stopped at `dkms build` (e.g. "BUILD_EXCLUSIVE ... does not match
@@ -364,12 +379,14 @@ server; it cannot revive a pipe the kernel failed to power on.
   `ls /lib/modules` and reboot; if it persists,
   `sudo apt install --reinstall "linux-modules-$(uname -r)"`.
 - **Screen still dark after resume, even though `uname -r` ends in `-d330-fix`:**
-  the patch is not in the booted kernel. A rebuild is named `-d330-fix` whether
-  or not the diff applied, so confirm `dmesg | grep -i "Lenovo D330 PPS"` is
-  non-empty and that step 4c's three greps printed hits. If DMI does not match
-  (`"82H0"` / `"Lenovo ideapad D330-10IGL"`), the quirk is skipped by design.
-- **Recover a screen that latched dark:** run `/usr/local/bin/d330-refresh-screen`;
-  see section 9. It re-drives a live display server and cannot revive a pipe the
-  kernel failed to power on.
+  either the patch is not in the booted kernel, or you hit the still-open DSI
+  panel issue. A rebuild is named `-d330-fix` whether or not the diff applied,
+  so confirm step 4c's two greps printed hits before the build, and that
+  `/sys/class/dmi/id/product_name` is `82H0` (the patch is gated on it). The CCS
+  fix is silent in `dmesg`; see `docs/research/DISPLAY_RESUME_CCS_MODIFIER.md`.
+- **Recover a screen that came back dark:** run
+  `sudo ./scripts/d330-display-reload.sh`; see section 9. It does a full i915
+  re-init and the session restarts. `d330-refresh-screen` only re-drives a live
+  display server and does not fix this.
 - **Uninstall everything:** `sudo ./scripts/install_dkms.sh --uninstall`
   (removes configs, units and the deployed files listed in the manifest).

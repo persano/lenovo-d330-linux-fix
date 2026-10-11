@@ -217,17 +217,17 @@ case_readme_truth() {
     expect_file_out "dmesg | grep lenovo_d330_fix" "$README"
     expect_regex_file_out "Option 1" "$README"
     expect_regex_file_out "Option 2" "$README"
-    # WR-05: the DKMS-module deliverable row must explicitly disclaim TCON/clamp
-    # enforcement (T-34-03). Extract the row, require the negation, and ban the
-    # old positive-advertising phrasings so SC3 truth is fully enforced.
+    # WR-05: the DKMS-module deliverable row must explicitly disclaim that it
+    # delivers the display fix (T-34-03). Extract the row, require the negation,
+    # and ban the old positive-advertising phrasings so SC3 truth is enforced.
     local modrow
     modrow=$(grep -iE 'lenovo_d330_fix\.ko' "$README" | head -1 || true)
     if [ -z "$modrow" ]; then
         echo "    [detail] DKMS-module deliverable row not found in README"
         CASE_FAIL=1
     else
-        if ! echo "$modrow" | grep -Eiq 'does NOT enforce|does not enforce'; then
-            echo "    [detail] DKMS-module row does not state it does NOT enforce TCON timing"
+        if ! echo "$modrow" | grep -Eiq 'does not (enforce|touch|fix|include|change)'; then
+            echo "    [detail] DKMS-module row does not disclaim that it delivers the fix"
             CASE_FAIL=1
         fi
         if echo "$modrow" | grep -Eiq 'to enforce safe TCON|hooking kernel PM events to enforce|enforces? a 600|enforces .*discharge delay'; then

@@ -16,7 +16,7 @@ Works on all distributions with kernel headers:
 ```bash
 sudo ./scripts/install_dkms.sh --install
 ```
-The DKMS `lenovo_d330_fix.ko` module is a DMI-matched diagnostic banner; it does not enforce the discharge delay. modprobe disables PSR/FBC, and the 600 ms clamp comes from the Option 2 kernel patch (`patches/d330_display_resume_fix.patch`).
+The DKMS `lenovo_d330_fix.ko` module is a DMI-matched diagnostic banner; it does not change the display driver. modprobe disables PSR/FBC, and the real fix (stop advertising CCS on `82H0` so a rotated scanout falls back to Y-tiled) comes from the Option 2 kernel patch (`patches/d330_display_resume_fix.patch`).
 
 ### 2. Building Patched Kernel `.deb` (Ubuntu / Linux Mint / Debian)
 We will compile patched kernel packages (`linux-image-*.deb` and `linux-headers-*.deb`). Run this in a scratch directory, not inside the repo, and reference the patch by absolute path:
