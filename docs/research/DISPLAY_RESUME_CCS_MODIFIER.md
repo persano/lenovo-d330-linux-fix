@@ -104,10 +104,15 @@ failing resume against a working state produced by a full driver reload:
   and skips the modeset" theory is wrong.
 - **Reload recovers.** After a black resume, `echo 0000:00:02.0 >
   /sys/bus/pci/drivers/i915/unbind; echo 0000:00:02.0 > .../bind` re-inits the
-  display and the panel comes back (repeatable). The write to `unbind` logs a
-  one-off `drm_framebuffer_cleanup` oops (fbcon had framebuffers pinned); it is
-  non-fatal and the rebind completes. This is the only reliable recovery found;
-  shipped as `scripts/d330-display-reload.sh`.
+  display and the panel comes back (repeatable). This is the only reliable
+  recovery found; shipped as `scripts/d330-display-reload.sh` and, automatically
+  on resume, as the `system-sleep` hook below. The reload is inherently dirty:
+  `i915_pci_remove` -> `drm_mode_config_cleanup` warns on the framebuffer the
+  running compositor still holds (`drm_framebuffer_free`/`cleanup`), and the DRM
+  device re-registers on a new card node each time. Releasing the framebuffer
+  console (`vtcon1`) first does not remove the warning -- the reference is held
+  by the compositor, not fbcon -- and no lighter recovery works (see disproven
+  theories).
 - **Registers are identical.** Reading the DSI link block (`0x6b000`/`0x6b8xx`),
   `DEVICE_READY`, `INTR_STAT`, the panel regs (`0x160018`, `0x160020`,
   `0x160054`, `0x138090`), the PPS (`0xc7204`), `CDCLK_CTL` (`0x46000`) and the
@@ -150,6 +155,9 @@ it.
   panel state does not survive suspend even when i915 leaves it alone.
 - Adding a DMI-gated `msleep(300)` after `MIPI_SEQ_POWER_ON` (vs the ~1 ms
   `panel_on_delay`) did not help.
+- Keeping the display power well / DC on across suspend
+  (`i915.disable_power_well=1 i915.enable_dc=0`) still resumes black, so
+  disabling i915's display power management does not save the panel either.
 
 ### vlv_dsi.c experiments tried on-device (none fixed it)
 
