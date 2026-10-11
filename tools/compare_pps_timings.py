@@ -3,6 +3,8 @@
 tools/compare_pps_timings.py
 
 Differential State Machine & Timing Analyzer for Intel PPS (Panel Power Sequencing)
+NOTE: the PPS timing theory was disproven and is not the delivered fix, this tool is
+kept as prior art for comparing Windows and Linux panel power sequencing values.
 Compares Windows Driver (igdkmd64.sys) vs Upstream Linux i915 (intel_pps.c)
 Target: Lenovo IdeaPad D330-10IGL (Type 82H0, UHD 600 GLK-R, 800x1280 IVO/BOE Panel)
 
