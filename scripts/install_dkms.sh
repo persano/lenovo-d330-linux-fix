@@ -115,6 +115,7 @@ deploy_manifest() {
 /etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf	file-optional
 /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh	exec
 /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh	exec
+/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh	exec
 /etc/sysctl.d/99-lenovo-d330-zram.conf	file
 /etc/systemd/zram-generator.conf	file
 /etc/default/grub.d/50-lenovo-d330-boot.cfg	grub-snippet
@@ -438,6 +439,9 @@ do_install() {
         [ -f "${REPO_ROOT}/patches/wireless/etc/systemd/system-sleep/lenovo-d330-wifi-resume.sh" ] && \
             cp "${REPO_ROOT}/patches/wireless/etc/systemd/system-sleep/lenovo-d330-wifi-resume.sh" /usr/lib/systemd/system-sleep/ && \
             chmod +x /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh
+        [ -f "${REPO_ROOT}/patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh" ] && \
+            cp "${REPO_ROOT}/patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh" /usr/lib/systemd/system-sleep/ && \
+            chmod +x /usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh
 
         # Deploy sysctl and zram generator configs
         mkdir -p /etc/sysctl.d /etc/systemd
@@ -860,6 +864,7 @@ do_uninstall() {
         rm -f /etc/X11/xorg.conf.d/60-lenovo-d330-touchpad-pen.conf
         rm -f /usr/lib/systemd/system-sleep/lenovo-d330-touchscreen-resume.sh
         rm -f /usr/lib/systemd/system-sleep/lenovo-d330-wifi-resume.sh
+        rm -f /usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh
         rm -f /etc/sysctl.d/99-lenovo-d330-zram.conf
         rm -f /etc/systemd/zram-generator.conf
         # Track grub.d presence before removal (M1, review IN-05): a removed

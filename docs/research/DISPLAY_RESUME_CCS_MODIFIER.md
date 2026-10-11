@@ -236,9 +236,13 @@ GPIO 144/145/160 anywhere. Do **not** flash `G0CN14WW` on Linux.
   power/reset/DCS lines (VBT GPIO 144/145/160), which i915 never drives on GLK;
   the reload's probe path effectively power-cycles the display, which is what
   clears the state.
-- Fallback (kept as the working base): ship the reload recovery
-  (`scripts/d330-display-reload.sh`), e.g. as a `systemd` sleep hook or a manual
-  SSH/desktop action.
+- Fallback (kept as the working base): the reload recovery ships two ways --
+  `scripts/d330-display-reload.sh` for a manual/SSH run, and the resume hook
+  `patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh`
+  (installed to `/usr/lib/systemd/system-sleep/` by `scripts/install_dkms.sh`),
+  which runs the same i915 unbind/bind after every resume on `82H0`. The real
+  fix remains the kernel patch `patches/d330_display_resume_fix.patch`; the
+  reload is the fallback until a resume-path fix lands.
 - Try an upstream/mainline kernel in case GLK DSI resume is a fixed regression,
   and search i915/GitLab for GLK DSI resume reports.
 - KWin-side workaround: avoid the encoder disable/enable on resume
@@ -257,5 +261,8 @@ GPIO 144/145/160 anywhere. Do **not** flash `G0CN14WW` on Linux.
 - DRM debug: `echo 0xe > /sys/module/drm/parameters/debug`.
 - Raw MMIO dump: `intel_reg read --count=<decimal> <base>` (writes go to stderr);
   `intel_reg dump` mis-decodes GLK pipe regs as `0`.
+- Resume recovery: `scripts/d330-display-reload.sh` (manual), or the sleep hook
+  `patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh`
+  (installed by `scripts/install_dkms.sh`; runs the reload on every resume).
 - GOP extraction: `bios.bin` → `uefi_firmware` (parse flash descriptor, walk
   FV/FFS, dump `IntelGopDriver` compressed section) → carve PE32+ → capstone.
