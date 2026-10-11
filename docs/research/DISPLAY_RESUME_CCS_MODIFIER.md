@@ -1,11 +1,17 @@
 # Display resume on the Lenovo IdeaPad D330-10IGL (Gemini Lake, i915)
 
 Status: **one real bug fixed (CCS + rotation); the resume-specific panel-black
-failure is open but now understood as panel-side.** Instrumented on-device: the
-DSI `pre_enable` *does* run on resume, and every host register (DSI link, panel
-power, PLL, CDCLK, PHY) is byte-identical between the black resume state and a
-working state, so no host register write can fix it. A full i915 re-init (PCI
-unbind+bind) reliably restores the panel; kept as the fallback workaround
+failure is open.** Later `i915_reg_rw` tracing (`DSI_RESUME_TRACE_ANALYSIS.md`)
+refines the "panel-side" conclusion below: with no compositor running the resume
+issues no DSI writes at all yet the panel is still black, so the fault is in
+i915's resume and readout path for the DSI encoder. Instrumented on-device: the
+DSI `pre_enable` *does* run on resume (driven by the compositor's commit ~3 s
+after i915's own resume, which does not call it), it runs the **full** correct
+cold MIPI sequence including `DISPLAY_ON`/`BACKLIGHT_ON`, it drives the VBT
+GPIOs 144/145/160, and every host register (DSI link, panel power, PLL, CDCLK,
+PHY) is byte-identical between the black resume state and a working state, so no
+host register write can fix it. A full i915 re-init (PCI unbind+bind) reliably
+restores the panel; kept as the fallback workaround
 `scripts/d330-display-reload.sh`. Kubuntu 26.04 / KWin Wayland.
 
 ## Summary
@@ -130,11 +136,15 @@ failing resume against a working state produced by a full driver reload:
   `BACKLIGHT_OFF(7)`, `DISPLAY_OFF(4)`, `ASSERT_RESET(5)`, `POWER_OFF(11)`;
   resume sends `POWER_ON(10)`, `DEASSERT_RESET(1)`, `INIT_OTP(2)`,
   `DISPLAY_ON(3)`, `BACKLIGHT_ON(6)`; a working reload sends the same two
-  batches. Every sequence runs (`present=1`); `panel=0 bl=0` on every line
-  because on GLK i915 has **no panel-power / backlight GPIO** --
-  `intel_dsi_vbt_gpio_init()` sets `want_panel_gpio` only for
-  valleyview/cherryview, so `gpio_panel`/`gpio_backlight` are always NULL by
-  design.
+  batches. Every sequence runs (`present=1`). **Correction:** the earlier note
+  here ("i915 has no panel-power / backlight GPIO so `gpio_panel`/`gpio_backlight`
+  are always NULL") is misleading -- those `intel_dsi` fields are indeed NULL on
+  GLK (`intel_dsi_vbt_gpio_init()` sets `want_panel_gpio` only for
+  valleyview/cherryview), but the VBT **MIPI sequence elements** drive **GPIO 144**
+  (power), **145** (backlight) and **160** (reset/OTP) directly via
+  `mipi_exec_gpio()` -> `bxt_gpio_set_value()` -> `soc_gpio_set_value()`
+  (`D330GPIO` markers), with identical values on the resume and the working
+  reload. i915 *does* drive those pins on GLK.
 - **The only host difference is `glk_cold_boot`.** Resume reaches
   `intel_dsi_pre_enable()` with `glk_cold_boot=1` (so `intel_dsi_prepare()` runs
   *before* `intel_dsi_device_ready()`), a reload with `glk_cold_boot=0` (prepare
@@ -143,9 +153,28 @@ failing resume against a working state produced by a full driver reload:
 
 Conclusion: the host configures the panel identically whether it ends up black
 or lit. The failure is below the register layer -- most consistent with the
-panel being left in a state that only the panel power/reset/DCS init (re-run in
-full by the reload's probe path) clears. Host-side register patching cannot fix
-it.
+panel being left in a state that only the reload's full probe/init path clears.
+Host-side register patching cannot fix it.
+
+### The display core / power well is already power-cycled on every S3
+
+`i915_drm_suspend` -> `intel_display_power_suspend_late()` ->
+`intel_power_domains_suspend()` -> `bxt_display_core_uninit()` +
+`bxt_enable_dc9()`; resume -> `intel_display_power_resume_early()` ->
+`bxt_disable_dc9()` + `intel_power_domains_resume()` ->
+`intel_power_domains_init_hw(true)` -> `bxt_display_core_init()`. So "the resume
+does not reset the PHY / power well" is **false** -- it does, every S3. Forcing a
+probe-style full init instead (`intel_power_domains_init_hw(display, false)` on
+`82H0`) trips repeated `WARNING: display/intel_dmc.c:701 at
+assert_dmc_loaded+0x29b/0x470` and gives no panel.
+
+### Backlight is a second, separate bug
+
+After resume the panel is left with `bl_power=4` and `actual_brightness=0`
+(backlight off) while `brightness=640`; writing `brightness` re-enables it
+(`actual=640`, `bl_power=0`). Forcing it on shows the panel **backlit but still
+blank**, so the backlight is independent of (and not the cause of) the missing
+image. Report it separately.
 
 ### Suspend depth and panel power are not the cause
 
@@ -224,6 +253,16 @@ walk the FV/FFS → dump the `IntelGopDriver` compressed section → carve the
   re-init without a boot" conclusion is superseded.
 - `glk_cold_boot` ordering in `intel_dsi_pre_enable()`: forced to `0` on `82H0`,
   resume still black (correlate, not cause).
+- Forcing a probe-style full display-core init at resume
+  (`intel_power_domains_init_hw(display, false)` on `82H0`, in
+  `intel_display_power.c`): repeatedly trips `WARNING: display/intel_dmc.c:701 at
+  assert_dmc_loaded+0x29b/0x470`; no panel. The core is already power-cycled by
+  S3 anyway.
+- `drm.debug` / dyndbg tracing of the i915 display path: writes to
+  `/sys/module/drm/parameters/debug` are accepted but **no** `[drm:...]` lines
+  land (only the boot `[drm]` banner), and `dynamic_debug/control` has no
+  `vlv_dsi` sites. Only unconditional `pr_err` markers compiled into the module
+  produce output.
 - Bare PCI `echo 1 > /sys/bus/pci/devices/0000:00:02.0/reset` does **not** recover
   and makes the panel worse (fully off). A full `remove`+`rescan` of the device
   also does not recover and left the box hung. Only the i915 **unbind/bind**
@@ -240,10 +279,10 @@ GPIO 144/145/160 anywhere. Do **not** flash `G0CN14WW` on Linux.
 
 - The panel DCS / VBT-sequence path has now been traced and is **identical**
   between a black resume and a working reload, so the trigger is not a missing
-  host re-send. The remaining panel-side lever is the panel's own
-  power/reset/DCS lines (VBT GPIO 144/145/160), which i915 never drives on GLK;
-  the reload's probe path effectively power-cycles the display, which is what
-  clears the state.
+  host re-send. The resume already runs the full cold sequence and drives the
+  panel's power/reset/DCS GPIOs (VBT 144/145/160), so the difference is inside
+  the panel / its DCS link, not in what i915 sends; the reload's full probe/init
+  path is what clears it.
 - Fallback (kept as the working base): the reload recovery ships two ways --
   `scripts/d330-display-reload.sh` for a manual/SSH run, and the resume hook
   `patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh`
@@ -266,7 +305,10 @@ GPIO 144/145/160 anywhere. Do **not** flash `G0CN14WW` on Linux.
   `/lib/modules/7.0.0-38-generic/kernel/drivers/gpu/drm/i915/i915.ko.zst`,
   `depmod -a`, `update-initramfs -u -k 7.0.0-38-generic`, reboot.
 - Suspend/resume without touching the lid: `rtcwake -m mem -s N`.
-- DRM debug: `echo 0xe > /sys/module/drm/parameters/debug`.
+- DRM debug: `echo 0xe > /sys/module/drm/parameters/debug` (accepted, but i915's
+  display `drm_dbg_kms()` output does not land -- use `pr_err` markers instead).
+- On-device call-path tracing: rebuild the module with `pr_err` markers
+  (`D330*`), install, then `dmesg` across a suspend/resume (`rtcwake -m mem`).
 - Raw MMIO dump: `intel_reg read --count=<decimal> <base>` (writes go to stderr);
   `intel_reg dump` mis-decodes GLK pipe regs as `0`.
 - Resume recovery: `scripts/d330-display-reload.sh` (manual), or the sleep hook
