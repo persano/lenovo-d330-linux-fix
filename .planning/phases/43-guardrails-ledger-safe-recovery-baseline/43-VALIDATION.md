@@ -40,12 +40,15 @@ created: 2026-10-12
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| (seeded — planner fills per task) | | | GUARD-01 | T-43-01 ledger bypass | Gate prints file:line hits; allowlist per-string | unit (static) | `bash scripts/test_pitfalls_ledger.sh` | ❌ W0 | ⬜ pending |
-| (seeded — planner fills per task) | | | GUARD-02 | T-43-01 ledger bypass | Non-zero on planted banned-lever fix; pristine passes | unit (fixture) | `bash scripts/test_pitfalls_ledger.sh` | ❌ W0 | ⬜ pending |
-| (seeded — planner fills per task) | | | GUARD-03 | T-43-02 kit tampering | `sha256sum -c` passes pristine, fails tampered | unit (fixture) | `bash scripts/test_safety_kit.sh` | ❌ W0 | ⬜ pending |
-| (seeded — planner fills per task) | | | RECOV-01 | T-43-05 resume wedge | 82H0 gate, timeout 30, no retry, DM ladder, stand-down | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
-| (seeded — planner fills per task) | | | RECOV-02 | T-43-03 packaging drift | Hook shipped by all packagers + CI; manifest entry | unit (static+fixture) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ⬜ pending |
-| (seeded — planner fills per task) | | | RECOV-03 | T-43-04 silent disable | Idempotent; state SKIP/OK/DRIFT; `D330_REAL_FIX=1` stand-down logged | unit (fixture) | `bash scripts/test_installer_symmetry.sh` + `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
+| 43-01-T1 | 43-01 | 1 | GUARD-01, GUARD-02 | T-43-01 ledger bypass | Gate prints file:line hits; per-string allowlist; non-vacuity probe | unit (static+fixture) | `bash scripts/test_pitfalls_ledger.sh` | ❌ created in task | ⬜ pending |
+| 43-01-T2 | 43-01 | 1 | GUARD-01 | T-43-01b row tampering | Row count ≥ 22 == header count; 5-cell rows; source-doc positive probe | unit (static) | `bash scripts/test_pitfalls_ledger.sh` | ✅ extended | ⬜ pending |
+| 43-02-T1 | 43-02 | 1 | RECOV-03 | T-43-05b silent stand-down | D330_REAL_FIX=1 stand-down before timeout; contract comment | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
+| 43-02-T2 | 43-02 | 1 | RECOV-01 | T-43-05 resume wedge | 82H0 gate, timeout-30 exactly-once, single attempt, distinct failure logs, DM ladder | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
+| 43-03-T1 | 43-03 | 1 | RECOV-03 | T-43-04c manifest drift | State file manifest-tracked; uninstall rm; verify OK/SKIP/drift | unit (fixture) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ⬜ pending |
+| 43-03-T2 | 43-03 | 1 | RECOV-02 | T-43-04/T-43-04b packaging drift | Hook shipped by 3 packagers + CI with %files; no state file shipped | unit (static) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ⬜ pending |
+| 43-04-T1 | 43-04 | 2 | GUARD-03 | T-43-02 kit tampering | sha256sum -c passes pristine, fails tampered; idempotent register | unit (fixture) | `bash scripts/test_safety_kit.sh` | ❌ created in task | ⬜ pending |
+| 43-04-T2 | 43-04 | 2 | GUARD-03 | T-43-06 short window | Protocol doc completeness (≥18 s, inhibit, no cold-boot, rollback) | unit (static) | `bash scripts/test_safety_kit.sh` | ✅ extended | ⬜ pending |
+| 43-04-T3 | 43-04 | 2 | GUARD-03 | T-43-02b verification gap | Harness chains suite 2; doc-parity at 38; kit git policy | unit (static) | `bash scripts/test_storage_cellular.sh --dry-run` + `bash scripts/test_doc_parity.sh` | ✅ exists | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -53,10 +56,10 @@ created: 2026-10-12
 
 ## Wave 0 Requirements
 
-- [ ] `scripts/test_pitfalls_ledger.sh` — covers GUARD-01, GUARD-02 (new suite; ledger doc is its Phase-1 task input)
-- [ ] `scripts/test_safety_kit.sh` — covers GUARD-03 (fixture-based; no real artifacts needed)
-- [ ] `bash -n` list + suite chain in `scripts/test_storage_cellular.sh` gains both new suites
-- [ ] `CHANGES_AUDIT.md` test count updated 36→38 (`test_doc_parity.sh` fails without it)
+- [x] `scripts/test_pitfalls_ledger.sh` — covers GUARD-01, GUARD-02 (planned in 43-01-T1/T2)
+- [x] `scripts/test_safety_kit.sh` — covers GUARD-03 (planned in 43-04-T1; fixture-based, no real artifacts needed)
+- [x] `bash -n` list + suite chain in `scripts/test_storage_cellular.sh` gains both new suites (43-01-T1 wires suite 1; 43-04-T3 wires suite 2)
+- [x] `CHANGES_AUDIT.md` test count updated 36→37 (43-01-T1) then 37→38 (43-04-T3); `test_doc_parity.sh` asserted green in both plans
 
 ---
 
