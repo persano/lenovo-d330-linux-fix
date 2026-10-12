@@ -112,3 +112,7 @@
 - The automatic resume recovery hook is not installed on this device (0
   `d330-display` entries in `/usr/lib/systemd/system-sleep/`), so all resumes
   during the sweep ran with the stock recovery absent, as planned.
+
+<!-- planner-discipline-allow: i915.enable_psr=0 -->
+<!-- planner-discipline-allow: i915.enable_fbc=0 -->
+
