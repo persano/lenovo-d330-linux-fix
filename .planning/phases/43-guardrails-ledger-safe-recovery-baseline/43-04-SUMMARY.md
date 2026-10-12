@@ -41,3 +41,4 @@ requirements: [GUARD-03]
 - GUARD-03: checksum-driven kit pipeline with tamper-detection suite chained into the harness, documented safe on-device capture protocol, and the off-device staging runbook — staged and machine-checked repo-side before any kernel experiment.
 
 <!-- planner-discipline-allow: i915.enable_psr=0 -->
+<!-- planner-discipline-allow: drm.debug/dyndbg dead-end citation -->
