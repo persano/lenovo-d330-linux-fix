@@ -3,6 +3,9 @@ docs/dumps/raw/
 # Safety kit artifacts are never committed; the integrity manifest is.
 docs/dumps/safety_kit/*
 !docs/dumps/safety_kit/MANIFEST.sha256
+# Phase 45 RE kit: binaries are gitignored, the integrity manifest is committed.
+docs/dumps/re_kit/*
+!docs/dumps/re_kit/MANIFEST.sha256
 drivers_base/*.exe
 drivers_base/*.zip
 *.o
