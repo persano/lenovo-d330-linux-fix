@@ -9,6 +9,7 @@
 - ✅ **v5.0 CI/CD & Remastered Live ISO Distribution** — Phases 21-23 (shipped)
 - ✅ **v6.0 System Resilience, Performance & Usability Polish** — Phases 24-31 (shipped)
 - ✅ **v7.0 Pre-Deployment Audit Remediation** — Phases 32-42 (shipped 2026-10-08)
+- 🚧 **v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen** — Phases 43-46 (in progress)
 
 ## Phases
 
@@ -114,7 +115,90 @@ Audit report: [`milestones/v7.0-MILESTONE-AUDIT.md`](milestones/v7.0-MILESTONE-A
 
 ---
 
-## Project Status: Milestones 1-7 Complete (Phases 0-42)
+### 🚧 v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen (In Progress)
+
+**Milestone Goal:** Resume on the D330-10IGL (`82H0`) leaves the panel black while every
+host register is byte-identical to a working state; crack it on the current test kernel
+(Ubuntu `7.0.0-38-generic`) with a research + deep-RE push on real hardware, falling back
+to a packaged seamless automatic recovery if no clean resume fix is achievable.
+
+**Phase Ordering Rationale:** the seamless recovery lands first (Phase 43) because it is
+provably correct today and independent of the reverse-engineering outcome, guaranteeing a
+shippable milestone; the safety kit and banned-lever gate must exist before any device
+experiment on a tablet with no serial console; the cheap upstream/mainline survey (Phase 44)
+runs before the costly RE and bisect (Phase 45); verification and any upstream submission
+close the milestone (Phase 46).
+
+**Phases:**
+
+- [ ] **Phase 43: Guardrails, Ledger & Safe Recovery Baseline** - Turn the disproven-lever list into a machine-checkable gate, stage the on-device safety kit, and ship the packaged, manifest-symmetric seamless recovery
+- [ ] **Phase 44: Community & Upstream Survey + Cheap Levers** - Confirm whether upstream already fixes GLK DSI resume, sweep mainline for a good/bad kernel pair, and file the i915 bug
+- [ ] **Phase 45: Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential** - RE `igdkmd64.sys`/GOP and run the on-device resume-vs-reload differential to land a DMI-gated fix (or prove none is achievable)
+- [ ] **Phase 46: Verification, Delivery & Upstream (conditional)** - Prove the observable bar and no-regression on-device, and submit upstream only if a real fix landed
+
+### Phase 43: Guardrails, Ledger & Safe Recovery Baseline
+
+**Goal**: Everything is safe and shippable before any risky kernel experiment — the banned-lever ledger is a machine-checkable gate, the on-device safety kit is staged, and the proven seamless recovery is hardened, packaged and manifest-symmetric.
+**Depends on**: Nothing (first phase of Milestone 8)
+**Requirements**: GUARD-01, GUARD-02, GUARD-03, RECOV-01, RECOV-02, RECOV-03
+**Success Criteria** (what must be TRUE):
+  1. `docs/research/RESUME_FIX_LEDGER.md` consolidates all 22 on-device-disproven levers plus community/upstream dead ends, and `scripts/test_pitfalls_ledger.sh` exits non-zero when a phase plan re-proposes a banned lever as a fix
+  2. The safety kit (golden `i915.ko.zst` with checksum, live USB, current VBT/GOP dump, checksummed tablet source tree) is staged off-device, and the black-resume-vs-working-reload capture protocol (no cold-boot control, `systemd-inhibit`, full ≥18 s window) is documented
+  3. After resume on `82H0` the display is automatically restored with no user action — a DMI-gated, `timeout`-bounded i915 unbind/bind plus display-manager restart
+  4. The recovery ships through the installer and all three packagers plus the CI `.deb`, is installed/uninstalled symmetrically via the deploy manifest, is idempotent, is disable-able via a manifest-tracked state file, and does not fight the real fix when both are present
+**Plans**: TBD
+
+### Phase 44: Community & Upstream Survey + Cheap Levers
+
+**Goal**: Settle the cheap, high-leverage questions first — does upstream already fix this, does a known GLK DSI commit change the resume path, and is there a good/bad kernel pair — before any costly bisect or RE.
+**Depends on**: Phase 43
+**Requirements**: SURVEY-01, SURVEY-02, SURVEY-03
+**Success Criteria** (what must be TRUE):
+  1. A documented survey of upstream/community state (i915 GitLab, lore, ChromeOS, distro forums) states whether GLK DSI resume is a fixed regression anywhere
+  2. The test kernel is checked against known GLK DSI fixes (`615c8ec48621`) and a mainline sweep yields a good/bad kernel pair if one exists
+  3. A correctly-formed i915 bug report (trace plus reproducer) is filed or updated on the upstream tracker
+**Plans**: TBD
+
+### Phase 45: Windows / GOP Binary RE + On-Device Resume-vs-Probe Differential
+
+**Goal**: Answer "what does probe do that resume does not?" with both independent inputs — static RE of the vendor Windows/GOP path and the dynamic on-device resume-vs-reload differential — then land a DMI-gated fix, or prove no clean fix is achievable.
+**Depends on**: Phase 44
+**Requirements**: WRE-01, WRE-02, WRE-03, ROOT-01, ROOT-02, ROOT-03, ROOT-04
+**Success Criteria** (what must be TRUE):
+  1. REA+Ghidra (GLM 5.3 Flash) decompiles `igdkmd64.sys` and the GOP image with cited file+address+bytes evidence, and the VBT is decoded confirming the DSI link config (single/dual-link, ports, MIPI sequence version)
+  2. The Windows D3→D0 / display-power callback and GOP panel-init path are documented, listing the resume behaviors i915 lacks
+  3. An on-device differential proves what the reload does that resume does not (DSI teardown / readout-state provenance), with instrumentation evidence
+  4. A DMI-gated (`82H0`) i915 change makes resume power the panel without a full reload, verified on-device, and the backlight returns at the user's brightness with no manual write
+  5. If no clean resume fix is achievable, that is proven with evidence and the milestone closes on the packaged recovery, not a non-fix
+**Plans**: TBD
+
+### Phase 46: Verification, Delivery & Upstream (conditional)
+
+**Goal**: Prove the observable bar and no regressions on real hardware, and deliver through the honest channel — upstream only if a real fix landed.
+**Depends on**: Phase 45
+**Requirements**: VERIFY-01, VERIFY-02, VERIFY-03
+**Success Criteria** (what must be TRUE):
+  1. On-device acceptance: the display is lit, upright at 270 deg, with correct backlight across 10+ consecutive suspend/resume cycles with no manual action
+  2. No regression to cold boot, the CCS/rotation fix, touch/audio, or the existing v1-v7 tool suites
+  3. Any real fix is shaped as an upstreamable i915 DMI quirk (`intel_quirks.c`) and submitted only if ROOT-02 landed
+**Plans**: TBD
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 43. Guardrails, Ledger & Safe Recovery Baseline | 0/0 | Not started | - |
+| 44. Community & Upstream Survey + Cheap Levers | 0/0 | Not started | - |
+| 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 0/0 | Not started | - |
+| 46. Verification, Delivery & Upstream (conditional) | 0/0 | Not started | - |
+
+---
+
+## Project Status: Milestones 1-7 Complete (Phases 0-42); Milestone 8 (Phases 43-46) Planning
+
+Milestone 8 (v8.0) maps its 19 v1 requirements (GUARD-01..03, RECOV-01..03, SURVEY-01..03,
+WRE-01..03, ROOT-01..04, VERIFY-01..03) to four phases, 43-46, with the load-bearing ordering
+above: a provably-correct, packaged seamless recovery ships first, the banned-lever gate and
+on-device safety kit exist before any kernel experiment, and the costly Windows/GOP RE plus the
+root-cause differential land only after the cheap upstream survey.
 
 Milestones 1-6 (Phases 0-31) executed, tested, and archived. Milestone 7 (Phases 32-42)
 remediated all 4 Critical, 17 Moderate and 11 Minor findings of the external pre-deployment
