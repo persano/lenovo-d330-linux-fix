@@ -19,7 +19,7 @@ created: 2026-10-12
 
 | Property | Value |
 |----------|-------|
-| **Framework** | House bash guard harness — 36 `scripts/test_*.sh` suites, case-function pattern, wired into `scripts/test_storage_cellular.sh` |
+| **Framework** | House bash guard harness — 37 `scripts/test_*.sh` suites, case-function pattern, wired into `scripts/test_storage_cellular.sh` |
 | **Config file** | none — pattern lives in each suite (research §Architecture Patterns, Pattern 1) |
 | **Quick run command** | `bash scripts/test_pitfalls_ledger.sh` / `bash scripts/test_safety_kit.sh` / `bash scripts/test_display_fix_guards.sh` / `bash scripts/test_installer_symmetry.sh` (per touched suite) |
 | **Full suite command** | `bash scripts/test_storage_cellular.sh --dry-run` plus `bash scripts/test_harness_trust.sh` |
@@ -40,8 +40,8 @@ created: 2026-10-12
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 43-01-T1 | 43-01 | 1 | GUARD-01, GUARD-02 | T-43-01 ledger bypass | Gate prints file:line hits; per-string allowlist; non-vacuity probe | unit (static+fixture) | `bash scripts/test_pitfalls_ledger.sh` | ❌ created in task | ⬜ pending |
-| 43-01-T2 | 43-01 | 1 | GUARD-01 | T-43-01b row tampering | Row count ≥ 22 == header count; 5-cell rows; source-doc positive probe | unit (static) | `bash scripts/test_pitfalls_ledger.sh` | ✅ extended | ⬜ pending |
+| 43-01-T1 | 43-01 | 1 | GUARD-01, GUARD-02 | T-43-01 ledger bypass | Gate prints file:line hits; per-string allowlist; non-vacuity probe | unit (static+fixture) | `bash scripts/test_pitfalls_ledger.sh` | ✅ created | ✅ green (a8b4cbc) |
+| 43-01-T2 | 43-01 | 1 | GUARD-01 | T-43-01b row tampering | Row count ≥ 22 == header count; 5-cell rows; source-doc positive probe | unit (static) | `bash scripts/test_pitfalls_ledger.sh` | ✅ extended | ✅ green (7756b88) |
 | 43-02-T1 | 43-02 | 1 | RECOV-03 | T-43-05b silent stand-down | D330_REAL_FIX=1 stand-down before timeout; contract comment | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
 | 43-02-T2 | 43-02 | 1 | RECOV-01 | T-43-05 resume wedge | 82H0 gate, timeout-30 exactly-once, single attempt, distinct failure logs, DM ladder | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
 | 43-03-T1 | 43-03 | 1 | RECOV-03 | T-43-04c manifest drift | State file manifest-tracked; uninstall rm; verify OK/SKIP/drift | unit (fixture) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ⬜ pending |
