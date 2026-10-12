@@ -68,7 +68,13 @@ case "${1:-}/${2:-}" in
         # Synchronous and bounded: the reload must finish before the compositor
         # resumes, but must never hang the resume if the rebind wedges.
         if command -v timeout >/dev/null 2>&1; then
-            timeout 30 "$0" _run || logger -t d330-display "i915 reload/restart timed out or failed (rc=$?)"
+            timeout 30 "$0" _run
+            rc=$?
+            if [ "$rc" -eq 124 ]; then
+                logger -t d330-display "i915 reload timed out after 30 seconds (rc=124)"
+            elif [ "$rc" -ne 0 ]; then
+                logger -t d330-display "i915 reload/restart failed (rc=$rc)"
+            fi
         else
             "$0" _run
         fi

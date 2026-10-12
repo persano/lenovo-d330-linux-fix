@@ -9,10 +9,13 @@
 # SC2 arithmetic fix are machine-checked in CI. The on-device dmesg/rtcwake
 # checks are the Task 8 (blocking-human) UAT checkpoint, not here.
 #
-# Cases (11): module-banner-no-dead-sleep, resume-service-deleted-zero-refs,
+# Cases (16): module-banner-no-dead-sleep, resume-service-deleted-zero-refs,
 # kernel-src-dryrun-first, nobgrt-kept, panel-orientation-present,
 # audit-claims-match-cfg, dkms-build-guards, resume-loop-arithmetic-fixed,
-# resume-loop-simulate-5, readme-truth, hook-standdown-contract.
+# resume-loop-simulate-5, readme-truth, hook-standdown-contract,
+# hook-dmi-gate, hook-bounded-attempt-exactly-once,
+# hook-distinct-failure-logging, hook-dm-ladder-intact,
+# hook-constants-unchanged.
 # ==============================================================================
 
 set -euo pipefail
@@ -261,6 +264,58 @@ case_hook_standdown_contract() {
     expect_file_out 'resume reload disabled (D330_DISPLAY_RESUME=0' "$HOOK"
 }
 
+case_hook_dmi_gate() {
+    expect_file_out '[ "$(cat /sys/class/dmi/id/product_name 2>/dev/null)" = "82H0" ] || exit 0' "$HOOK"
+}
+
+case_hook_bounded_attempt_exactly_once() {
+    local c guard fall
+    c=$(grep -cF -- 'timeout 30 "$0" _run' "$HOOK" || true)
+    if [ "$c" -ne 1 ]; then
+        echo "    [detail] timeout 30 self-exec count=$c (want exactly 1)"
+        CASE_FAIL=1
+    fi
+    # Line-anchored so the timeout line's _run tail does not double-count.
+    c=$(grep -cE '^[[:space:]]*"\$0" _run$' "$HOOK" || true)
+    if [ "$c" -ne 1 ]; then
+        echo "    [detail] bare no-timeout fallback count=$c (want exactly 1)"
+        CASE_FAIL=1
+    fi
+    guard=$(grep -nF -- 'command -v timeout' "$HOOK" | head -1 | cut -d: -f1 || true)
+    fall=$(grep -nE '^[[:space:]]*"\$0" _run$' "$HOOK" | head -1 | cut -d: -f1 || true)
+    if [ -z "${guard:-}" ] || [ -z "${fall:-}" ] || [ "$fall" -le "$guard" ]; then
+        echo "    [detail] fallback not inside the command -v timeout guard (guard=${guard:-none} fallback=${fall:-none})"
+        CASE_FAIL=1
+    fi
+    if sed -n "${guard},${fall}p" "$HOOK" | grep -qE '(^|[^[:alnum:]])(for|while|until)([^[:alnum:]]|$)'; then
+        echo "    [detail] loop keyword between the timeout guard and the fallback (retry construct)"
+        CASE_FAIL=1
+    fi
+}
+
+case_hook_distinct_failure_logging() {
+    expect_file_out 'i915 reload timed out after 30 seconds (rc=124)' "$HOOK"
+    expect_file_out 'i915 reload/restart failed (rc=$rc)' "$HOOK"
+    local tags
+    tags=$(grep -c 'logger -t d330-display' "$HOOK" || true)
+    if [ "$tags" -lt 7 ]; then
+        echo "    [detail] d330-display logger tag count=$tags (must not drop below 7)"
+        CASE_FAIL=1
+    fi
+}
+
+case_hook_dm_ladder_intact() {
+    expect_file_out 'systemctl restart display-manager.service' "$HOOK"
+    expect_file_out 'systemctl restart sddm.service' "$HOOK"
+    expect_file_out 'display manager restart failed' "$HOOK"
+}
+
+case_hook_constants_unchanged() {
+    expect_file_out 'DRV=/sys/bus/pci/drivers/i915' "$HOOK"
+    expect_file_out 'DISABLE_FILE=/etc/default/lenovo-d330-display-resume' "$HOOK"
+    expect_file_out 'case "${1:-}/${2:-}" in' "$HOOK"
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -276,6 +331,11 @@ CASE_NAMES=(
     case_resume_loop_simulate_5
     case_readme_truth
     case_hook_standdown_contract
+    case_hook_dmi_gate
+    case_hook_bounded_attempt_exactly_once
+    case_hook_distinct_failure_logging
+    case_hook_dm_ladder_intact
+    case_hook_constants_unchanged
 )
 
 for fn in "${CASE_NAMES[@]}"; do
