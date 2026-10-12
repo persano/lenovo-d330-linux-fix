@@ -19,7 +19,8 @@ The Lenovo IdeaPad D330-10IGL (`82H0`) and D330-10IGM (`81H3`, `81MD`) integrate
 2. **Headphone Auto-Mute**:
    - In raw ALSA mode, plugging in headphones plays audio simultaneously through both internal speakers and headphones. Jack sensing pins fail to trigger hardware mute (`JackHWMute`).
 3. **Internal DMIC Silence**:
-   - Legacy Intel SST driver (`snd_soc_skl`) fails to correctly clock the Gemini Lake DMIC interface, yielding 0-byte recordings or silent noise. SOF (`snd_intel_dspcfg dsp_driver=3`) is mandatory.
+   - The Intel **SST** driver (`snd_soc_skl`, `dsp_driver=2`) fails to correctly clock the Gemini Lake DMIC interface, yielding 0-byte recordings or silent noise.
+   - This is *not* a reason to force SOF. On this machine the HDA controller enumerates as PCI `class 0x040300`, which `snd_intel_dsp_driver_probe()` (`sound/hda/core/intel-dsp-config.c`) maps to `SND_INTEL_DSP_DRIVER_LEGACY`. SOF then rejects the device outright at `sound/soc/sof/intel/hda.c`: *"the DSP is not enabled on this platform, aborting probe"*. See section 3.
 
 ---
 
@@ -37,9 +38,39 @@ The provided profile (`patches/audio/ucm2/sof-essx8336/`):
 
 ## 3. Kernel Configuration (`lenovo-d330-audio.conf`)
 
-- Enforces `options snd_intel_dspcfg dsp_driver=3` to guarantee SOF DSP stack initialization.
-- Informs SOF of the dual DMIC hardware configuration (`options snd_soc_sof_intel_hda_common dmic_num=2`).
-- Configures Everest Semi codec quirks (`options snd_soc_es8316 quirk=0x0013`).
+**Do not force `snd_intel_dspcfg dsp_driver=3`.** That was shipped once and it
+zeroed audio completely:
+
+- The controller is PCI `8086:3198` and enumerates as `class 0x040300`
+  ("no DSP present"). `snd_intel_dsp_driver_probe()` honours a forced
+  `dsp_driver` at the top of the function, *before* it ever inspects that
+  class, so `dsp_driver=3` routed the device to SOF.
+- SOF's `hda_dsp_probe_early()` checks the same class itself and aborts with
+  `-ENODEV`, while `snd_hda_intel` stood down because SOF was selected.
+- Net effect: `0000:00:0e.0` bound to no driver at all and
+  `aplay -l` reported `no soundcards found`. The PCI class is firmware-set and
+  identical on every boot, so this was reproducible, not a resume artifact.
+
+With the option removed, auto-detection returns
+`SND_INTEL_DSP_DRIVER_LEGACY` for `0x040300` and the codec comes up normally:
+
+```
+snd_hda_intel 0000:00:0e.0: bound 0000:00:02.0 (ops intel_audio_component_bind_ops [i915])
+snd_hda_codec_alc269 hdaudioC0D0: ALC256: picked fixup headset-mic (model specified)
+snd_hda_codec_alc269 hdaudioC0D0: autoconfig for ALC256: line_outs=1 (0x14/0x0/0x0/0x0/0x0) type:speaker
+```
+
+So on this board the codec is a **Realtek ALC256 on the HDA link**, not an
+ES8316/ES8336 on I2S, and the legacy `snd_hda_intel` driver is the correct one.
+
+Remaining options in the file:
+
+- `options snd_hda_intel model=headset-mic,auto enable=1,1` — applies the
+  ALC256 headset-mic fixup and is the option that actually matters here.
+- `options snd_soc_sof_intel_hda_common dmic_num=2` and
+  `options snd_soc_es8316 quirk=0x0013` — inert: they target modules that no
+  longer load on this hardware. Kept only so a future board revision with the
+  ES8316 picks them up; harmless while SOF stays unbound.
 
 ---
 
