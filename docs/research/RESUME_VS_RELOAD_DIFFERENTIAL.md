@@ -2,6 +2,7 @@
 <!-- planner-discipline-allow: i915.enable_psr=0 -->
 <!-- planner-discipline-allow: i915.enable_fbc=0 -->
 <!-- planner-discipline-allow: bl_power -->
+<!-- planner-discipline-allow: intel_dsi_post_disable -->
 
 # Resume vs Reload Differential (ROOT-01 answer)
 

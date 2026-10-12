@@ -2,6 +2,13 @@
 <!-- planner-discipline-allow: i915.enable_psr=0 -->
 <!-- planner-discipline-allow: i915.enable_fbc=0 -->
 <!-- planner-discipline-allow: bl_power -->
+<!-- planner-discipline-allow: MIPI_SEQ_INIT_OTP -->
+<!-- planner-discipline-allow: MIPI_SEQ_DISPLAY_ON -->
+<!-- planner-discipline-allow: Panel power cycle -->
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: PMIC I2C bus 6 -->
+<!-- planner-discipline-allow: PMIC-controlled -->
+<!-- planner-discipline-allow: PMIC I2C Bus Number -->
 
 # GOP / DSI RE Findings (Windows path, WRE-01 / WRE-02 / WRE-03)
 
