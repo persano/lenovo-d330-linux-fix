@@ -29,9 +29,9 @@ created: 2026-10-12
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 44-01-T1 | 44-01 | 1 | SURVEY-02 | T-44-01 sweep tampering | Two-kernel resume test with Phase 43 protocol; evidence captured per kernel; no boot/cmdline changes | device (SSH) | sweep script run + evidence files present | ❌ created in task | ⬜ pending |
-| 44-01-T2 | 44-01 | 1 | SURVEY-01 | — | Survey doc with cited URLs; unreachable sources marked, not guessed | unit (static) | ledger gate over docs/research + doc section greps | ✅ created in task | ⬜ pending |
-| 44-01-T3 | 44-01 | 1 | SURVEY-03 | T-44-02 fabricated evidence | Bug report carries real trace evidence + reproducer + versions; filing handoff documented | unit (static) | doc block greps + ledger gate | ✅ created in task | ⬜ pending |
+| 44-01-T1 | 44-01 | 1 | SURVEY-02 | T-44-01 sweep tampering | Two-kernel resume test with Phase 43 protocol; evidence captured per kernel; no boot/cmdline changes | device (SSH) | sweep script run + evidence files present | ✅ created in task | ✅ green |
+| 44-01-T2 | 44-01 | 1 | SURVEY-01 | — | Survey doc with cited URLs; unreachable sources marked, not guessed | unit (static) | ledger gate over docs/research + doc section greps | ✅ created in task | ✅ green |
+| 44-01-T3 | 44-01 | 1 | SURVEY-03 | T-44-02 fabricated evidence | Bug report carries real trace evidence + reproducer + versions; filing handoff documented | unit (static) | doc block greps + ledger gate | ✅ created in task | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -39,7 +39,7 @@ created: 2026-10-12
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Panel lit/black verdict per sweep kernel | SURVEY-02 | Remote SSH cannot see the physical panel; registers and CRTC reads read identical on black vs working (prior sessions) | User confirms panel state per kernel test during the structured pause |
+| Panel lit/black verdict per sweep kernel | SURVEY-02 | Remote SSH cannot see the physical panel; registers and CRTC reads read identical on black vs working (prior sessions) | NOT SATISFIED: user was not continuously watching; immediate answers (arm A black, arm B lit) were retracted later and could not be recalled. Verdicts recorded as unreliable in docs/research/KERNEL_SWEEP_EVIDENCE.md; kernel-axis good/bad pair NOT established |
 | Upstream issue submission (SURVEY-03) | SURVEY-03 | Tracker is bot-blocked for scripts; no credentials on this machine | User opens issue 6619 (or files new), pastes the prepared report |
 
 ## Validation Sign-Off

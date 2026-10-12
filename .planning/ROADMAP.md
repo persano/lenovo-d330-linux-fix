@@ -174,6 +174,8 @@ Plans:
 
 **Plans**: TBD
 
+- [x] 44-01-PLAN.md
+
 ### Phase 45: Windows / GOP Binary RE + On-Device Resume-vs-Probe Differential
 
 **Goal**: Answer "what does probe do that resume does not?" with both independent inputs — static RE of the vendor Windows/GOP path and the dynamic on-device resume-vs-reload differential — then land a DMI-gated fix, or prove no clean fix is achievable.
@@ -205,7 +207,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 43. Guardrails, Ledger & Safe Recovery Baseline | 4/4 | Complete    | 2026-10-12 |
-| 44. Community & Upstream Survey + Cheap Levers | 0/0 | Not started | - |
+| 44. Community & Upstream Survey + Cheap Levers | 1/1 | In Progress|  |
 | 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 0/0 | Not started | - |
 | 46. Verification, Delivery & Upstream (conditional) | 0/0 | Not started | - |
 
