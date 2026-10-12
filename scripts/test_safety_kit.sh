@@ -10,10 +10,9 @@
 # greps shipped files. Pristine-first ordering (SC1 rule): the verify-passes
 # case runs BEFORE any tamper case, so tamper detection cannot pass vacuously.
 #
-# Cases (5): prep-script-syntax, register-creates-manifest,
+# Cases (6): prep-script-syntax, register-creates-manifest,
 # verify-passes-pristine, verify-fails-on-tamper,
-# manifest-format-rejects-junk. (Task 2 of plan 43-04 adds
-# protocol-doc-complete.)
+# manifest-format-rejects-junk, protocol-doc-complete.
 # ==============================================================================
 
 set -euo pipefail
@@ -230,6 +229,7 @@ CASE_NAMES=(
     case_verify_passes_pristine
     case_verify_fails_on_tamper
     case_manifest_format_rejects_junk
+    case_protocol_doc_complete
 )
 
 for fn in "${CASE_NAMES[@]}"; do
