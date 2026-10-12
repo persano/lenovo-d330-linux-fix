@@ -468,7 +468,7 @@ installer never compiles; only the archive-guarded
 
 ## 9. Comprehensive Verification Test Suite
 
-Every subsystem includes an automated bash verification test script supporting `--probe`, `--simulate`, and `--dry-run` modes. The suite currently ships 36 test guards (`scripts/test_*.sh`); the representative ones are:
+Every subsystem includes an automated bash verification test script supporting `--probe`, `--simulate`, and `--dry-run` modes. The suite currently ships 37 test guards (`scripts/test_*.sh`); the representative ones are:
 1. `scripts/test_vaapi.sh`: Validates `vainfo` profile availability, environment variable persistence, and browser preference file syntax.
 2. `scripts/test_thermals.sh`: Verifies RAPL sysfs nodes, verifies PL1/PL2 power values, tests `thermald` configuration XML parsing.
 3. `scripts/test_oom_protection.sh`: Validates `earlyoom` configuration file parameters, systemd drop-in override syntax, and process exclusion lists.

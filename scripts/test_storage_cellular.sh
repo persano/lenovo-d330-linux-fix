@@ -61,7 +61,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_doc_parity.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_doc_parity.sh scripts/test_pitfalls_ledger.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -148,6 +148,12 @@ if [[ "$MODE" == "dry-run" ]]; then
     # tray, wireless, test-count, touch-mode, modes, 0-byte files). Same contract
     # as the suites above - its non-zero exit propagates under set -e.
     bash scripts/test_doc_parity.sh
+
+    # Banned-lever ledger gate (Phase 43, GUARD-01/GUARD-02): parses the
+    # RESUME_FIX_LEDGER.md machine table and scans plan/summary and research
+    # docs for banned-lever fix proposals; planner-discipline-allow markers
+    # exempt exact strings per file. Same contract as the suites above.
+    bash scripts/test_pitfalls_ledger.sh
 
     # Cellular packaging inventory: resolve the real FCC-unlock hook instead of
     # printing a hardcoded path that does not exist.
