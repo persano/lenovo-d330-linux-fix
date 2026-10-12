@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Reverse-Engineer & Fix the D330 Resume Black Screen
-current_phase: 44
-current_phase_name: Community & Upstream Survey + Cheap Levers
-status: planning
+status: executing
 stopped_at: Phase 43 complete, ready to plan Phase 44
-last_updated: "2026-10-12T16:44:50.820Z"
+last_updated: "2026-10-12T17:10:24.219Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 43 complete, transitioned to Phase 44
-state_head: b8bf23be683f792655af579af7e9f20fe55d6532
+last_activity_desc: Phase null execution started
+state_head: 73c10d363b713fe48e99b9885f1cda8de170a093
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 4
+  total_plans: 5
   completed_plans: 4
   percent: 25
 ---
@@ -33,14 +31,14 @@ progress:
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** Phase 43 — Guardrails, Ledger & Safe Recovery Baseline
+**Current focus:** Phase null
 
 ## Current Position
 
-Phase: 44 — Community & Upstream Survey + Cheap Levers
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-12 — Phase 43 complete, transitioned to Phase 44
+Phase: null — EXECUTING
+Plan: 1 of ?
+Status: Executing Phase null
+Last activity: 2026-10-12 — Phase null execution started
 
 Progress: [░░░░░░░░░░] 0%
 
