@@ -468,9 +468,12 @@ From `docs/research/COMMUNITY_FINDINGS.md`: §2.3 sleep-target masking (systemct
 | A4 | The `D330_REAL_FIX=1` stand-down check should be *implemented* in Phase 43 (contract "documented now, Phase 45 sets it" read as: check ships now, marker written by Phase 45) | Pattern 6 / Open Question 3 | If document-only: the non-fighting contract (RECOV-03) is untestable this phase |
 | A5 | `<!-- planner-discipline-allow: ... -->` has no existing automated consumer (grep over tools/ + scripts/ found none); the ledger gate would be its first machine consumer | Pattern 3 / Don't Hand-Roll | If a consumer exists elsewhere with different semantics, align with it |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All five questions are dispositioned in the phase plans; dispositions below cite the resolving plan/task.
 
 1. **Exact composition of the 22 ledger rows**
+   - Resolved: 43-01 Task 2 — one row per *distinct lever* (forced-register batch = one row), final count in the ledger header, reconciled honestly against the roadmap bar of 22 (no padding) with any discrepancy flagged in the plan summary.
    - What we know: all source bullets verified verbatim; a 20+-row scaffold exists (see Code Examples).
    - What's unclear: whether the roadmap's "22" counts each forced register as its own row or as one experiment row.
    - Recommendation: author the ledger with one row per *distinct lever* (a forced-registers batch = one row), state the final count in the ledger header, and if it lands ≠ 22, reconcile with the roadmap number at plan-check rather than padding rows.
@@ -479,16 +482,20 @@ From `docs/research/COMMUNITY_FINDINGS.md`: §2.3 sleep-target masking (systemct
    - What we know: locked decision says packagers mirror the installer's manifest set; the installer's `state` class is not created at install.
    - What's unclear: whether "mirror" includes shipping a default-enabled `/etc/default/lenovo-d330-display-resume`.
    - Recommendation: ship the hook only in packagers; treat the state file as runtime-managed (skip in package parity assertions). Default-enabled shipping is the fallback if the user wants it.
+   - Resolved: 43-03 Task 2 — packagers ship the hook only; the runtime state file is referenced by no packager file (machine-checked parity assertion), mirroring the installer's shipped set per A3.
 
 3. **Implement `D330_REAL_FIX=1` stand-down now or document-only?**
    - Recommendation: implement now (3-line additive check, fixture-testable, RECOV-03's "does not fight the real fix" becomes machine-checked this phase); Phase 45 only ever writes the marker.
+   - Resolved: 43-02 Task 1 — stand-down implemented now as an additive hook block with a guard case pinning its ordering; Phase 45 only writes the marker.
 
 4. **Kit artifact location + git policy**
    - What we know: repo has no hardware access; kit artifacts are binaries (module, ISO, dumps) that must not be committed.
    - Recommendation: `scripts/prepare_safety_kit.sh --kit-dir <dir>` (default `docs/dumps/safety_kit/`, `.gitignore`d for artifacts but not for `MANIFEST.sha256`); runbook directs on-device execution with `--register <file>` per artifact.
+   - Resolved: 43-04 Tasks 1–3 — kit dir default `docs/dumps/safety_kit/`; `.gitignore` covers artifacts with `MANIFEST.sha256` negated back in (Task 3); register/verify semantics fixture-asserted in `test_safety_kit.sh`.
 
 5. **Final scan scope for the ledger gate**
    - Recommendation: `*-PLAN.md` + `*-SUMMARY.md` under `.planning/phases/` (matches "plans, summaries" in the locked decision) + `docs/research/*.md` minus the four allowlisted docs + honor `planner-discipline-allow` markers. Confirm at plan-check.
+   - Resolved: 43-01 Task 1 (checker-corrected) — scan root is the git-tracked tree (`git ls-files` filtered to `.gsd/phases` plan/summary paths plus `docs/research/*.md`), NOT the `.planning` symlink path (with `core.symlinks=false` git checks `.planning` out as a text stub, so globbing it finds zero files and the gate would pass vacuously); allowlist + `planner-discipline-allow` markers honored; scanned-file count asserted > 0 and a zero-file normal-mode scan exits 1.
 
 ## Environment Availability
 
