@@ -132,7 +132,7 @@ close the milestone (Phase 46).
 **Phases:**
 
 - [x] **Phase 43: Guardrails, Ledger & Safe Recovery Baseline** - Turn the disproven-lever list into a machine-checkable gate, stage the on-device safety kit, and ship the packaged, manifest-symmetric seamless recovery (completed 2026-10-12)
-- [ ] **Phase 44: Community & Upstream Survey + Cheap Levers** - Confirm whether upstream already fixes GLK DSI resume, sweep mainline for a good/bad kernel pair, and file the i915 bug
+- [x] **Phase 44: Community & Upstream Survey + Cheap Levers** - Confirm whether upstream already fixes GLK DSI resume, sweep mainline for a good/bad kernel pair, and file the i915 bug (completed 2026-10-12)
 - [ ] **Phase 45: Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential** - RE `igdkmd64.sys`/GOP and run the on-device resume-vs-reload differential to land a DMI-gated fix (or prove none is achievable)
 - [ ] **Phase 46: Verification, Delivery & Upstream (conditional)** - Prove the observable bar and no-regression on-device, and submit upstream only if a real fix landed
 
@@ -207,7 +207,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 43. Guardrails, Ledger & Safe Recovery Baseline | 4/4 | Complete    | 2026-10-12 |
-| 44. Community & Upstream Survey + Cheap Levers | 1/1 | In Progress|  |
+| 44. Community & Upstream Survey + Cheap Levers | 1/1 | Complete    | 2026-10-12 |
 | 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 0/0 | Not started | - |
 | 46. Verification, Delivery & Upstream (conditional) | 0/0 | Not started | - |
 
