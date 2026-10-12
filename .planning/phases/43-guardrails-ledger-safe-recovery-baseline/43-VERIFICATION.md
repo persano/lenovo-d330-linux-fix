@@ -1,6 +1,6 @@
 ---
 phase: 43
-status: verified
+status: passed
 verified: 2026-10-12
 verifier: gsd-verifier (session ses_ecf0f3e4fffea3nRBr3Bbek0Qa) + orchestrator fixes
 gaps_found_at_verification: 1
