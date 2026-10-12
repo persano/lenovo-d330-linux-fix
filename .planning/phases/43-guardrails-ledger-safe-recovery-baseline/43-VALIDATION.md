@@ -42,8 +42,8 @@ created: 2026-10-12
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 43-01-T1 | 43-01 | 1 | GUARD-01, GUARD-02 | T-43-01 ledger bypass | Gate prints file:line hits; per-string allowlist; non-vacuity probe | unit (static+fixture) | `bash scripts/test_pitfalls_ledger.sh` | ✅ created | ✅ green (a8b4cbc) |
 | 43-01-T2 | 43-01 | 1 | GUARD-01 | T-43-01b row tampering | Row count ≥ 22 == header count; 5-cell rows; source-doc positive probe | unit (static) | `bash scripts/test_pitfalls_ledger.sh` | ✅ extended | ✅ green (7756b88) |
-| 43-02-T1 | 43-02 | 1 | RECOV-03 | T-43-05b silent stand-down | D330_REAL_FIX=1 stand-down before timeout; contract comment | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
-| 43-02-T2 | 43-02 | 1 | RECOV-01 | T-43-05 resume wedge | 82H0 gate, timeout-30 exactly-once, single attempt, distinct failure logs, DM ladder | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ⬜ pending |
+| 43-02-T1 | 43-02 | 1 | RECOV-03 | T-43-05b silent stand-down | D330_REAL_FIX=1 stand-down before timeout; contract comment | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ✅ green (6ba303b) |
+| 43-02-T2 | 43-02 | 1 | RECOV-01 | T-43-05 resume wedge | 82H0 gate, timeout-30 exactly-once, single attempt, distinct failure logs, DM ladder | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ✅ green (dc5e5a0) |
 | 43-03-T1 | 43-03 | 1 | RECOV-03 | T-43-04c manifest drift | State file manifest-tracked; uninstall rm; verify OK/SKIP/drift | unit (fixture) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ⬜ pending |
 | 43-03-T2 | 43-03 | 1 | RECOV-02 | T-43-04/T-43-04b packaging drift | Hook shipped by 3 packagers + CI with %files; no state file shipped | unit (static) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ⬜ pending |
 | 43-04-T1 | 43-04 | 2 | GUARD-03 | T-43-02 kit tampering | sha256sum -c passes pristine, fails tampered; idempotent register | unit (fixture) | `bash scripts/test_safety_kit.sh` | ❌ created in task | ⬜ pending |
