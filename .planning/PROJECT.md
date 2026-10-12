@@ -18,6 +18,18 @@
 - **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)**: Intel VA-API hardware decode environment and browser prefs, fanless thermal RAPL limits (PL1 5.0W / PL2 8.0W) with thermald curve, earlyoom low-RAM watchdog, tablet OSK auto-summon & long-press right-click, PipeWire RNNoise neural microphone filter-chain, RTL8821CE single-antenna Wi-Fi/BT coexistence & s2idle resume hook, eMMC fast boot tuning (~9s boot), and GTK3 desktop system tray hardware applet (`tools/d330-tray.py`).
 - **Milestone 7: Pre-Deployment Audit Remediation (v7.0)**: Remediated all 4 Critical, 17 Moderate and 11 Minor findings of the external pre-deployment audit (`BLOCKED BY CRITICAL DEFECTS`): data-loss/boot safety guards (explicit `--device`, pre-write guards, safe fstab), physically-completable hibernate (disk swapfile + resume cmdline), the real PPS/display-resume module (honest DMI banner, real `--kernel-src` clamp), manifest-driven installer/uninstaller symmetry, desktop-session wiring (suffix-free tool names, systemd **user** unit for the tablet daemon), real (or removed) PWM/sensor tools, activated PipeWire DSP filter-chains, corrected udev/hwdb/wireless matches and power-stack ownership, a trustworthy 36-script test harness, and documentation/packaging parity (exec bits, FCC hook, fail-loud packagers, `test_doc_parity.sh`). Plus one cross-phase packaging integration gap (packagers shipped `.py`/`.sh` tool names the units don't execute) found by the milestone audit and fixed.
 
+## Current Milestone: v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen
+
+**Goal:** Kill the open D330 resume-black bug, the panel powers up after resume, every host register is byte-identical to a working state, the full DSI sequence runs, yet it stays black and only a full i915 PCI unbind/bind reload recovers. Crack it with a research + deep-RE push (Ghidra + REA driven by GLM 5.3 Flash) on real hardware.
+
+**Target features:**
+- One "tried / disproven" ledger consolidating prior work so nothing is re-tread (PPS/TCON, D-PHY retune, register forcing, keep-panel-powered, suspend depth, PMIC/I2C, `glk_cold_boot`, DMC probe-init, bare PCI reset).
+- Internet/forum/bug-tracker research: GLK DSI resume reports, i915 GitLab/Bugzilla, ChromeOS, distro forums, other Gemini Lake tablets.
+- Windows-behavior analysis: RE `igdkmd64.sys` + `IntelGopDriver` + VBT/ACPI with REA+Ghidra to find the resume-path difference (binary-only for now; real Windows install later if needed).
+- Deep RE of the resume path: `__intel_display_driver_resume` commit vs the reload's full probe/`intel_modeset_setup_hw_state`.
+- Deliver a fix (driver patch, module, or script) on the current test kernel (Ubuntu 7.0.0-38-generic).
+- Seamless automatic recovery (invisible reload/compositor restart) is an acceptable bar if a clean resume fix proves impossible.
+
 ## Project Status: Milestone 7 (v7.0) complete — Phases 0-42 shipped
 Hardware parity and usability work through v6.0 shipped; Milestone 7 (Phases 32-42) remediated the entire external pre-deployment audit plus one cross-phase packaging gap found by the milestone audit. All 11 phases verified. Machine-checkable success criteria are green in the dev environment; hardware-in-the-loop, daemon, and real package-build criteria are covered by documented per-phase verification overrides to re-run on a D330 unit at deployment sign-off.
 
@@ -35,5 +47,22 @@ Hardware parity and usability work through v6.0 shipped; Milestone 7 (Phases 32-
 - **Phases 41-42**: 36-script test harness made trustworthy (failure counters, `--apply` gating, mutation meta-guard); documentation/packaging parity (`100755` exec bits, FCC hook shipped as the `8086:7360` target, fail-loud packagers, no 0-byte tracked files, `scripts/test_doc_parity.sh`) (M12/M17/N1-N5/N8-N10).
 - **Milestone audit**: Fixed a cross-phase packaging gap — all three packagers + the CI `.deb` now install the same suffix-free tool names the shipped units `Exec`, ship the tray autostart, and the CI build no longer `cp ... || true` (commit `5e4948b`).
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-10-08 after v7.0 milestone*
+*Last updated: 2026-10-12 after v8.0 milestone started*
