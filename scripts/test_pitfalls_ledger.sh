@@ -57,6 +57,7 @@ ALLOWLIST=(
     "COMMUNITY_FINDINGS.md"
     "RESUME_CAPTURE_PROTOCOL.md"
 )
+MIN_LEDGER_ROWS=22
 
 MODE="suite"
 PROBE_SCAN_DIR="${D330_LEDGER_SCAN_DIR:-}"
@@ -261,8 +262,8 @@ case_ledger_parses() {
         CASE_FAIL=1
         return 0
     fi
-    if [ "$LEV_COUNT" -lt 8 ]; then
-        echo "    [detail] ledger has only $LEV_COUNT rows (need at least 8 seeded)"
+    if [ "$LEV_COUNT" -lt "$MIN_LEDGER_ROWS" ]; then
+        echo "    [detail] ledger has only $LEV_COUNT rows (need at least $MIN_LEDGER_ROWS)"
         CASE_FAIL=1
     fi
     local -A seen=()
