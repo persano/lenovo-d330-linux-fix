@@ -9,7 +9,12 @@ installer ships only the guarded GRUB snippet; it never compiles or installs the
 ASL/CPIO:
 
 - `dsdt_override.asl` is a source sketch and is **never compiled** by
-  `install_dkms.sh`. Build it manually with `iasl` if you intend to use it.
+  `install_dkms.sh`. **Do not build it as written**: it declares only
+  `Device (RP04)`, and a table packed as `kernel/firmware/acpi/dsdt.aml`
+  replaces the entire firmware DSDT, not just that device. See
+  `docs/research/ACPI_DSDT_CLEANUP.md` for the measured outcome of both
+  override routes on the D330, and the conclusion that the duplicate
+  `\_SB.PCI0.RP04` errors are left alone.
 - `tools/d330-acpi-override.sh` is a manual packaging helper (requires `iasl`);
   it is not deployed to `/usr/local/bin`.
 - `etc/default/grub.d/51-lenovo-d330-acpi-override.cfg` is the only installed
