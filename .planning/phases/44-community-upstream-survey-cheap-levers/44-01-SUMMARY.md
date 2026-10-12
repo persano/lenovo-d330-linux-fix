@@ -42,3 +42,4 @@ requirements: [SURVEY-01, SURVEY-02, SURVEY-03]
 
 <!-- planner-discipline-allow: i915.enable_psr=0 -->
 <!-- planner-discipline-allow: i915.enable_fbc=0 -->
+<!-- planner-discipline-allow: rescan -->
