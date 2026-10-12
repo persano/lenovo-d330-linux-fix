@@ -40,6 +40,7 @@ mkdir -p %{buildroot}/etc/udev/rules.d
 mkdir -p %{buildroot}/etc/udev/hwdb.d
 mkdir -p %{buildroot}/etc/systemd/system
 mkdir -p %{buildroot}/usr/lib/systemd/user
+mkdir -p %{buildroot}/usr/lib/systemd/system-sleep
 
 cp %{_builddir}/tools/d330-* %{buildroot}/usr/local/bin/
 cp %{_builddir}/tools/lenovo-d330-power-tune.sh %{buildroot}/usr/local/bin/
@@ -63,6 +64,10 @@ cp %{_builddir}/patches/*/etc/systemd/system/*.service %{buildroot}/etc/systemd/
 # systemd USER unit: %post enables it with `systemctl --global enable`, which
 # requires the unit under /usr/lib/systemd/user.
 cp %{_builddir}/patches/*/usr/lib/systemd/user/*.service %{buildroot}/usr/lib/systemd/user/
+# Display resume recovery hook (system-sleep): plain executable, systemd
+# discovers it by directory (nothing to enable).
+cp %{_builddir}/patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh %{buildroot}/usr/lib/systemd/system-sleep/
+chmod 755 %{buildroot}/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh
 # PipeWire filter-chain DSP fragments (Phase 38): must land in the RUNNING
 # daemon's pipewire.conf.d, which no packager shipped before.
 mkdir -p %{buildroot}/etc/pipewire/pipewire.conf.d
@@ -92,6 +97,7 @@ systemctl enable d330-swapfile.service 2>/dev/null || true
 /usr/share/libinput/*
 /etc/systemd/system/*
 /usr/lib/systemd/user/*
+/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh
 /etc/pipewire/pipewire.conf.d/*
 /etc/xdg/autostart/*
 

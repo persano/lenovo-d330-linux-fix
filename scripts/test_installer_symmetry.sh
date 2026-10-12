@@ -10,12 +10,13 @@
 # so the deploy manifest drives a fixture round trip; everything else is a
 # static grep against the installer and the two packaging enable sites.
 #
-# Cases (18): manifest-single-source, manifest-deploy-consistency,
+# Cases (19): manifest-single-source, manifest-deploy-consistency,
 # verify-drift-detected, verify-clean-passes, verify-conditional-absent,
 # state-file-verify-symmetry, verify-removed-direction, grub-regen-both-paths,
 # uninstall-rescue-bypass, enable-parity-8, user-unit-packaged,
-# dropin-narrow-removal, warn-named-packages, uninstall-gaps,
-# uninstall-nonroot-warn, no-broad-rm-rf, no-broad-ucm-rm-rf, bash-n-all.
+# hook-packager-parity, dropin-narrow-removal, warn-named-packages,
+# uninstall-gaps, uninstall-nonroot-warn, no-broad-rm-rf, no-broad-ucm-rm-rf,
+# bash-n-all.
 # ==============================================================================
 
 set -euo pipefail
@@ -29,6 +30,7 @@ DEBIAN_POSTINST="packaging/debian/postinst"
 DEBIAN_RULES="packaging/debian/rules"
 RPM_SPEC="packaging/rpm/lenovo-d330-fix.spec"
 ARCH_PKGBUILD="packaging/arch/PKGBUILD"
+CI_WORKFLOW=".github/workflows/build-packages.yml"
 SUITE="scripts/test_installer_symmetry.sh"
 STORAGE="scripts/test_storage_cellular.sh"
 
@@ -36,7 +38,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 35 installer symmetry guard suite (18 cases, static greps +
+Runs the Phase 35 installer symmetry guard suite (19 cases, static greps +
 manifest-driven --verify fixture, no real systemctl/dkms/grub).
 
 Options:
@@ -520,6 +522,46 @@ case_state_file_verify_symmetry() {
     esac
 }
 
+# RECOV-02 (Phase 43): every packager plus the CI .deb ships the display
+# resume recovery hook with executable permissions, the RPM %files section
+# covers it, and NO packager references the runtime state file (a shipped
+# disabled-by-default state file would silently disable packaged recovery).
+case_hook_packager_parity() {
+    local f
+    for f in "$DEBIAN_RULES" "$RPM_SPEC" "$ARCH_PKGBUILD" "$CI_WORKFLOW"; do
+        if [ ! -f "$f" ]; then
+            echo "    [detail] packager missing: $f"
+            CASE_FAIL=1
+            continue
+        fi
+        if ! grep -qF "patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh" "$f"; then
+            echo "    [detail] hook source not referenced by $f"
+            CASE_FAIL=1
+        fi
+        if ! grep -qF "/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh" "$f"; then
+            echo "    [detail] hook destination path missing in $f"
+            CASE_FAIL=1
+        fi
+        if ! grep -Eq "chmod 755 .*lenovo-d330-display-resume\.sh|install -m 755 .*lenovo-d330-display-resume\.sh" "$f"; then
+            echo "    [detail] executable permission for the hook missing in $f"
+            CASE_FAIL=1
+        fi
+        if grep -qF "/etc/default/lenovo-d330-display-resume" "$f"; then
+            echo "    [detail] runtime state file must not be referenced by $f"
+            CASE_FAIL=1
+        fi
+    done
+    # RPM: %install and %files must each carry the hook.
+    if ! awk '/^%install/,/^%post/' "$RPM_SPEC" | grep -qF "/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh"; then
+        echo "    [detail] hook not installed in the RPM %install section"
+        CASE_FAIL=1
+    fi
+    if ! awk '/^%files/,/^%changelog/' "$RPM_SPEC" | grep -qF "/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh"; then
+        echo "    [detail] hook not listed in the RPM %files section"
+        CASE_FAIL=1
+    fi
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -535,6 +577,7 @@ CASE_NAMES=(
     case_uninstall_rescue_bypass
     case_enable_parity_8
     case_user_unit_packaged
+    case_hook_packager_parity
     case_dropin_narrow_removal
     case_warn_named_packages
     case_uninstall_gaps

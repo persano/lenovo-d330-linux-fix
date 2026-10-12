@@ -63,6 +63,12 @@ package() {
     install -d "${pkgdir}/usr/lib/systemd/user"
     install -m 644 "${srcdir}"/../patches/*/usr/lib/systemd/user/*.service "${pkgdir}/usr/lib/systemd/user/"
 
+    # Display resume recovery hook (system-sleep): plain executable, systemd
+    # discovers it by directory (nothing to enable).
+    install -d "${pkgdir}/usr/lib/systemd/system-sleep"
+    install -m 755 "${srcdir}"/../patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh \
+                   "${pkgdir}/usr/lib/systemd/system-sleep/lenovo-d330-display-resume.sh"
+
     # Install PipeWire filter-chain DSP fragments into the RUNNING daemon's
     # pipewire.conf.d (Phase 38); patches/*/etc/pipewire/** was previously
     # shipped by no packager.
