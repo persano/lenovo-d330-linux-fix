@@ -15,7 +15,8 @@ verified), uefi-firmware-parser (pip), innoextract, intel_vbt_decode (on-device,
 | Artifact | Source | SHA-256 (first 16) |
 |---|---|---|
 | `spi2.bin` | device SPI dump `dd if=/dev/mtd0ro bs=4k conv=noerror,sync` 2026-10-12 | `3b965008eaf35ade` |
-| `vbt.bin` | carved from spi2.bin @ 1656092, 5430 B (VBT 5382 B) | `3fd07a339dcdc39e` |
+| `vbt.bin` | carved from spi2.bin @ 1656092, 5430 B (VBT 5382 B) — **VBT A below** | `3fd07a339dcdc39e` |
+| `runtime_vbt.bin` | `/sys/kernel/debug/dri/*/i915_vbt` on-device, 5755 B — **VBT B below, the one the kernel uses** | (MANIFEST) |
 | `gop_driver_dc90d1e2.efi` | Lenovo BIOS G0CN14WW capsule → FV (see §3) | `cf9d011adb9cd680` |
 | `igdkmd64.sys` + INFs | Lenovo `3gid020fh6y37sb0.exe` (Intel VGA 27.20.100.8729) | `81198e584734995e` |
 
@@ -29,27 +30,55 @@ verified), uefi-firmware-parser (pip), innoextract, intel_vbt_decode (on-device,
 - Device VBT carve: spi2.bin offset **1656092**, bytes = `"$VBT BROXTON        "` (16 B signature string).
   intel_vbt_decode exit 0, full decode in `docs/dumps/re_kit/vbt_decode.txt`.
 
-## 2. WRE-03: the DSI panel as configured (authoritative device VBT)
+## 2. The two VBTs (WRE-03: the DSI panel as configured)
 
-From `docs/dumps/re_kit/vbt_decode.txt`:
+**The machine has two VBTs and they differ.** The kernel uses the second one.
 
-- Header: signature `"$VBT BROXTON        "` (line 4; GLK uses the Broxton family string), version
-  1.0, BDB version **206**, 29 blocks: 1 2 3 6 7 8 9 10 12 13 17 18 20 26 27 28 31 32 40 41 42 43
-  44 46 51 52 252 253 **254** (line 21).
-- LFP1 child device, DVO Port **DP-A** (GLK DSI port A), boot display (child device table).
-- **No MIPI sequence block**: blocks 53/54 absent; block 254 is "VBIOS only, no decoding available"
-  (vbt_decode.txt line 1019, 234 B). Raw parse of block 254 first byte = `0x00` → the VBT carries
-  **no DCS panel-init sequences**. Consequence: Linux `intel_dsi_vbt.c` has no sequences to run;
-  panel init is done by whoever brings up the DSI link (panel self-init in video mode).
-- DSI link (block 52, vbt_decode.txt lines 891-901): Mode **VIDEO**, transfer mode
-  **non-burst with sync events (0x2)**, RGB888, dithering in panel controller,
-  **Lane Count: 4**, **Dual Link Support: not supported** (single link), Dphy Flags
-  **Clock Stop: DISABLED**, EOT sent.
-- PPS (block 51/52, vbt_decode.txt): PPS GPIO Pins **Using PMIC**, MIPI PMIC I2C Bus Number **6**
-  (line 948); power sequence T1-T3 2000 / T8 10 / T9 2000 / T10 500 / T11-T12 5000 ms (line 595);
-  panel power cycle delay **5000 ms** (line 944).
+**VBT A — SPI flash, "BROXTON", BDB 206** (carved from spi2.bin @ 1656092, 5382 B;
+`docs/dumps/re_kit/vbt_decode.txt`):
+
+- Blocks: 1 2 3 6 7 8 9 10 12 13 17 18 20 26 27 28 31 32 40 41 42 43 44 46 51 52 252 253 254
+  (line 21). **No block 53 (MIPI sequence) and no block 55.**
+- DSI config (block 52, lines 891-901): Mode VIDEO, transfer mode **non-burst with sync events
+  (0x2)**, RGB888, dithering in panel controller, **Lane Count: 4**, **Dual Link Support: not
+  supported** (single link), Dphy Flags Clock Stop **DISABLED**, EOT sent. PPS GPIO Pins
+  **Using PMIC**, MIPI PMIC I2C Bus Number **6** (line 948). Panel power cycle delay **5000 ms**
+  (line 944). Power sequence T1-T3 2000 / T8 10 / T9 2000 / T10 500 / T11-T12 5000 ms (line 595).
 - LFP blocks 40-44: PP_ON_DELAYS `0x025807d0`, PP_OFF_DELAYS `0x01f407d0`, PWM freq 200, level 180.
-- Placeholder native timing 1024x768 in block 42; real 1366x768 timing comes from the DTD/driver.
+
+**VBT B — runtime (GOP handoff), "GEMINILAKE", BDB 212** (`docs/dumps/re_kit/runtime_vbt.bin`,
+5755 B; decode `runtime_vbt_decode.txt`):
+
+- Source: `/sys/kernel/debug/dri/*/i915_vbt` on the running system (2026-10-12, kernel
+  7.0.14-d330-fix). This is the VBT i915 actually parses — delivered through the GOP OpRegion
+  handoff (GOP writes pointer+size to the OpRegion ASLS mailbox; see §3.3).
+- Blocks: 31 32 40 41 42 43 44 46 51 52 **53** **55** 252 253 254.
+- **Block 53 "MIPI sequence block", version v3, Panel 0 (LFP1)(LFP2)** — the panel-init
+  sequences (`runtime_vbt_decode.txt` / `b53_full.txt`, full table):
+
+| Seq | Name | Content |
+|---|---|---|
+| 1 | DEASSERT_RESET | empty |
+| 2 | MIPI_SEQ_INIT_OTP | delay 10 ms; GPIO 160 set 1; delay 10 ms; GPIO 160 set 0; delay 10 ms; GPIO 160 set 1; delay 20 ms |
+| 3 | MIPI_SEQ_DISPLAY_ON | DCS (Port A, VC 0, LP, 0x05, len 1) `0x11`; delay 200 ms; DCS `0x29`; delay 10 ms |
+| 4 | MIPI_SEQ_DISPLAY_OFF | DCS `0x28 00`; delay 200 ms; DCS `0x10 00`; delay 100 ms |
+| 5 | MIPI_SEQ_ASSERT_RESET | delay 100 ms; GPIO 160 set 0; delay 1 ms |
+| 6 | MIPI_SEQ_BACKLIGHT_ON | delay 150 ms; GPIO 145 set 1; delay 2 ms |
+| 7 | MIPI_SEQ_BACKLIGHT_OFF | GPIO 145 set 0; delay 1 ms |
+| 10 | MIPI_SEQ_POWER_ON | GPIO 144 set 1; delay 1 ms |
+| 11 | MIPI_SEQ_POWER_OFF | delay 100 ms; GPIO 144 set 0 |
+
+- GPIOs are PMIC-controlled panel rails (matches VBT A "PPS GPIO Pins: Using PMIC"):
+  GPIO **160** = panel reset (index 0), GPIO **144** = panel power (index 3), GPIO **145** = backlight (index 4).
+- Block 55 (258 B) undecoded by intel_vbt_decode; block 254 = VBIOS version string
+  ("1001Intel(R) Mobile/Desktop PCI Accelerated SVGA BIOS", raw first bytes of block 254).
+- LFP child: LFP1 on pipe A (PRD table, entries 1-4).
+
+**Why this matters**: the SPI-carved VBT A is what any static VBT analysis would find, but it
+has NO sequences — while the runtime VBT B (what Windows/Linux both receive from the GOP)
+HAS them. Any "VBT has no panel-init sequences" reasoning based on the SPI image alone is
+wrong for this machine. (An earlier revision of this document made exactly that mistake;
+corrected here against `i915_vbt` debugfs evidence.)
 
 ## 3. WRE-01: the GOP driver
 
@@ -66,18 +95,19 @@ is the **Intel GOP driver**:
    function at `_decomp.c` around the `0xc0004` reference) — this is the GOP→OS VBT pointer
    handoff (matches the i915 `GopDriver`/GOP-VBT-early-doc flow).
 4. 107 functions total (decomp `_funcs.txt`); grep of the full decompiled C finds:
-   **no DCS command sequences** (no `0x11`/`0x29` write sequences), **no panel-power MMIO
-   constants** (no `0xc7204/0xc7208`, no delay loops 0x1f4/0x1388/0x7d0), **no MIPI sequence
-   interpreter**. The GOP only parses VBT, sets mode, and passes handoff data — consistent
-   with §2: this panel needs no DCS init (video-mode self-init), and panel power rails are
-   managed over the PMIC I2C bus per VBT (the I2C traffic path is the one unproven area;
-   flagged, not asserted).
+   **no direct panel-power MMIO constants** (no `0xc7204/0xc7208`, no delay loops
+   0x1f4/0x1388/0x7d0 as immediates). The GOP parses VBT, sets mode, and passes the handoff
+   (§3.3). Whether the GOP itself replays the block-53 sequences (GPIO/DCS table) before
+   handoff is not proven from decomp alone; the sequence CONTENT is fully known (§2) and
+   the Linux side executes them at enable/disable (see
+   docs/research/RESUME_VS_RELOAD_DIFFERENTIAL.md).
 5. Other FV modules (`gop_candidate_06b5947e.efi` 126,720 B — no identifying strings;
    `vbt_candidate_a622ab73.efi` 63,456 B — `GdCreatePixmap: unsupported format %08x` string,
    Insyde graphics helper) are not the GOP driver.
-6. The capsule's own VBT differs from the running one: `bios_raw_8dfae5d4.bin` offset **2736**
-   holds `"$VBT GEMINILAKE     "` (header 48, vbt_size 4284) — a different build's VBT.
-   Recorded as reference only; the SPI (G0CN12WW) VBT of §2 is what the panel actually runs with.
+6. The capsule (G0CN14WW) carries its own `"$VBT GEMINILAKE     "` inside the GOP FV
+   (`bios_raw_8dfae5d4.bin` offset **2736**, header 48, vbt_size 4284 — smaller than the
+   runtime 5755 B VBT of §2 VBT B; different build). The running firmware (G0CN12WW) supplies
+   the runtime VBT through its own GOP.
 
 ## 4. WRE-02: what the Windows driver owns
 
@@ -109,25 +139,30 @@ Reading: the Windows driver owns a complete DSI encoder lifecycle — power-stat
 (`SetPanelPower`, `SendPPSPacket`, `GetPanelPowerSeqTimingDelay`) — and runs it on its own
 save/restore path (`SB_SAVESTATE_ARGS` / `SB_RESTORESTATE_ARGS`). This is the direct counterpart
 of the Linux resume path (`intel_dsi_vbt.c` + `intel_pps.c`), and the two implementations
-differ: Windows re-runs its DSI power-state sequence on every S3 resume; Linux depends on the
-PPS register state surviving S3 (only writes PP regs when it thinks they need reprogramming)
-and has **no VBT sequences to replay** (§2).
+differ: Windows re-runs its DSI power-state sequence on every S3 resume; Linux only re-runs
+the enable path if something re-atomic-enables the connector — which does not happen on this
+device (see docs/research/RESUME_VS_RELOAD_DIFFERENTIAL.md).
 
 ## 5. Implications for the bug (feeds 45-02)
 
-- The only "sequence" the panel needs beyond a plain DSI link up is panel power rails
-  (PMIC bus 6) + PP timing (500/500/500/5000 ms). The 5000 ms power-cycle delay is the
-  suspect: if Linux programs PP registers with stale/short state at resume (panel not fully
-  power-cycled), the panel stays black while everything else comes up cleanly (phase 44 sweep:
-  kernel logs clean, panel black; full i915 unbind/bind reload = the one fix that works).
-- 45-02 candidate: clamp the PP power-cycle delay path (`intel_pps.c` upstream logic) so the
-  resume PP sequence is forced deterministic, mirroring what Windows does unconditionally.
-  This RE pass supplies the ground truth for that patch.
+- The differential (docs/research/RESUME_VS_RELOAD_DIFFERENTIAL.md) proves the shape: on
+  S3 resume with the connector disabled pre-suspend, the Linux resume path runs only PP
+  bookkeeping (intel_pps_vdd_on/off, unlock_regs_wa, encoder_reset, get_hw_state) and
+  **never re-runs the DSI enable path** (no intel_dsi_pre_enable, no block-53 sequences,
+  no backlight on). The connector stays `enabled=disabled`, `dpms=Off`, `bl_power=4`.
+  A full i915 re-probe (unbind/bind) re-runs everything and the panel returns.
+- 45-02 candidate therefore: force the resume path to re-enable the DSI encoder (full
+  modeset/re-probe of the connector) from the `lenovo_d330_fix` module — not a PP-delay
+  clamp. The block-53 sequence content (§2) is the reference for what a correct enable
+  must replay: POWER_ON (GPIO 144 high) → INIT_OTP (GPIO 160 toggle) → DISPLAY_ON
+  (DCS 0x11, 200 ms, DCS 0x29) → BACKLIGHT_ON (150 ms, GPIO 145 high).
 - Non-goals: `i915.enable_psr=0` / `i915.enable_fbc=0` / `bl_power` masking are already
   excluded by docs/research/RESUME_FIX_LEDGER.md; this pass does not reopen them.
 
 ## 6. Open items
 
-- PMIC I2C bus 6 traffic path in GOP (which controller GOP talks to) — unproven, flagged in §3.4.
+- Whether the GOP itself replays block-53 sequences before handoff (decomp shows no direct
+  DCS/MMIO table interpreter; could be indirect via VBT structure) — unproven, flagged §3.4.
+- PMIC I2C bus 6 traffic path in GOP (which controller GOP talks to) — unproven, flagged §3.
 - igdkmd64.sys full decompilation (27 MB) — deliberately not done; symbol-string evidence above
   is sufficient for the findings scope. A Ghidra project can be rebuilt from the kit if needed.

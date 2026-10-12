@@ -468,7 +468,7 @@ installer never compiles; only the archive-guarded
 
 ## 9. Comprehensive Verification Test Suite
 
-Every subsystem includes an automated bash verification test script supporting `--probe`, `--simulate`, and `--dry-run` modes. The suite currently ships 38 test guards (`scripts/test_*.sh`); the representative ones are:
+Every subsystem includes an automated bash verification test script supporting `--probe`, `--simulate`, and `--dry-run` modes. The suite currently ships 39 test guards (`scripts/test_*.sh`); the representative ones are:
 1. `scripts/test_vaapi.sh`: Validates `vainfo` profile availability, environment variable persistence, and browser preference file syntax.
 2. `scripts/test_thermals.sh`: Verifies RAPL sysfs nodes, verifies PL1/PL2 power values, tests `thermald` configuration XML parsing.
 3. `scripts/test_oom_protection.sh`: Validates `earlyoom` configuration file parameters, systemd drop-in override syntax, and process exclusion lists.
@@ -480,6 +480,7 @@ Every subsystem includes an automated bash verification test script supporting `
 9. `scripts/test_distro_packaging.sh`: Validates Debian, RPM, and Arch packaging recipes and file manifests.
 10. `scripts/test_iso_integrity.sh`: Validates El Torito boot catalog, EFI system partition, and Live ISO build prerequisites.
 11. `scripts/test_ci_workflows.sh`: Validates GitHub Actions workflow YAML schemas.
+12. `scripts/test_re_diff_evidence.sh`: Validates the checksummed RE kit manifest, the GOP/DSI findings citations, and the resume-vs-reload differential evidence anchors (Phase 45).
 
 ---
 

@@ -61,7 +61,7 @@ if [[ "$MODE" == "dry-run" ]]; then
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
     cd "$REPO_ROOT"
 
-    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_doc_parity.sh scripts/test_pitfalls_ledger.sh scripts/test_safety_kit.sh scripts/test_storage_cellular.sh; do
+    for f in tools/d330-microsd-setup.sh scripts/test_microsd_guards.sh scripts/test_hibernate_guards.sh scripts/test_display_fix_guards.sh scripts/test_installer_symmetry.sh scripts/test_noop_guards.sh scripts/test_audio_dsp.sh scripts/test_mic_rnnoise.sh scripts/test_udev_hwdb_match.sh scripts/test_power_stack.sh scripts/test_wireless_coex.sh scripts/test_harness_trust.sh scripts/test_doc_parity.sh scripts/test_pitfalls_ledger.sh scripts/test_safety_kit.sh scripts/test_re_diff_evidence.sh scripts/test_storage_cellular.sh; do
         if bash -n "$f"; then
             echo "[OK] bash -n $f"
         else
@@ -159,6 +159,11 @@ if [[ "$MODE" == "dry-run" ]]; then
     # kit prep/verify utility (idempotent register, tamper detection) and the
     # capture-protocol doc completeness. Same contract as the suites above.
     bash scripts/test_safety_kit.sh
+
+    # RE + differential evidence suite (Phase 45, 45-01-T4): checksummed RE kit
+    # integrity + the GOP/DSI findings and resume-vs-reload docs carry their
+    # citation anchors. Same contract as the suites above.
+    bash scripts/test_re_diff_evidence.sh
 
     # Cellular packaging inventory: resolve the real FCC-unlock hook instead of
     # printing a hardcoded path that does not exist.
