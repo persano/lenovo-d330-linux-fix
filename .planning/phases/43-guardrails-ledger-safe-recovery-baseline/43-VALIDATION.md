@@ -19,7 +19,7 @@ created: 2026-10-12
 
 | Property | Value |
 |----------|-------|
-| **Framework** | House bash guard harness — 37 `scripts/test_*.sh` suites, case-function pattern, wired into `scripts/test_storage_cellular.sh` |
+| **Framework** | House bash guard harness — 38 `scripts/test_*.sh` suites, case-function pattern, wired into `scripts/test_storage_cellular.sh` |
 | **Config file** | none — pattern lives in each suite (research §Architecture Patterns, Pattern 1) |
 | **Quick run command** | `bash scripts/test_pitfalls_ledger.sh` / `bash scripts/test_safety_kit.sh` / `bash scripts/test_display_fix_guards.sh` / `bash scripts/test_installer_symmetry.sh` (per touched suite) |
 | **Full suite command** | `bash scripts/test_storage_cellular.sh --dry-run` plus `bash scripts/test_harness_trust.sh` |
@@ -46,9 +46,9 @@ created: 2026-10-12
 | 43-02-T2 | 43-02 | 1 | RECOV-01 | T-43-05 resume wedge | 82H0 gate, timeout-30 exactly-once, single attempt, distinct failure logs, DM ladder | unit (static) | `bash scripts/test_display_fix_guards.sh` | ✅ cases new | ✅ green (dc5e5a0) |
 | 43-03-T1 | 43-03 | 1 | RECOV-03 | T-43-04c manifest drift | State file manifest-tracked; uninstall rm; verify OK/SKIP/drift | unit (fixture) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ✅ green (8b83932) |
 | 43-03-T2 | 43-03 | 1 | RECOV-02 | T-43-04/T-43-04b packaging drift | Hook shipped by 3 packagers + CI with %files; no state file shipped | unit (static) | `bash scripts/test_installer_symmetry.sh` | ✅ cases new | ✅ green (2e67597) |
-| 43-04-T1 | 43-04 | 2 | GUARD-03 | T-43-02 kit tampering | sha256sum -c passes pristine, fails tampered; idempotent register | unit (fixture) | `bash scripts/test_safety_kit.sh` | ❌ created in task | ⬜ pending |
-| 43-04-T2 | 43-04 | 2 | GUARD-03 | T-43-06 short window | Protocol doc completeness (≥18 s, inhibit, no cold-boot, rollback) | unit (static) | `bash scripts/test_safety_kit.sh` | ✅ extended | ⬜ pending |
-| 43-04-T3 | 43-04 | 2 | GUARD-03 | T-43-02b verification gap | Harness chains suite 2; doc-parity at 38; kit git policy | unit (static) | `bash scripts/test_storage_cellular.sh --dry-run` + `bash scripts/test_doc_parity.sh` | ✅ exists | ⬜ pending |
+| 43-04-T1 | 43-04 | 2 | GUARD-03 | T-43-02 kit tampering | sha256sum -c passes pristine, fails tampered; idempotent register | unit (fixture) | `bash scripts/test_safety_kit.sh` | ✅ created | ✅ green (7457425) |
+| 43-04-T2 | 43-04 | 2 | GUARD-03 | T-43-06 short window | Protocol doc completeness (≥18 s, inhibit, no cold-boot, rollback) | unit (static) | `bash scripts/test_safety_kit.sh` | ✅ extended | ✅ green (3784b30) |
+| 43-04-T3 | 43-04 | 2 | GUARD-03 | T-43-02b verification gap | Harness chains suite 2; doc-parity at 38; kit git policy | unit (static) | `bash scripts/test_storage_cellular.sh --dry-run` + `bash scripts/test_doc_parity.sh` | ✅ exists | ✅ green (db7d4e2) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
