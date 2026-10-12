@@ -39,3 +39,5 @@ requirements: [GUARD-01, GUARD-02]
 
 - GUARD-01: 27-row ledger, one row per distinct disproven lever, alias + disproof + evidence, count bar enforced at 22.
 - GUARD-02: gate enforced by the full harness chain, fixture-proven non-vacuous, per-string allowlist, fail-closed parsing.
+
+<!-- planner-discipline-allow: i915.enable_psr=0 -->

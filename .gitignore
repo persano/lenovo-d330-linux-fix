@@ -1,5 +1,8 @@
 .gsd/work/
 docs/dumps/raw/
+# Safety kit artifacts are never committed; the integrity manifest is.
+docs/dumps/safety_kit/*
+!docs/dumps/safety_kit/MANIFEST.sha256
 drivers_base/*.exe
 drivers_base/*.zip
 *.o
@@ -10,6 +13,9 @@ Thumbs.db
 __pycache__/
 *.pyc
 .serena/
+
+# Local device credentials (never commit)
+.env
 
 # Local tool state (not part of the shipped project)
 opencode.json
