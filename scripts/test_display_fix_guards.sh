@@ -9,10 +9,10 @@
 # SC2 arithmetic fix are machine-checked in CI. The on-device dmesg/rtcwake
 # checks are the Task 8 (blocking-human) UAT checkpoint, not here.
 #
-# Cases (10): module-banner-no-dead-sleep, resume-service-deleted-zero-refs,
+# Cases (11): module-banner-no-dead-sleep, resume-service-deleted-zero-refs,
 # kernel-src-dryrun-first, nobgrt-kept, panel-orientation-present,
 # audit-claims-match-cfg, dkms-build-guards, resume-loop-arithmetic-fixed,
-# resume-loop-simulate-5, readme-truth.
+# resume-loop-simulate-5, readme-truth, hook-standdown-contract.
 # ==============================================================================
 
 set -euo pipefail
@@ -22,6 +22,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
 MODULE="patches/dkms/lenovo-d330-fix/lenovo_d330_fix.c"
+HOOK="patches/display/etc/systemd/system-sleep/lenovo-d330-display-resume.sh"
 DKMS_CONF="patches/dkms/lenovo-d330-fix/dkms.conf"
 # The deleted unit name is assembled from parts so this suite never ships the
 # contiguous literal the plan's zero-reference sweep forbids.
@@ -237,6 +238,29 @@ case_readme_truth() {
     fi
 }
 
+case_hook_standdown_contract() {
+    local rc=0
+    bash -n "$HOOK" || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        echo "    [detail] hook syntax error"
+        CASE_FAIL=1
+    fi
+    expect_file_out 'D330_REAL_FIX' "$HOOK"
+    expect_file_out 'real fix active (D330_REAL_FIX=1); reload hook stands down' "$HOOK"
+    expect_file_out 'Coexistence contract' "$HOOK"
+    # Ordering: the stand-down check line must precede the timeout invocation.
+    local stand tline
+    stand=$(grep -nF -- 'D330_REAL_FIX:-0' "$HOOK" | head -1 | cut -d: -f1 || true)
+    tline=$(grep -nF -- 'timeout 30' "$HOOK" | head -1 | cut -d: -f1 || true)
+    if [ -z "${stand:-}" ] || [ -z "${tline:-}" ] || [ "$stand" -ge "$tline" ]; then
+        echo "    [detail] stand-down check does not precede the timeout invocation (stand=${stand:-none} timeout=${tline:-none})"
+        CASE_FAIL=1
+    fi
+    # Disable path intact and still logged.
+    expect_file_out 'D330_DISPLAY_RESUME:-1' "$HOOK"
+    expect_file_out 'resume reload disabled (D330_DISPLAY_RESUME=0' "$HOOK"
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -251,6 +275,7 @@ CASE_NAMES=(
     case_resume_loop_arithmetic_fixed
     case_resume_loop_simulate_5
     case_readme_truth
+    case_hook_standdown_contract
 )
 
 for fn in "${CASE_NAMES[@]}"; do

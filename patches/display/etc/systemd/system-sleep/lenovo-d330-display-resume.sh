@@ -27,6 +27,11 @@
 # /etc/default/lenovo-d330-display-resume containing:
 #     D330_DISPLAY_RESUME=0
 # (the hook logs this on every resume).
+#
+# Coexistence contract: the same state file may also carry D330_REAL_FIX=1,
+# written by the Phase 45 real fix. When it is set, this reload hook stands
+# down and only logs; the real fix owns display restoration. The contract
+# ships in Phase 43; the marker is written by Phase 45.
 
 DRV=/sys/bus/pci/drivers/i915
 DISABLE_FILE=/etc/default/lenovo-d330-display-resume
@@ -53,6 +58,10 @@ case "${1:-}/${2:-}" in
         fi
         if [ "${D330_DISPLAY_RESUME:-1}" = "0" ]; then
             logger -t d330-display "resume reload disabled (D330_DISPLAY_RESUME=0 in $DISABLE_FILE)"
+            exit 0
+        fi
+        if [ "${D330_REAL_FIX:-0}" = "1" ]; then
+            logger -t d330-display "real fix active (D330_REAL_FIX=1); reload hook stands down"
             exit 0
         fi
         logger -t d330-display "resume: reloading i915 and restarting the display manager; disable with 'echo D330_DISPLAY_RESUME=0 > $DISABLE_FILE' or 'rm $0'"
