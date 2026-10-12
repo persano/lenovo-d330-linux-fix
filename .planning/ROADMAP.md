@@ -191,6 +191,9 @@ Plans:
 
 **Plans**: TBD
 
+- [x] 45-01-PLAN.md
+- [ ] 45-02-PLAN.md
+
 ### Phase 46: Verification, Delivery & Upstream (conditional)
 
 **Goal**: Prove the observable bar and no regressions on real hardware, and deliver through the honest channel — upstream only if a real fix landed.
@@ -208,7 +211,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 43. Guardrails, Ledger & Safe Recovery Baseline | 4/4 | Complete    | 2026-10-12 |
 | 44. Community & Upstream Survey + Cheap Levers | 1/1 | Complete    | 2026-10-12 |
-| 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 0/0 | Not started | - |
+| 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 1/2 | In Progress|  |
 | 46. Verification, Delivery & Upstream (conditional) | 0/0 | Not started | - |
 
 ---
