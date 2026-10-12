@@ -10,12 +10,12 @@
 # so the deploy manifest drives a fixture round trip; everything else is a
 # static grep against the installer and the two packaging enable sites.
 #
-# Cases (17): manifest-single-source, manifest-deploy-consistency,
+# Cases (18): manifest-single-source, manifest-deploy-consistency,
 # verify-drift-detected, verify-clean-passes, verify-conditional-absent,
-# verify-removed-direction, grub-regen-both-paths, uninstall-rescue-bypass,
-# enable-parity-8, user-unit-packaged, dropin-narrow-removal,
-# warn-named-packages, uninstall-gaps, uninstall-nonroot-warn, no-broad-rm-rf,
-# no-broad-ucm-rm-rf, bash-n-all.
+# state-file-verify-symmetry, verify-removed-direction, grub-regen-both-paths,
+# uninstall-rescue-bypass, enable-parity-8, user-unit-packaged,
+# dropin-narrow-removal, warn-named-packages, uninstall-gaps,
+# uninstall-nonroot-warn, no-broad-rm-rf, no-broad-ucm-rm-rf, bash-n-all.
 # ==============================================================================
 
 set -euo pipefail
@@ -36,7 +36,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Runs the Phase 35 installer symmetry guard suite (17 cases, static greps +
+Runs the Phase 35 installer symmetry guard suite (18 cases, static greps +
 manifest-driven --verify fixture, no real systemctl/dkms/grub).
 
 Options:
@@ -180,26 +180,30 @@ case_manifest_deploy_consistency() {
     while IFS=$'\t' read -r p k; do
         [ -n "$p" ] || continue
         case "$k" in
-            unit-enabled|unit-user-enabled|fstab-line|state) continue ;;
+            unit-enabled|unit-user-enabled|fstab-line) continue ;;
         esac
         b="${p##*/}"
-        # install deploy action
-        if ! contains "$install_body" "$b"; then
-            case "$p" in
-                /usr/src/*)
-                    contains "$install_body" "DEST_SRC" || {
-                        echo "    [detail] no install action for $p (DEST_SRC missing)"
-                        CASE_FAIL=1
-                    } ;;
-                */earlyoom.service.d/d330-override.conf)
-                    contains "$install_body" "earlyoom.service.d" || {
-                        echo "    [detail] no install action for $p"
-                        CASE_FAIL=1
-                    } ;;
-                *)
-                    echo "    [detail] no do_install cp/install action for $p"
-                    CASE_FAIL=1 ;;
-            esac
+        # State kinds are runtime artifacts: no install action exists by design,
+        # but the uninstall removal action is still required for symmetry.
+        if [ "$k" != "state" ]; then
+            # install deploy action
+            if ! contains "$install_body" "$b"; then
+                case "$p" in
+                    /usr/src/*)
+                        contains "$install_body" "DEST_SRC" || {
+                            echo "    [detail] no install action for $p (DEST_SRC missing)"
+                            CASE_FAIL=1
+                        } ;;
+                    */earlyoom.service.d/d330-override.conf)
+                        contains "$install_body" "earlyoom.service.d" || {
+                            echo "    [detail] no install action for $p"
+                            CASE_FAIL=1
+                        } ;;
+                    *)
+                        echo "    [detail] no do_install cp/install action for $p"
+                        CASE_FAIL=1 ;;
+                esac
+            fi
         fi
         # uninstall removal action
         if ! contains "$uninstall_body" "$p"; then
@@ -471,6 +475,51 @@ case_bash_n_all() {
     done
 }
 
+# RECOV-03 (Phase 43): the display-resume state file is manifest-tracked with
+# state-kind semantics: present-OK / absent-SKIP / drift-in-removed, symmetric
+# uninstall removal, and exactly one added manifest entry (Pitfall 5).
+case_state_file_verify_symmetry() {
+    local R C rc=0 U nstate
+    R="$(mktemp -d "$FIX/state_XXXXXX")"
+    populate_root "$R"
+    bash "$S" --verify --root "$R" > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_out "/etc/default/lenovo-d330-display-resume (state): present"
+    C="$(mktemp -d "$FIX/state_skip_XXXXXX")"
+    while IFS=$'\t' read -r p k; do
+        [ -n "$p" ] || continue
+        case "$k" in
+            unit-enabled|unit-user-enabled|fstab-line|state|file-optional|exec-optional|dir-optional|grub-snippet-optional) continue ;;
+        esac
+        case "$k" in
+            dir) mkdir -p "${C}${p}" ;;
+            exec) mkdir -p "$(dirname "${C}${p}")"; : > "${C}${p}"; chmod +x "${C}${p}" ;;
+            *) mkdir -p "$(dirname "${C}${p}")"; : > "${C}${p}" ;;
+        esac
+    done < <(dump_manifest)
+    rc=0
+    bash "$S" --verify --root "$C" > "$CASE_OUT" 2>&1 || rc=$?
+    expect_rc_eq "$rc" 0
+    expect_out "/etc/default/lenovo-d330-display-resume (state): conditional/runtime artifact absent"
+    rc=0
+    bash "$S" --verify --removed --root "$R" > "$CASE_OUT" 2>&1 || rc=$?
+    if [ "$rc" -eq 0 ]; then
+        echo "    [detail] removed-mode passed a populated root (expected non-zero)"
+        CASE_FAIL=1
+    fi
+    expect_out "/etc/default/lenovo-d330-display-resume (state): still present after uninstall"
+    nstate="$(dump_manifest | awk -F'\t' '$2 == "state"' | wc -l)"
+    if [ "$nstate" -ne 2 ]; then
+        echo "    [detail] state-kind manifest entries=$nstate (want exactly 2)"
+        CASE_FAIL=1
+    fi
+    U="$(awk '/do_uninstall\(\)/,/^}/' "$S")"
+    case "$U" in
+        *"rm -f /etc/default/lenovo-d330-display-resume"*) ;;
+        *) echo "    [detail] state file not removed in do_uninstall"; CASE_FAIL=1 ;;
+    esac
+}
+
 # ------------------------------------------------------------------------------
 # Runner
 # ------------------------------------------------------------------------------
@@ -480,6 +529,7 @@ CASE_NAMES=(
     case_verify_drift_detected
     case_verify_clean_passes
     case_verify_conditional_absent
+    case_state_file_verify_symmetry
     case_verify_removed_direction
     case_grub_regen_both_paths
     case_uninstall_rescue_bypass

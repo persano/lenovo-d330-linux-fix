@@ -155,6 +155,7 @@ deploy_manifest() {
 /etc/tlp.d/50-lenovo-d330.conf	file-optional
 /usr/share/color/icc/Lenovo-D330-sRGB-D65.icc	file-optional
 /etc/d330-hardware-state.json	state
+/etc/default/lenovo-d330-display-resume	state
 d330-tablet-daemon.service	unit-user-enabled
 lenovo-d330-power.service	unit-enabled
 lenovo-d330-camera-loopback.service	unit-enabled
@@ -921,6 +922,7 @@ do_uninstall() {
         # N6/I34: runtime state file written by d330-hardware-state.service
         # ExecStop (manifest kind 'state'); never removed before Phase 35.
         rm -f /etc/d330-hardware-state.json
+        rm -f /etc/default/lenovo-d330-display-resume
         set -e
 
         # M6: the tablet daemon is a global USER unit -> disable it globally.
