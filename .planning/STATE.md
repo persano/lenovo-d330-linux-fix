@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Reverse-Engineer & Fix the D330 Resume Black Screen
 status: planning
-last_updated: "2026-10-12T03:47:01.831Z"
+last_updated: "2026-10-12T00:00:00.000Z"
 last_activity: 2026-10-12
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -15,41 +15,61 @@ progress:
 
 # STATE: Project Execution State
 
-- **Active Milestone**: none — Milestone 7 (v7.0) shipped and archived
-- **Active Phase**: —
-- **Status**: Milestone 7 complete (11/11 phases, 32–42). All 4 Critical / 17 Moderate / 11 Minor audit findings plus one cross-phase packaging gap remediated. Awaiting next milestone.
+- **Active Milestone**: Milestone 8 (v8.0) — Reverse-Engineer & Fix the D330 Resume Black Screen
+- **Active Phase**: — (roadmap created; Phases 43-46 defined, awaiting `/gsd-plan-phase 43`)
+- **Status**: Roadmap created. 4 phases (43-46), 19/19 v1 requirements mapped, 0 planned. Start with Phase 43 (Guardrails, Ledger & Safe Recovery Baseline).
 - **Blockers**:
-  * [RESOLVED — Phase 32] C1 — `tools/d330-microsd-setup.sh --format` can mkfs the root disk (no mount check, `-F`, auto device substitution). Fixed: explicit `--device`, three ordered pre-write guards, no force flag, `partprobe`+`settle`; suite 26/0.
-  * [RESOLVED — Phase 32] C2 — `--mount-data` writes an fstab entry without `nofail` → emergency shell when the card is absent. Fixed: locked `nofail,x-systemd.device-timeout=10s` options, verify-before-append, rollback trap; suite 26/0.
-  * [RESOLVED — Phase 33] C3 — low-battery auto-hibernate had only a 3 GB zram swap → no valid resume device, safety net could not work. Fixed: disk-backed `/var/swapfile` oneshot unit (RAM-sized 4–8 GB clamp, free-space guard), fail-closed resume activation ladder (`resume=`+`resume_offset=`, honest manual-step exit), daemon refuse+degrade with `[ERROR]` when non-zram swap absent, enable sites ×3, ExecStart/package-name alignment; suite 21/0 + 26/0. Hardware round trip deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 34] C4 — the 600 ms PPS clamp was not delivered and the module advertised enforcement it did not perform. Fixed: module reduced to an honest DMI banner/breadcrumb (research proved no notifier event exists between panel-off/on), echo-only resume service deleted with all refs, optional `--kernel-src` clamp-patch step (dry-run first, warn-not-fail), grub cfg keeps `video=efifb:nobgrt` + adds `panel_orientation` tokens, dkms.conf build guards, README/CHANGES_AUDIT truth-fix, resume-loop set -e arithmetic fixed (--simulate 5/5). Suites 10/0 + 21/0 + 26/0. Hardware dmesg + real 5-cycle deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 35] M1/M2/M11/N6 — installer/uninstaller asymmetry. Fixed: single deploy manifest driving install/uninstall/`--verify [--root] [--removed]`, GRUB regen both paths, rescue-shell `--uninstall`/`--verify` (prereq+EUID skipped for install only), all 9 shipped units enabled at install_dkms.sh/deb/rpm, narrow earlyoom drop-in removal, named missing-package WARNs, uninstall gaps closed (state json, unmask wait-online ×2, dracut), `[WARN]` de-duplicated, best-effort removals with honest non-root warning, `.gitattributes *.sh eol=lf`. Suites 16/0 + 21/0 + 10/0 + 26/0. Hardware install→find / is-enabled deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 36] M3/M6/N7 — tray autostart pointed at a never-created binary and the tablet daemon ran as a context-less root system unit (all session commands silently no-op'd), with docs claiming a GTK app that does not exist. Fixed: desktop `Exec` -> `/usr/local/bin/d330-tray`, tray cwd-relative fallbacks removed, false GTK/AppIndicator claims downgraded to the honest stdlib notification/status helper; daemon converted to a systemd **user** unit (`/usr/lib/systemd/user/`, `WantedBy=default.target` + `Wants/PartOf=graphical-session.target`), enabled via `systemctl --global enable` at install + deb + rpm + shipped by all 3 packagers, install/`--verify`/uninstall manifest kinds `unit-user`/`unit-user-enabled`, dead loop removed, mode success logged only for desktop-applicable commands (headless run logs `[WARNING]`), dead udev triggers dropped. SC1: `test_tray_applet.sh` now exits non-zero on a wrong Exec (mutation-proven). Suites 9/0 + 17/0 + 21/0 + 10/0 + 26/0. Live GNOME dock/undock deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 37] M4/M5/M17 — two tools reported success for writes they never performed: `d330-backlight-pwm.py --apply` printed `[OK]` after merely checking the sysfs dir existed (a `Type=oneshot` boot service faked a 1000 Hz PWM apply), and `d330-sensor-filter` exited after a fixed ~1 s loop so its `Restart=on-failure` unit died permanently with the accelerometer claim (15° deadband) unimplemented. Fixed: honest PWM apply (intel_reg read-back delta required before `[OK]`, else `[SKIP]`/`[FAIL]` non-zero; parser reads the value after the last `:`, targets `BXT_BLC_PWM_FREQ1`/`0xC8254` only), no-op PWM boot service deleted (enabled units 9→8) across manifest/install/uninstall/packagers + CHANGES_AUDIT §4.5 corrected; sensor filter is now a `while True` daemon (SIGTERM/SIGINT clean, `--cycles`/`--once` test hook, `D330_IIO_BASE` seam) with real accel deadband/hysteresis + `in_illuminance_raw`→`in_illuminance_input` fallback; false-success test masks removed and `scripts/test_noop_guards.sh` (5/0, wired into the aggregate runner) proves no-false-success + a 62 s liveness run. Suites 5/0 + 17/0 + 21/0 + 10/0 + 26/0. No hardware override needed.
-  * [RESOLVED — Phase 38] M7 — PipeWire DSP confs were dead config: deployed to `filter-chain.conf.d/` (only read by `pipewire -c filter-chain.conf`, never by the running server), with invalid `label = biquad`, invalid `"Type"` controls, nonexistent `label = limiter`, no `links`, and a shared `filter_chain.nodes` var clobbered between the two files. Fixed: both fragments moved to `etc/pipewire/pipewire.conf.d/` (manifest/install/uninstall/packagers) and rewritten as valid inlined graphs (`bq_highpass`/`bq_peaking`/builtin `clamp`, explicit links naming declared nodes), RNNoise module carries `flags = [ nofail ]` + installer `log_warn` for the optional `librnnoise-ladspa` package, false-success test masks removed (`test_audio_dsp.sh --dry-run` structural 17/0, `test_mic_rnnoise.sh` fails closed when the plugin is absent — SC2 — via a `D330_LADSPA_DIRS` seam), shared `scripts/lib_conf_check.sh` helper, §4.3 "colors only the speakers" claim downgraded to the honest virtual-sink/route-it description. Suites 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + storage rc0. Live `pw-dump` deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 39] M8/M9/M10/M15/M16 — udev/hwdb rules and modprobe options did not match the target: hwdb DMI patterns used a space-stripped `pvrLenovoideapadD330-*` form that can never match the real `pvrLenovo ideapad D330-*` modalias; sensor udev globs were case-sensitive against `BOSC0200`/`ACPI0008`; `MODE`/`GROUP` were set on read-only sysfs platform attrs (no-op); `ENV{SOUND_INITIALIZED}`/`ENV{WL_OUTPUT}` were dead properties; the wifi-resume hook bounced the radio unconditionally (dropping VPN/ssh on every wake); refresh-screen force-rotated 90° and reported success while changing nothing; and `options rtl8821ce/iwlwifi/pcie_aspm` targeted absent modules/non-module params. Fixed: space-free `pn82H0`/`pn81MD`/`pn81H3` hwdb keys (+ `evdev:` touchscreen keys), case-insensitive `[Bb][Oo][Ss][Cc]0200`/`[Aa][Cc][Pp][Ii]0008` globs, no-op/dead properties removed with root/`pkexec` documented, resume hook bounces only an enabled-but-wedged link, refresh-screen preserves current rotation and exits non-zero when no display path ran, wireless conf targets only real modules (rtw88_core/rtw88_pci; `ant_sel` only on out-of-tree rtl8821ce; Intel + pcie_aspm removed). New `scripts/test_udev_hwdb_match.sh` (10/0) scans all 22 modprobe options + asserts all product codes; SC3 mutation-proven. Suites 10/0 + 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + audio 17/0 + rnnoise 7/0. Hardware `udevadm test`/`modprobe -s` deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 40] M13/M14 — the power stack had multiple writers per knob: `lenovo-d330-power-tune.sh` wrote a boot-only CPU cap *and* a broad `power/control=auto` loop racing TLP; the udev rule forced `power/control` on PCI/USB/I2C/sound that TLP already manages; TLP set a sub-minimum `INTEL_GPU_MIN_FREQ_ON_AC=100` (rejected every AC event); `nowatchdog` disabled lockup detection; thermald's zone `<Type>cpu</Type>` did not match the sysfs zone and `d330-thermal-tune.sh` did `$((pl1 / 1000000))` on a non-numeric `N/A`. Fixed: AC-aware cap (`max_perf_pct` 100/75) re-applied on power-source change by a `SUBSYSTEM=="power_supply"` `ACTION=="change"` udev rule (the script no longer writes runtime PM); udev reduced to the eMMC host + dock (2 `power/control` lines) with TLP the sole runtime-PM owner via `RUNTIME_PM_ON_AC/ON_BAT`; sub-minimum GPU min dropped and MAX 650/BOOST 700 documented (Intel ARK/`gt_max_freq_mhz`); `nowatchdog` → `softlockup_panic=1`, CHANGES_AUDIT §7.7 watchdog claim corrected; thermald zone `<Type>` → `x86_pkg_temp`, numeric regex guards in `d330-thermal-tune.sh`, thermald declared in debian Recommends. New `scripts/test_power_stack.sh` (12/0) wired into the aggregate. Hardware SC1/SC2/SC3 deferred (see PENDING DEPLOY).
-  * [PENDING DEPLOY] Phase 38 UAT test 1 — live `pw-dump | grep -E 'd330_speaker_dsp|rnnoise_source_d330'` after a PipeWire daemon restart (both virtual nodes load) — deferred under a documented VERIFICATION override (no PipeWire daemon on this host). Machine-checked equivalents green (valid graphs under pipewire.conf.d + install/packager deploy + SC2 fail-closed; dsp 17/0, rnnoise 7/0). Re-run at sign-off: `/gsd-verify-work 38`.
-  * [PENDING DEPLOY] Phase 32 UAT items 1–2 — physical mounted-target abort on a real MicroSD and on-target `/etc/fstab` + absent-card boot on the D330 — were deferred under documented VERIFICATION overrides (no hardware in this environment). Machine-checked equivalents are green (suite 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 32`.
-  * [PENDING DEPLOY] Phase 33 UAT tests 1–2 — `systemctl hibernate` → power-cycle → resume round trip, and on-device `systemctl is-enabled` ×2 after a real install — deferred under documented VERIFICATION overrides (no hardware). Machine-checked equivalents green (probe: dry-run report, zram-only refusal, ready-path hibernate invocation; suites 21/0 + 26/0). Re-run on the tablet at sign-off: `/gsd-verify-work 33` (7-step sequence in `33-03-SUMMARY.md`).
-  * [PENDING DEPLOY] Phase 34 UAT tests 1–2 — `dmesg | grep lenovo_d330_fix` DMI banner and 5 real suspend/resume cycles on the D330 — deferred under documented VERIFICATION overrides. Machine-checked equivalents green (`--simulate` 5/5; module static asserts; suites 10/0 + 21/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 34`.
-  * [PENDING DEPLOY] Phase 35 UAT tests 1–2 — real install→`find /etc /usr/local/bin /usr/share/alsa` empty sweep and `systemctl is-enabled` ×9 after a real install — deferred under documented VERIFICATION overrides (no systemd target). Machine-checked equivalents green (`--verify --removed` round trip, 9-unit enable parity; suites 16/0 + 21/0 + 10/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 35`.
-  * [PENDING DEPLOY] Phase 36 UAT test 1 — live GNOME dock/undock on the D330 (panel auto-rotate + OSK on detach, landscape + OSK hide on attach; `systemctl --user` unit active) — deferred under a documented VERIFICATION override (no hardware/live session). Machine-checked equivalents green (user-unit shape + packager deploy + enable parity; tray harness 9/0 with SC1 mutation catch; suites 17/0 + 21/0 + 10/0 + 26/0). Re-run at sign-off: `/gsd-verify-work 36`.
-  * [PENDING DEPLOY] Phase 39 UAT tests 1–2 — on-device `udevadm test`/`udevadm hwdb --test` (rules + `pn82H0` keys resolve) and `modprobe -s rtw88_8821ce`/`rtw88_core`/`rtw88_pci` reflecting the intended params — deferred under documented VERIFICATION overrides (no udev/D330 or rtw88 module here). Machine-checked equivalents green (`test_udev_hwdb_match.sh` 10/0 scanning all 22 options; SC3 mutation-proven). Re-run at sign-off: `/gsd-verify-work 39`.
-  * [PENDING DEPLOY] Phase 40 UAT tests 1–3 — on-device `tlp-stat -s` vs `/sys/class/powercap` agreement after AC hot-plug, a clean TLP journal across a full AC/battery cycle, and a reproduced boot bench — deferred under documented VERIFICATION overrides (no D330/TLP/RAPL here). Machine-checked equivalents green (`test_power_stack.sh` 12/0, non-vacuous; storage --dry-run rc 0). Re-run at sign-off: `/gsd-verify-work 40`.
-  * [RESOLVED — Phase 40] M13/M14 — the power stack had multiple writers per knob: `lenovo-d330-power-tune.sh` applied a boot-only 75% CPU cap that survived AC plug; the udev `95` rule forced `power/control=auto` broadly while TLP also drove runtime PM (permanent flapping); TLP `INTEL_GPU_MIN_FREQ_ON_AC=100` was below the GLK ~300 MHz min (rejected write every AC event); `nowatchdog` disabled the very lockup detection the device needs; thermald `<Type>cpu</Type>` could be ignored and `d330-thermal-tune.sh` `$((pl1/1000000))` turned `N/A` into 0. Fixed: AC-aware perf cap (mains by `type`, fail-safe to battery) re-applied on a Mains-filtered `power_supply` change rule, TLP as sole owner of PCI/USB/MMC runtime PM with scoped udev for i2c/sound/eMMC/dock, GPU min removed + max/boost documented, `nowatchdog`→`softlockup_panic=1`+`panic=10` with §7.7 claim corrected, thermald `x86_pkg_temp` + numeric guards (pl1/pl2/temp) + `ExecCondition` fallback + debian Recommends. New `scripts/test_power_stack.sh` (12/0, non-vacuous, repo-wide `power/control` scan). Suites 12/0 + 17/0 + 21/0 + 10/0 + 26/0 + 5/0 + 10/0 + 17/0 + 7/0. Hardware/boot SC1-3 deferred (see PENDING DEPLOY).
-  * [RESOLVED — Phase 41] M12/N8 — 23 of 27 `test_*.sh` exited 0 no matter what and their `--dry-run` modes validated nothing. Fixed: failure counters + non-zero exit across the always-green scripts (removed `cmd || true` + unconditional success), live mutations gated behind `--apply` (thermals/boot_speed/battery_power/memory_storage), parser/arith bugs fixed (`((x++))` under `set -e`, `--stress N`/`--cycle-test N` values consumed, real daemon `--simulate-*` flags), false `[OK]` for missing subjects removed (cellular rules/FCC hook, tablet-osk daemon status, hardware toggle), `SCRIPT_DIR` CWD anchors, `build_live_iso.sh --dry-run` validates real prereqs + `test_iso_integrity.sh` inherits it, and new `scripts/test_harness_trust.sh` (SC1 mutation on 5 subjects with intact-baseline guard; SC2 structural no-mutation-without-`--apply` scan) wired into the aggregate runner. Suites all green. No hardware override needed.
-  * [RESOLVED — Phase 42] M17/N1–N5/N7/N9/N10 — repo/docs were not release-clean: 50 shell scripts tracked `100644` though README says `sudo ./scripts/install_dkms.sh`; the FCC-unlock hook was an empty blob whose colon name never matched; CHANGES_AUDIT carried wrong values (fbc, swappiness/BFQ, touch-mode, PWM, earlyoom, PL2 window, `--avoid`, wireless, tray, test count, power_cycle_delay_ms 500-vs-600); dead code + unclosed handles; packagers piped every `cp` into `|| true`. Fixed: all `scripts/*.sh`+`tools/*.sh` (and `tools/d330-ctl`) tracked `100755` with packager `chmod 755`; FCC hook shipped as target `/etc/ModemManager/fcc-unlock.d/8086:7360` with warn-on-missing; every CHANGES_AUDIT contradiction reconciled to code; dead code (`SW_LID`, except shadow) removed + handles closed; packagers fail loudly (no `cp || true`) + optional deps declared (thermald/earlyoom/zram-generator/rnnoise/vainfo/desktop); README tree + `.desktop` hygiene; new `scripts/test_doc_parity.sh` (19/0). Suites all green. Only the real package build is host-bound (see PENDING DEPLOY).
-  * [PENDING DEPLOY] Phase 42 UAT test 1 — real `dpkg-buildpackage -b` / `makepkg -f` / `rpmbuild -bb` failing on a deliberately broken copy step — deferred under a documented VERIFICATION override (no debhelper-13/makepkg/rpmbuild here). Machine half green (no `cp ... || true` remains in any packager; doc-parity guard 19/0). Re-run on a Linux/POSIX host at sign-off: `/gsd-verify-work 42`.
-  * [RESOLVED — Milestone audit] Cross-phase packaging gap found by the integration checker: the 3 packagers + CI deb installed `tools/d330-*` with their `.py`/`.sh` suffixes while shipping `ExecStart=` units that reference suffix-free names, so packaged installs enabled units that could not start. Fixed in `5e4948b` (all 3 packagers + `.github/workflows/build-packages.yml` rename to the installer's suffix-free names, ship `lenovo-d330-power-tune` + tray autostart, chmod 755; CI no longer `cp ... || true`); `scripts/test_hibernate_guards.sh` updated to assert it. Gates: hibernate 21/0, doc-parity 19/0, installer-symmetry 17/0, aggregate rc 0.
-- **Next Immediate Action**: none — start the next milestone with `/gsd-new-milestone`. Known non-blocking tech debt is in `.planning/v7.0-MILESTONE-AUDIT.md`.
+  * [PENDING DEPLOY — inherited from v7.0] 12 documented VERIFICATION overrides (11 `uat_gaps` + 1 `deferred_items` resolved in place) for hardware-in-the-loop, daemon, package-build and live-session criteria (Phases 32-42). Machine-checked equivalents are green; re-run each at deployment sign-off with `/gsd-verify-work <N>`. Detail in `.planning/milestones/v7.0-ROADMAP.md` and `.planning/v7.0-MILESTONE-AUDIT.md`.
+  * [PENDING — v8.0 Phase 43] Golden `i915.ko` backup, live USB and VBT/GOP dump are NOT yet staged; the packaged seamless recovery is not yet shipped by the packagers. These are Phase 43 deliverables and must land before any kernel experiment.
+- **Next Immediate Action**: `/gsd-plan-phase 43`
 
 ## Project Reference
 
-See `.planning/PROJECT.md` (updated 2026-10-08 after v7.0).
+See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** deployment sign-off on a physical D330 (the PENDING DEPLOY items above).
+**Current focus:** v8.0 — kill the D330 resume-black bug (test kernel Ubuntu `7.0.0-38-generic`).
+
+## Current Position
+
+Phase: 43 of 46 (Guardrails, Ledger & Safe Recovery Baseline)
+Plan: — of — in current phase
+Status: Ready to plan
+Last activity: 2026-10-12 — v8.0 roadmap created (Phases 43-46)
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+
+- Total plans completed: 0
+- Average duration: —
+- Total execution time: — hours
+
+**Recent Trend:**
+
+- Last 5 plans: —
+- Trend: —
+
+*Updated after each plan completion*
+
+## Accumulated Context
+
+### Decisions
+
+Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecting current work:
+
+- [Roadmap v8.0]: Phase ordering is load-bearing — the provably-correct packaged seamless recovery and the banned-lever gate ship first (Phase 43); the costly Windows/GOP RE and root-cause differential (Phase 45) are gated behind the cheap upstream/mainline survey (Phase 44).
+- [Roadmap v8.0]: Milestone closes honestly on the packaged recovery if no clean resume fix is achievable (ROOT-04); any real fix must be shaped as an upstreamable i915 DMI quirk in `intel_quirks.c`.
+
+### Pending Todos
+
+None yet.
+
+### Blockers/Concerns
+
+See the Blockers list above (inherited v7.0 PENDING DEPLOY items + Phase 43 safety-kit staging).
 
 ## Deferred Items
 
@@ -72,57 +92,18 @@ Items acknowledged/deferred at milestone close (v7.0), most recent first:
 
 Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps` + 1 `deferred_items` resolved in place), 0 carried forward from a prior close.
 
+## Session Continuity
+
+Last session: 2026-10-12
+Stopped at: v8.0 roadmap created — Phases 43-46 defined, STATE reset to v8.0
+Resume file: None
+
 ## Archived Milestones
 
-- [x] **Milestone 1: Display & Power Parity (v1.0)** - All Phases 0-5 Completed & Shipped
-- [x] **Milestone 2: Peripheral Parity & Tablet Usability (v2.0)** - All Phases 6-9 Completed & Shipped
-- [x] **Milestone 3: Vision, Ergonomics & Multimedia (v3.0)** - All Phases 10-14 Completed & Shipped
-- [x] **Milestone 4: Connectivity, Firmware & System Boot (v4.0)** - All Phases 15-20 Completed & Shipped
-- [x] **Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0)** - All Phases 21-23 Completed & Shipped
-- [x] **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)** - All Phases 24-31 Completed & Shipped
-
-## Active Milestone
-
+- [x] **Milestone 1: Display & Power Parity (v1.0)** - Phases 0-5 Completed & Shipped
+- [x] **Milestone 2: Peripheral Parity & Tablet Usability (v2.0)** - Phases 6-9 Completed & Shipped
+- [x] **Milestone 3: Vision, Ergonomics & Multimedia (v3.0)** - Phases 10-14 Completed & Shipped
+- [x] **Milestone 4: Connectivity, Firmware & System Boot (v4.0)** - Phases 15-20 Completed & Shipped
+- [x] **Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0)** - Phases 21-23 Completed & Shipped
+- [x] **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)** - Phases 24-31 Completed & Shipped
 - [x] **Milestone 7: Pre-Deployment Audit Remediation (v7.0)** - Phases 32-42 Completed & Shipped (archived to `.gsd/milestones/v7.0-ROADMAP.md`)
-
-## Current Position
-
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-10-12 — Milestone v8.0 started
-
-## Performance Metrics
-
-| Plan | Duration | Tasks | Files |
-|------|----------|-------|-------|
-| Phase 33 P33-03 | 20min | 1 tasks | 3 files |
-| Phase 34 P34-01 | 25min | 7 tasks | 13 files |
-| Phase 39 P01 | 12min | 5 tasks | 14 files |
-| Phase 40 P01 | ~2m | 6 tasks | 12 files |
-
-## Decisions
-
-- [Phase ?]: 33-03: README documents Secure Boot/lockdown degradation as owner decision, never an instruction to weaken security (R3)
-- [Phase ?]: 33-03: R1 probe commands + round-trip-only-proof rule embedded verbatim in README Known Limits so the unverified initramfs swap-file resume stays visible
-- [Phase ?]: 33-03: requirements SC1-3 left unmarked (on-device proof deferred to UAT); marking now would claim unproven success (T-33-04)
-- [Phase ?]: 34-01: PM handler is option (b) honest DMI banner; research Q1 proves no notifier event between panel-off/on so a notifier sleep adds zero TCON discharge time
-- [Phase ?]: 34-01: video=efifb:nobgrt KEPT (research 3a disproved removal premise; parsed by efifb_setup)
-- [Phase ?]: 34-01: echo-only resume service deleted with zero stale refs; enabled-unit census 9->8 (Phase 35 recount)
-- [Phase ?]: 34-01: SC1/SC2 left hardware-gated (Task 8 UAT); only SC3 machine-verified this phase
-- [Phase 39]: 39-01: emit both rtl8821ce + rtw88_8821ce module spellings; keep only real in-tree rtw88 params (disable_lps_deep/disable_aspm); drop fwlps/ips and all Intel options
-- [Phase 39]: 39-01: match hwdb/udev on DMI pn82H0/pn81MD/pn81H3; the pvr product string has a space and never matched
-- [Phase 39]: 39-01: udev cannot chmod sysfs platform attrs (drop MODE/GROUP); wifi resume only bounces a wedged link; refresh-screen preserves rotation and drops the no-op dpms branch
-- [Phase 40]: 40-01: AC-aware CPU perf cap re-applied on power_supply change; removed the script's broad runtime-PM writer
-- [Phase 40]: 40-01: TLP is the sole runtime-PM owner (PCI/USB/I2C/sound); udev scoped to eMMC host + dock
-- [Phase 40]: 40-01: dropped sub-minimum INTEL_GPU_MIN_FREQ=100; nowatchdog -> softlockup_panic=1; thermald owns RAPL
-
-## Session
-
-**Last session:** 2026-10-08T23:14:51.241Z
-**Stopped at:** Milestone v7.0 complete — archived; awaiting next milestone
-**Resume file:** None
-
-## Operator Next Steps
-
-- Start the next milestone with /gsd-new-milestone
