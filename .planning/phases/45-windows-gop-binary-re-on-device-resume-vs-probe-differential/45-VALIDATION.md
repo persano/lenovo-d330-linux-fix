@@ -2,8 +2,8 @@
 phase: 45
 slug: windows-gop-binary-re-on-device-resume-vs-probe-differential
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-10-12
 ---
 
@@ -46,11 +46,11 @@ created: 2026-10-12
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved — plan-checker iteration 1 issues fixed (ledger markers, --kit-dir, runnable chain command, per-candidate ledger cross-check, hook-absence branch, concrete CI dispatch/patch-carry/deploy loop with known-good .deb retention); gate passed=4 failed=0; all 6 tasks machine-verified.
