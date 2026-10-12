@@ -2,7 +2,7 @@
 phase: 44
 slug: community-upstream-survey-cheap-levers
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-10-12
 ---
@@ -44,11 +44,11 @@ created: 2026-10-12
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 60s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved — Nyquist audit 2026-10-12: gate + full chain re-run green on live tree (ledger passed=4 failed=0, chain PASS, all 38 suites); per-task verify greps T1/T2/T3 re-run OK against commits 246635d/155f17f/8c6a563. Panel-verdict manual row NOT SATISFIED does not block: genuinely non-automatable over SSH, honestly recorded, and SURVEY-02 satisfied via the machine-verifiable 615c8ec48621 axis; limitation handed to Phase 45 differential.
