@@ -2,20 +2,20 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Reverse-Engineer & Fix the D330 Resume Black Screen
-current_phase: 43
-current_phase_name: Guardrails, Ledger & Safe Recovery Baseline
-status: executing
-stopped_at: v8.0 roadmap created — Phases 43-46 defined, STATE reset to v8.0
-last_updated: "2026-10-12T14:32:10.129Z"
+current_phase: 44
+current_phase_name: Community & Upstream Survey + Cheap Levers
+status: planning
+stopped_at: Phase 43 complete, ready to plan Phase 44
+last_updated: "2026-10-12T16:44:50.820Z"
 last_activity: 2026-10-12
-last_activity_desc: v8.0 roadmap created (Phases 43-46)
-state_head: 44da1fd6970e99ae7708c511e3fd9f615646273c
+last_activity_desc: Phase 43 complete, transitioned to Phase 44
+state_head: b8bf23be683f792655af579af7e9f20fe55d6532
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 4
+  percent: 25
 ---
 
 # STATE: Project Execution State
@@ -33,14 +33,14 @@ progress:
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** v8.0 — kill the D330 resume-black bug (test kernel Ubuntu `7.0.0-38-generic`).
+**Current focus:** Phase 43 — Guardrails, Ledger & Safe Recovery Baseline
 
 ## Current Position
 
-Phase: 43 (Guardrails, Ledger & Safe Recovery Baseline) — READY TO EXECUTE
-Plan: — of — in current phase
-Status: Ready to execute
-Last activity: 2026-10-12 — v8.0 roadmap created (Phases 43-46)
+Phase: 44 — Community & Upstream Survey + Cheap Levers
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-12 — Phase 43 complete, transitioned to Phase 44
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -100,7 +100,7 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 ## Session Continuity
 
 Last session: 2026-10-12
-Stopped at: v8.0 roadmap created — Phases 43-46 defined, STATE reset to v8.0
+Stopped at: Phase 43 complete, ready to plan Phase 44
 Resume file: None
 
 ## Archived Milestones

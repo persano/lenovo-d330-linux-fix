@@ -131,7 +131,7 @@ close the milestone (Phase 46).
 
 **Phases:**
 
-- [ ] **Phase 43: Guardrails, Ledger & Safe Recovery Baseline** - Turn the disproven-lever list into a machine-checkable gate, stage the on-device safety kit, and ship the packaged, manifest-symmetric seamless recovery
+- [x] **Phase 43: Guardrails, Ledger & Safe Recovery Baseline** - Turn the disproven-lever list into a machine-checkable gate, stage the on-device safety kit, and ship the packaged, manifest-symmetric seamless recovery (completed 2026-10-12)
 - [ ] **Phase 44: Community & Upstream Survey + Cheap Levers** - Confirm whether upstream already fixes GLK DSI resume, sweep mainline for a good/bad kernel pair, and file the i915 bug
 - [ ] **Phase 45: Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential** - RE `igdkmd64.sys`/GOP and run the on-device resume-vs-reload differential to land a DMI-gated fix (or prove none is achievable)
 - [ ] **Phase 46: Verification, Delivery & Upstream (conditional)** - Prove the observable bar and no-regression on-device, and submit upstream only if a real fix landed
@@ -148,18 +148,18 @@ close the milestone (Phase 46).
   3. After resume on `82H0` the display is automatically restored with no user action — a DMI-gated, `timeout`-bounded i915 unbind/bind plus display-manager restart
   4. The recovery ships through the installer and all three packagers plus the CI `.deb`, is installed/uninstalled symmetrically via the deploy manifest, is idempotent, is disable-able via a manifest-tracked state file, and does not fight the real fix when both are present
 
-**Plans**: 4 plans
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 43-01-PLAN.md — Banned-lever ledger + machine gate (GUARD-01, GUARD-02)
-- [ ] 43-02-PLAN.md — Recovery hook hardening + guard cases (RECOV-01, RECOV-03)
-- [ ] 43-03-PLAN.md — Packagers + CI ship the hook; state-file manifest symmetry (RECOV-02, RECOV-03)
+- [x] 43-01-PLAN.md — Banned-lever ledger + machine gate (GUARD-01, GUARD-02)
+- [x] 43-02-PLAN.md — Recovery hook hardening + guard cases (RECOV-01, RECOV-03)
+- [x] 43-03-PLAN.md — Packagers + CI ship the hook; state-file manifest symmetry (RECOV-02, RECOV-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 43-04-PLAN.md — Safety kit prep/verify + capture protocol doc (GUARD-03)
+- [x] 43-04-PLAN.md — Safety kit prep/verify + capture protocol doc (GUARD-03)
 
 ### Phase 44: Community & Upstream Survey + Cheap Levers
 
@@ -204,7 +204,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 43. Guardrails, Ledger & Safe Recovery Baseline | 0/4 | Planned | - |
+| 43. Guardrails, Ledger & Safe Recovery Baseline | 4/4 | Complete    | 2026-10-12 |
 | 44. Community & Upstream Survey + Cheap Levers | 0/0 | Not started | - |
 | 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 0/0 | Not started | - |
 | 46. Verification, Delivery & Upstream (conditional) | 0/0 | Not started | - |
