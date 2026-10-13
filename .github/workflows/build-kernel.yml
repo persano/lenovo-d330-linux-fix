@@ -61,6 +61,7 @@ jobs:
       - name: Resolve exact source version and extract its config
         env:
           KV: ${{ inputs.kernel_version }}
+          REL: ${{ inputs.ubuntu_release }}
         run: |
           set -euxo pipefail
           BUILD="$RUNNER_TEMP/kbuild"
@@ -68,9 +69,13 @@ jobs:
           mkdir -p "$BUILD" && cd "$BUILD"
           # /boot/config-* moved between releases: resolute (26.04) ships it in
           # linux-modules-*, older kernels in linux-image-unsigned-*. Try each.
+          # -t pins the target release: the runner's own archive may carry a
+          # higher-versioned backport of the same kernel (e.g. noble's
+          # 7.0.0-38.38~24.04.4) that would otherwise win the download and
+          # poison apt-get source with a version absent from the target.
           CFG=""
           for IMG in "linux-modules-${KV}" "linux-image-unsigned-${KV}" "linux-image-${KV}"; do
-            apt-get download "$IMG" || continue
+            apt-get download -t "$REL" "$IMG" || continue
             set -- "${IMG}"_*.deb
             DEB="$1"
             SRC_VER="$(dpkg-deb -f "$DEB" Version)"
