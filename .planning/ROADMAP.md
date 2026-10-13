@@ -260,7 +260,21 @@ budget. Delivery (Phase 49) proves the observable bar and closes honestly either
   2. `docs/research/DSI_MMIO_DIFF.md` records the diff, excludes volatile/irrelevant registers with reasons, and names the mechanism as a testable claim (which hardware state the GOP sets that the resume path does not)
   3. Every claim is machine-evidenced; the ledger gate stays green
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 47-01-PLAN.md — Dump instrument: additive i915 debugfs snapshot node + CI build (MMIO-01)
+- [ ] 47-02-PLAN.md — Diff tooling + static evidence guard (MMIO-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 47-03-PLAN.md — On-device capture session: deploy, one boot/resume pair, kit registration (MMIO-01)
+
+**Wave 3** *(blocked on Waves 1-2 completion)*
+
+- [ ] 47-04-PLAN.md — Diff the pair, name the mechanism, Phase-48 handoff (MMIO-01, MMIO-02)
 
 ### Phase 48: Clean DMI-Gated Fix (MMIO-Guided)
 
