@@ -1,5 +1,15 @@
 # Milestones
 
+## v8.0 v8.0 (Shipped: 2026-10-13)
+
+**Phases completed:** 4 phases, 8 plans, 0 tasks
+
+**Key accomplishments:**
+
+- (none recorded)
+
+---
+
 ## v7.0 Pre-Deployment Audit Remediation (Shipped: 2026-10-08)
 
 **Phases completed:** 11 phases, 15 plans, 53 tasks
