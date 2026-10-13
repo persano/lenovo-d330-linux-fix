@@ -264,28 +264,27 @@
 +	.write = d330_dsi_dump_write,
 +	.llseek = default_llseek,
 +};
---- a/drivers/gpu/drm/i915/display/intel_display_debugfs.c
-+++ b/drivers/gpu/drm/i915/display/intel_display_debugfs.c
-@@ -824,6 +824,9 @@
- 	{"i915_lpsp_status", i915_lpsp_status, 0},
+--- a/drivers/gpu/drm/i915/i915_debugfs.c
++++ b/drivers/gpu/drm/i915/i915_debugfs.c
+@@ -722,6 +722,9 @@
+ 	{"i915_gem_drop_caches", &i915_drop_caches_fops},
  };
  
 +/* Additive D330 instrumentation (intel_dsi_dump_debugfs.c). */
 +void d330_dsi_dump_register(struct intel_display *display);
 +
- void intel_display_debugfs_register(struct intel_display *display)
+ void i915_debugfs_register(struct drm_i915_private *i915)
  {
- 	struct dentry *debugfs_root = display->drm->debugfs_root;
-@@ -831,6 +834,9 @@
- 	debugfs_create_file("i915_fifo_underrun_reset", 0644, debugfs_root,
- 			    display, &i915_fifo_underrun_reset_ops);
+ 	struct dentry *debugfs_root = i915->drm.debugfs_root;
+@@ -740,5 +743,8 @@
+ 	drm_debugfs_create_files(i915_debugfs_list,
+ 				 ARRAY_SIZE(i915_debugfs_list),
+ 				 debugfs_root, i915->drm.primary);
  
 +	/* Additive D330 instrumentation: DSI MMIO snapshot (read-only). */
-+	d330_dsi_dump_register(display);
++	d330_dsi_dump_register(&i915->display);
 +
- 	drm_debugfs_create_files(intel_display_debugfs_list,
- 				 ARRAY_SIZE(intel_display_debugfs_list),
- 				 debugfs_root, display->drm->primary);
+ 	i915_gpu_error_debugfs_register(i915);
 --- a/drivers/gpu/drm/i915/Makefile
 +++ b/drivers/gpu/drm/i915/Makefile
 @@ -328,6 +328,7 @@
