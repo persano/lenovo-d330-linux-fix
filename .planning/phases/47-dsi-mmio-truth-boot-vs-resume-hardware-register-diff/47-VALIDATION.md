@@ -33,6 +33,7 @@ created: 2026-10-13
 - **After every plan wave:** Run `bash scripts/test_pitfalls_ledger.sh && bash scripts/test_re_diff_evidence.sh`
 - **Before `/gsd-verify-work`:** Full suite must be green
 - **Max feedback latency:** 30 seconds
+- **Justified latency exceptions (47-01, nyquist_latency):** two 47-01 automated verifies intentionally exceed the 30 s bar and are recorded here as exceptions, not violations: (1) Task 2's CI build wait (~40 min) — kernel delivery is locked to the CI-built `.deb` by decision D-01, so this is a delivery constraint, not a per-commit feedback loop; (2) Task 1's on-device `make M=drivers/gpu/drm/i915 modules` compile check (minutes-long kernel build). Per-commit feedback stays within the bar via the ledger gate (`test_pitfalls_ledger.sh`, ~10-30 s); the long checks are once-per-task end proofs, not per-commit loops.
 
 ---
 

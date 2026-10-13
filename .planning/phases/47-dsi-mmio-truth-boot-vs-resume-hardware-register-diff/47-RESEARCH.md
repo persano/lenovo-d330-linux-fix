@@ -428,22 +428,26 @@ join -t= -j1 /tmp/a /tmp/b | awk -F= '$2!=$3 {print}'   # differing offsets, bot
 | A4 | `echo`-triggered snapshot semantics satisfy the locked "manual sysfs/debugfs echo per state" wording | Pattern 1 | Planner/user can prefer plain cat-on-read; the snapshot design is the recommended, strictly-safer reading |
 | A5 | i915 fastboot keeps the boot dump GOP-faithful (no DSI init runs at boot; no user-triggered modeset between boot and dump) | What This Phase Must Add | Boot dump is kernel-contaminated → DIFF must then classify which values i915 could have written (ftrace reload write-set provides the boundary) |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Will the in-kernel read path read the DSI PHY block?**
    - What we know: IGT read 0xffffffff there; the driver polls PHY `GRC_DONE`, so the kernel path works when the driver uses it.
    - What's unclear: whether plain `intel_de_read` under RPM in a debugfs context returns real values, 0xffffffff, or hangs.
    - Recommendation: boot dump runs first and doubles as the capability probe; the exclusion table and decision tree already branch on the outcome.
+   - RESOLVED: handled as a Pattern-4 decision-tree branch in 47-04 — the boot dump doubles as the capability probe and the tree branches on the outcome.
 2. **Does the diff produce a register-level mechanism, or only RO-bit correlates?**
    - What we know: 21 readable registers differed cold-vs-resume and forcing them did nothing; resume-vs-reload readable diff was empty.
    - What's unclear: whether the new ground (PHY block, RO bits) yields the ONE claim or the honest unreachable-mechanism closure.
    - Recommendation: use the Pattern 4 decision tree; both outcomes satisfy MMIO-02 if stated as a testable claim with the "what to restore/replicate" list.
+   - RESOLVED: the ONE claim is formed by the Pattern-4 mechanism-claim decision tree in 47-04 (register-level mechanism or honest unreachable-mechanism closure; both satisfy MMIO-02).
 3. **Name of register `0x160018`** (known differing DSI-PHY-area register).
    - What we know: prior diff lists it unnamed ("DSI PHY `0x160018`").
    - Recommendation: grep `0x160018` in the 7.0.0 tree during implementation; if unnamed there, cite it by address only.
+   - RESOLVED: 47-01 Task 1 tree-greps `0x160018` in the 7.0.0 tree during implementation; if unnamed there, the overlay cites it by address only.
 4. **Is `MIPI_CTRL` (`0x6b104`) state captured by the prior 21-row diff?**
    - What we know: the prior table does not list `0x6b104`; it may have been identical or unlisted.
    - Recommendation: no action — the new dump covers it either way; DIFF notes whether it reconfirms or adds it.
+   - RESOLVED: no action — the new dump covers `0x6b104` either way; 47-04 records whether it reconfirms or adds it.
 
 ## Environment Availability
 
