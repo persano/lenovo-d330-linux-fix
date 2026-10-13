@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v8.0
 milestone_name: Reverse-Engineer & Fix the D330 Resume Black Screen
-status: planning
-last_updated: "2026-10-12T00:00:00.000Z"
+status: executing
+stopped_at: Phase 44 complete, ready to plan Phase 45
+last_updated: "2026-10-12T19:54:56.552Z"
 last_activity: 2026-10-12
+last_activity_desc: Phase null execution started
+state_head: b160d46636b31ae51b71bf6f898fa1a0aba46d78
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
+  percent: 50
 ---
 
 # STATE: Project Execution State
@@ -28,14 +31,14 @@ progress:
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** v8.0 — kill the D330 resume-black bug (test kernel Ubuntu `7.0.0-38-generic`).
+**Current focus:** Phase null
 
 ## Current Position
 
-Phase: 43 of 46 (Guardrails, Ledger & Safe Recovery Baseline)
-Plan: — of — in current phase
-Status: Ready to plan
-Last activity: 2026-10-12 — v8.0 roadmap created (Phases 43-46)
+Phase: null — EXECUTING
+Plan: 1 of ?
+Status: Executing Phase null
+Last activity: 2026-10-12 — Phase null execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -95,7 +98,7 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 ## Session Continuity
 
 Last session: 2026-10-12
-Stopped at: v8.0 roadmap created — Phases 43-46 defined, STATE reset to v8.0
+Stopped at: Phase 44 complete, ready to plan Phase 45
 Resume file: None
 
 ## Archived Milestones

@@ -33,8 +33,8 @@ created: 2026-10-12
 | 45-01-T2 | 45-01 | 1 | WRE-01, WRE-02 | T-45-02 fabricated RE | Cited file+address+bytes findings; Ghidra headless artifacts kept in kit | unit (static) | evidence suite RE-citation greps | ❌ created in task | ⬜ pending |
 | 45-01-T3 | 45-01 | 1 | WRE-03 | T-45-02 fabricated RE | intel_vbt_decode output recorded verbatim (DSI link config, MIPI seq version) | device (SSH) | decode output greps in evidence doc | ❌ created in task | ⬜ pending |
 | 45-01-T4 | 45-01 | 1 | ROOT-01 | T-45-01 sweep tampering | Two-arm differential with ftrace/MMIO/backlight evidence, ≥18 s windows, rtcwake | device (SSH) | evidence suite arm-structure greps + chain | ❌ created in task | ⬜ pending |
-| 45-02-T1 | 45-02 | 2 | ROOT-02, ROOT-03 | T-45-03 false-fix claim | DMI-gated fix built in CI, deployed, register-verified on-device (backlight returns without reload) | device (SSH) | per-iteration rtcwake + sysfs assertions logged in evidence doc | ❌ created in task | ⬜ pending |
-| 45-02-T2 | 45-02 | 2 | ROOT-04 (conditional) | T-45-03 false-fix claim | If no fix: 5-iteration evidence + ROOT-04 proof doc; if fix: D330_REAL_FIX=1 marker step | unit (static) | evidence greps + chain | ❌ created in task | ⬜ pending |
+| 45-02-T1 | 45-02 | 2 | ROOT-02, ROOT-03 | T-45-03 false-fix claim | DMI-gated fix built in CI, deployed, outcome recorded per iteration. **Correction (45-02 evidence): sysfs/register state was proven a mirage (byte-identical while the panel is visually dead); outcomes verified with human eyes-on, machine traces kept as secondary evidence** | device (SSH) + eyes-on | per-iteration rtcwake + sysfs/ftrace logs in the iteration log + user verdict | ✅ green (candidates executed; all FAILED, recorded) | ✅ green |
+| 45-02-T2 | 45-02 | 2 | ROOT-04 (conditional) | T-45-03 false-fix claim | ROOT-04 branch taken: NO_CLEAN_FIX_PROOF.md + ledger rows 28-29 + proven-bar correction + known-good redeploy; D330_REAL_FIX=1 correctly absent | unit (static) | ledger gate (files=43 hits=0) + evidence greps + full chain | ✅ green | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -43,6 +43,13 @@ created: 2026-10-12
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Day-to-day UX confirmation after a landed fix | ROOT-02 (secondary) | The user's perception of daily usability is outside machine observation | After a landed fix: user uses the tablet normally across some suspend/resumes; NOT acceptance evidence — registers are |
+| Resume black-screen visual outcome (45-02 correction) | ROOT-03 | No machine sensor can see the panel's image (sysfs proved unreliable); the human eye is the only valid instrument for "image visible vs black" | After each fix iteration resume: user states "shows content / lit but black / fully black"; recorded verbatim in the iteration log |
+
+**Phase 45-02 premise correction:** the original "panel state read from registers/sysfs,
+never from user eyes (Phase 44 lesson)" stance is superseded — Phase 45-02 proved sysfs
+can read `dpms=On, bl_power=0` while the panel shows no image, and the eyes-on verdicts
+were the only reliable acceptance signal. Machine evidence remains mandatory for
+mechanism claims; eyes-on is mandatory for outcome claims.
 
 ## Validation Sign-Off
 

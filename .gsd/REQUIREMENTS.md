@@ -10,21 +10,21 @@ Requirements for milestone v8.0. Each maps to exactly one roadmap phase (Phases 
 
 ### Guardrails & Safety
 
-- [ ] **GUARD-01**: The disproven levers (22 on-device rows plus community/upstream dead ends) are consolidated into one binding ledger every phase plan must respect
-- [ ] **GUARD-02**: A machine-checkable test fails if a phase plan or the repo re-proposes a banned lever as a fix
-- [ ] **GUARD-03**: Safe on-device test protocol (black-resume vs working-reload control, full-window captures) plus off-device golden `i915.ko` and live-USB recovery are staged before any kernel experiment
+- [x] **GUARD-01**: The disproven levers (22 on-device rows plus community/upstream dead ends) are consolidated into one binding ledger every phase plan must respect
+- [x] **GUARD-02**: A machine-checkable test fails if a phase plan or the repo re-proposes a banned lever as a fix
+- [x] **GUARD-03**: Safe on-device test protocol (black-resume vs working-reload control, full-window captures) plus off-device golden `i915.ko` and live-USB recovery are staged before any kernel experiment
 
 ### Seamless Recovery Baseline
 
-- [ ] **RECOV-01**: After resume on `82H0` the display is automatically restored with no user action (DMI-gated, time-bounded i915 unbind/bind plus display-manager restart)
-- [ ] **RECOV-02**: Recovery ships through the installer and all three packagers plus the CI `.deb`, installed/uninstalled symmetrically via the deploy manifest
-- [ ] **RECOV-03**: Recovery is idempotent, disable-able via a manifest-tracked state file, and does not fight the real fix when both are present
+- [x] **RECOV-01**: After resume on `82H0` the display is automatically restored with no user action (DMI-gated, time-bounded i915 unbind/bind plus display-manager restart)
+- [x] **RECOV-02**: Recovery ships through the installer and all three packagers plus the CI `.deb`, installed/uninstalled symmetrically via the deploy manifest
+- [x] **RECOV-03**: Recovery is idempotent, disable-able via a manifest-tracked state file, and does not fight the real fix when both are present
 
 ### Community & Upstream Survey
 
-- [ ] **SURVEY-01**: A documented survey of upstream/community state (i915 GitLab, lore, ChromeOS, distro forums) confirms whether GLK DSI resume is a fixed regression anywhere
-- [ ] **SURVEY-02**: The test kernel is checked against known GLK DSI fixes (e.g. `615c8ec48621`) and a mainline sweep yields a good/bad kernel pair if one exists
-- [ ] **SURVEY-03**: A correctly-formed i915 bug report (trace plus reproducer) is filed or updated on the upstream tracker
+- [x] **SURVEY-01**: A documented survey of upstream/community state (i915 GitLab, lore, ChromeOS, distro forums) confirms whether GLK DSI resume is a fixed regression anywhere
+- [x] **SURVEY-02**: The test kernel is checked against known GLK DSI fixes (e.g. `615c8ec48621`) and a mainline sweep yields a good/bad kernel pair if one exists
+- [x] **SURVEY-03**: A correctly-formed i915 bug report (trace plus reproducer) is filed or updated on the upstream tracker
 
 ### Windows Behavior RE
 
@@ -72,15 +72,15 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GUARD-01 | Phase 43 | Pending |
-| GUARD-02 | Phase 43 | Pending |
-| GUARD-03 | Phase 43 | Pending |
-| RECOV-01 | Phase 43 | Pending |
-| RECOV-02 | Phase 43 | Pending |
-| RECOV-03 | Phase 43 | Pending |
-| SURVEY-01 | Phase 44 | Pending |
-| SURVEY-02 | Phase 44 | Pending |
-| SURVEY-03 | Phase 44 | Pending |
+| GUARD-01 | Phase 43 | Complete |
+| GUARD-02 | Phase 43 | Complete |
+| GUARD-03 | Phase 43 | Complete |
+| RECOV-01 | Phase 43 | Complete |
+| RECOV-02 | Phase 43 | Complete |
+| RECOV-03 | Phase 43 | Complete |
+| SURVEY-01 | Phase 44 | Complete |
+| SURVEY-02 | Phase 44 | Complete |
+| SURVEY-03 | Phase 44 | Complete |
 | WRE-01 | Phase 45 | Pending |
 | WRE-02 | Phase 45 | Pending |
 | WRE-03 | Phase 45 | Pending |
@@ -93,6 +93,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | VERIFY-03 | Phase 46 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 19 total
 - Mapped to phases: 19
 - Unmapped: 0

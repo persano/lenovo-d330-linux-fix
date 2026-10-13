@@ -131,8 +131,8 @@ close the milestone (Phase 46).
 
 **Phases:**
 
-- [ ] **Phase 43: Guardrails, Ledger & Safe Recovery Baseline** - Turn the disproven-lever list into a machine-checkable gate, stage the on-device safety kit, and ship the packaged, manifest-symmetric seamless recovery
-- [ ] **Phase 44: Community & Upstream Survey + Cheap Levers** - Confirm whether upstream already fixes GLK DSI resume, sweep mainline for a good/bad kernel pair, and file the i915 bug
+- [x] **Phase 43: Guardrails, Ledger & Safe Recovery Baseline** - Turn the disproven-lever list into a machine-checkable gate, stage the on-device safety kit, and ship the packaged, manifest-symmetric seamless recovery (completed 2026-10-12)
+- [x] **Phase 44: Community & Upstream Survey + Cheap Levers** - Confirm whether upstream already fixes GLK DSI resume, sweep mainline for a good/bad kernel pair, and file the i915 bug (completed 2026-10-12)
 - [ ] **Phase 45: Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential** - RE `igdkmd64.sys`/GOP and run the on-device resume-vs-reload differential to land a DMI-gated fix (or prove none is achievable)
 - [ ] **Phase 46: Verification, Delivery & Upstream (conditional)** - Prove the observable bar and no-regression on-device, and submit upstream only if a real fix landed
 
@@ -142,11 +142,24 @@ close the milestone (Phase 46).
 **Depends on**: Nothing (first phase of Milestone 8)
 **Requirements**: GUARD-01, GUARD-02, GUARD-03, RECOV-01, RECOV-02, RECOV-03
 **Success Criteria** (what must be TRUE):
+
   1. `docs/research/RESUME_FIX_LEDGER.md` consolidates all 22 on-device-disproven levers plus community/upstream dead ends, and `scripts/test_pitfalls_ledger.sh` exits non-zero when a phase plan re-proposes a banned lever as a fix
   2. The safety kit (golden `i915.ko.zst` with checksum, live USB, current VBT/GOP dump, checksummed tablet source tree) is staged off-device, and the black-resume-vs-working-reload capture protocol (no cold-boot control, `systemd-inhibit`, full ≥18 s window) is documented
   3. After resume on `82H0` the display is automatically restored with no user action — a DMI-gated, `timeout`-bounded i915 unbind/bind plus display-manager restart
   4. The recovery ships through the installer and all three packagers plus the CI `.deb`, is installed/uninstalled symmetrically via the deploy manifest, is idempotent, is disable-able via a manifest-tracked state file, and does not fight the real fix when both are present
-**Plans**: TBD
+
+**Plans**: 4/4 plans executed
+
+Plans:
+**Wave 1**
+
+- [x] 43-01-PLAN.md — Banned-lever ledger + machine gate (GUARD-01, GUARD-02)
+- [x] 43-02-PLAN.md — Recovery hook hardening + guard cases (RECOV-01, RECOV-03)
+- [x] 43-03-PLAN.md — Packagers + CI ship the hook; state-file manifest symmetry (RECOV-02, RECOV-03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 43-04-PLAN.md — Safety kit prep/verify + capture protocol doc (GUARD-03)
 
 ### Phase 44: Community & Upstream Survey + Cheap Levers
 
@@ -154,10 +167,14 @@ close the milestone (Phase 46).
 **Depends on**: Phase 43
 **Requirements**: SURVEY-01, SURVEY-02, SURVEY-03
 **Success Criteria** (what must be TRUE):
+
   1. A documented survey of upstream/community state (i915 GitLab, lore, ChromeOS, distro forums) states whether GLK DSI resume is a fixed regression anywhere
   2. The test kernel is checked against known GLK DSI fixes (`615c8ec48621`) and a mainline sweep yields a good/bad kernel pair if one exists
   3. A correctly-formed i915 bug report (trace plus reproducer) is filed or updated on the upstream tracker
+
 **Plans**: TBD
+
+- [x] 44-01-PLAN.md
 
 ### Phase 45: Windows / GOP Binary RE + On-Device Resume-vs-Probe Differential
 
@@ -165,12 +182,17 @@ close the milestone (Phase 46).
 **Depends on**: Phase 44
 **Requirements**: WRE-01, WRE-02, WRE-03, ROOT-01, ROOT-02, ROOT-03, ROOT-04
 **Success Criteria** (what must be TRUE):
+
   1. REA+Ghidra (GLM 5.3 Flash) decompiles `igdkmd64.sys` and the GOP image with cited file+address+bytes evidence, and the VBT is decoded confirming the DSI link config (single/dual-link, ports, MIPI sequence version)
   2. The Windows D3→D0 / display-power callback and GOP panel-init path are documented, listing the resume behaviors i915 lacks
   3. An on-device differential proves what the reload does that resume does not (DSI teardown / readout-state provenance), with instrumentation evidence
   4. A DMI-gated (`82H0`) i915 change makes resume power the panel without a full reload, verified on-device, and the backlight returns at the user's brightness with no manual write
   5. If no clean resume fix is achievable, that is proven with evidence and the milestone closes on the packaged recovery, not a non-fix
+
 **Plans**: TBD
+
+- [x] 45-01-PLAN.md
+- [x] 45-02-PLAN.md
 
 ### Phase 46: Verification, Delivery & Upstream (conditional)
 
@@ -178,16 +200,18 @@ close the milestone (Phase 46).
 **Depends on**: Phase 45
 **Requirements**: VERIFY-01, VERIFY-02, VERIFY-03
 **Success Criteria** (what must be TRUE):
+
   1. On-device acceptance: the display is lit, upright at 270 deg, with correct backlight across 10+ consecutive suspend/resume cycles with no manual action
   2. No regression to cold boot, the CCS/rotation fix, touch/audio, or the existing v1-v7 tool suites
   3. Any real fix is shaped as an upstreamable i915 DMI quirk (`intel_quirks.c`) and submitted only if ROOT-02 landed
+
 **Plans**: TBD
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 43. Guardrails, Ledger & Safe Recovery Baseline | 0/0 | Not started | - |
-| 44. Community & Upstream Survey + Cheap Levers | 0/0 | Not started | - |
-| 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 0/0 | Not started | - |
+| 43. Guardrails, Ledger & Safe Recovery Baseline | 4/4 | Complete    | 2026-10-12 |
+| 44. Community & Upstream Survey + Cheap Levers | 1/1 | Complete    | 2026-10-12 |
+| 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 2/2 | In Progress|  |
 | 46. Verification, Delivery & Upstream (conditional) | 0/0 | Not started | - |
 
 ---
