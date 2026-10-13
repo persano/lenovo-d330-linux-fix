@@ -2,18 +2,20 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Actually Fix the D330 Resume Black Screen
+current_phase: 47
+current_phase_name: DSI MMIO Truth (Boot vs Resume Hardware Register Diff)
 status: Roadmap created; awaiting Phase 47 plan
 stopped_at: Milestone v8.0 closed without a fix; v9.0 roadmap created, ready to plan Phase 47
-last_updated: "2026-10-13T16:19:16.457Z"
+last_updated: "2026-10-13T20:49:33.903Z"
 last_activity: 2026-10-13
 last_activity_desc: v9.0 milestone created (fix continues; no upstream dependency)
-state_head: 4093d070c247c38b9665d20e865125c3eaf91f38
+state_head: b9d3721b9eeb4d1f2186672203a4fc1ff8533682
 progress:
-  total_phases: 4
+  total_phases: 3
   completed_phases: 2
-  total_plans: 8
+  total_plans: 4
   completed_plans: 8
-  percent: 50
+  percent: 0
 ---
 
 # STATE: Project Execution State
@@ -35,7 +37,7 @@ See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 ## Current Position
 
-Phase: Milestone v8.0 complete
+Phase: 47 (DSI MMIO Truth (Boot vs Resume Hardware Register Diff)) — READY TO EXECUTE
 Plan: —
 Status: Awaiting next milestone
 Last activity: 2026-10-13 — Milestone v8.0 completed and archived
