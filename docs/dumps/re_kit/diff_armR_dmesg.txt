@@ -1,0 +1,50 @@
+[13260.277441] printk: Suspending console(s) (use no_console_suspend to debug)
+[13260.291593] wlp2s0: deauthenticating from 6c:5a:b0:f9:3b:c6 by local choice (Reason: 3=DEAUTH_LEAVING)
+[13260.449110] ACPI: EC: interrupt blocked
+[13260.469983] ACPI: PM: Preparing to enter system sleep state S3
+[13260.471672] ACPI: EC: event blocked
+[13260.471678] ACPI: EC: EC stopped
+[13260.471709] ACPI: PM: Saving platform NVS memory
+[13260.471798] Disabling non-boot CPUs ...
+[13260.474390] smpboot: CPU 1 is now offline
+[13260.485211] ACPI: PM: Low-level resume complete
+[13260.485280] ACPI: EC: EC started
+[13260.485282] ACPI: PM: Restoring platform NVS memory
+[13260.486552] Enabling non-boot CPUs ...
+[13260.486758] smpboot: Booting Node 0 Processor 1 APIC 0x2
+[13260.491525] CPU1 is up
+[13260.491759] ACPI: PM: Waking up from system sleep state S3
+[13260.901030] intel-hid INT33D5:00: unknown event 0xca
+[13260.901048] intel-hid INT33D5:00: switch event received, enable switches supports
+[13260.901191] input input26: PM: parent INT33D5:00 should not be sleeping
+[13260.901270] input: Intel HID switches as /devices/platform/INT33D5:00/input/input26
+[13260.901349] ACPI: button: The lid device is not compliant to SW_LID.
+[13261.009160] ACPI: EC: interrupt unblocked
+[13261.018042] ACPI: EC: event unblocked
+[13261.018892] iwlwifi 0000:02:00.0: RF_KILL bit toggled to enable radio.
+[13261.035760] iwlwifi 0000:02:00.0: Applying debug destination EXTERNAL_DRAM
+[13261.116620] iwlwifi 0000:02:00.0: Applying debug destination EXTERNAL_DRAM
+[13261.119336] iwlwifi 0000:02:00.0: FW already configured (0) - re-configuring
+[13261.245727] usb 1-4: reset high-speed USB device number 3 using xhci_hcd
+[13261.483559] usb 1-3: reset high-speed USB device number 2 using xhci_hcd
+[13261.720690] usb 1-7: reset full-speed USB device number 5 using xhci_hcd
+[13261.850045] OOM killer enabled.
+[13261.850053] Restarting tasks: Starting
+[13261.863919] Bluetooth: hci0: Legacy ROM 2.5 revision 1.0 build 3 week 17 2014
+[13261.907237] Restarting tasks: Done
+[13261.907264] efivarfs: resyncing variable state
+[13261.996688] Bluetooth: hci0: Intel Bluetooth firmware file: intel/ibt-hw-37.8.10-fw-1.10.3.11.e.bseq
+[13262.001816] wlp2s0: authenticate with bc:07:1d:08:d2:ea (local address=6c:94:66:ea:ab:6e)
+[13262.002965] wlp2s0: send auth to bc:07:1d:08:d2:ea (try 1/3)
+[13262.008885] wlp2s0: authenticated
+[13262.017552] wlp2s0: associate with bc:07:1d:08:d2:ea (try 1/3)
+[13262.045938] wlp2s0: RX AssocResp from bc:07:1d:08:d2:ea (capab=0x1511 status=0 aid=3)
+[13262.048809] wlp2s0: associated
+[13262.055535] wlp2s0: Limiting TX power to 22 (25 - 3) dBm as advertised by bc:07:1d:08:d2:ea
+[13262.216556] efivarfs: finished resyncing variable state
+[13262.216593] [lenovo_d330_fix] System resumed after 1957 ms; TCON timing is not enforced by this module (see Option 2 kernel patch).
+[13262.216614] random: crng reseeded on system resumption
+[13262.251846] PM: suspend exit
+[13262.256742] D33042 ARM-R RESUME RETURNED
+[13262.425166] Bluetooth: hci0: Intel BT fw patch 0x32 completed & activated
+[13262.481593] Bluetooth: MGMT ver 1.23

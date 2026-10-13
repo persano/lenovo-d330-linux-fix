@@ -1,0 +1,97 @@
+# tracer: function_graph
+#
+# CPU  DURATION                  FUNCTION CALLS
+# |     |   |                     |   |   |   |
+ 0)               |  /* L2 UNBIND */
+ 0)               |  intel_dsi_disable [i915]() {
+ 0) # 1071.122 us |    intel_dsi_vbt_exec_sequence [i915]();
+ 0)               |    intel_backlight_disable [i915]() {
+ 0)   1.015 us    |      intel_backlight_invert_pwm_level [i915]();
+ 0)   2.107 us    |      intel_backlight_set_pwm_level [i915]();
+ 0)   9.739 us    |    }
+ 0) * 24540.68 us |  }
+ 0)               |  intel_dsi_post_disable [i915]() {
+ 0)   4.284 us    |    vlv_dsi_wait_for_fifo_empty [i915]();
+ 0)               |    intel_dsi_vbt_exec_sequence [i915]() {
+ 0)               |      mipi_dsi_dcs_write_buffer() {
+ 0)               |        mipi_dsi_device_transfer() {
+ 0)               |          intel_dsi_host_transfer [i915]() {
+ 0)               |            mipi_dsi_create_packet() {
+ 0)   0.955 us    |              mipi_dsi_packet_format_is_long();
+ 0)   2.475 us    |            }
+ 0)   8.617 us    |          }
+ 0) + 10.824 us   |        }
+ 0) + 12.645 us   |      }
+ 0)   1.379 us    |      vlv_dsi_wait_for_fifo_empty [i915]();
+ 0)               |      mipi_dsi_dcs_write_buffer() {
+ 0)               |        mipi_dsi_device_transfer() {
+ 0)               |          intel_dsi_host_transfer [i915]() {
+ 0)               |            mipi_dsi_create_packet() {
+ 0)   1.005 us    |              mipi_dsi_packet_format_is_long();
+ 0)   3.061 us    |            }
+ 0)   9.048 us    |          }
+ 0) + 11.419 us   |        }
+ 0) + 17.845 us   |      }
+ 0)   1.620 us    |      vlv_dsi_wait_for_fifo_empty [i915]();
+ 0) @ 300267.4 us |    }
+ 0) @ 101116.0 us |    intel_dsi_vbt_exec_sequence [i915]();
+ 0) @ 100082.9 us |    intel_dsi_vbt_exec_sequence [i915]();
+ 0) @ 557091.5 us |  }
+ 0) + 12.102 us   |  intel_dsi_get_hw_state [i915]();
+ 0)   2.227 us    |  intel_dsi_get_hw_state [i915]();
+ ------------------------------------------
+ 0)  dl2.sh-35986  => kwin_wa-33707 
+ ------------------------------------------
+
+ 0)   9.535 us    |  intel_dsi_get_modes [i915]();
+ 0)               |  vlv_dsi_mode_valid [i915]() {
+ 0)   1.493 us    |    intel_dsi_mode_valid [i915]();
+ 0)   2.953 us    |  }
+ 0)   7.898 us    |  intel_dsi_get_modes [i915]();
+ 0)               |  vlv_dsi_mode_valid [i915]() {
+ 0)   1.345 us    |    intel_dsi_mode_valid [i915]();
+ 0)   2.770 us    |  }
+ 0)   7.955 us    |  intel_dsi_get_modes [i915]();
+ 0)               |  vlv_dsi_mode_valid [i915]() {
+ 0)   1.550 us    |    intel_dsi_mode_valid [i915]();
+ 0)   3.256 us    |  }
+ 1)   9.188 us    |  intel_dsi_get_modes [i915]();
+ 1)               |  vlv_dsi_mode_valid [i915]() {
+ 1)   1.497 us    |    intel_dsi_mode_valid [i915]();
+ 1)   2.919 us    |  }
+ 1)   8.369 us    |  intel_dsi_get_modes [i915]();
+ 1)               |  vlv_dsi_mode_valid [i915]() {
+ 1)   1.397 us    |    intel_dsi_mode_valid [i915]();
+ 1)   2.784 us    |  }
+ 1) + 10.853 us   |  intel_dsi_get_modes [i915]();
+ 1)               |  vlv_dsi_mode_valid [i915]() {
+ 1)   1.361 us    |    intel_dsi_mode_valid [i915]();
+ 1)   2.847 us    |  }
+ 1)   8.677 us    |  intel_dsi_get_modes [i915]();
+ 1)               |  vlv_dsi_mode_valid [i915]() {
+ 1)   1.553 us    |    intel_dsi_mode_valid [i915]();
+ 1)   2.947 us    |  }
+ 1)   8.314 us    |  intel_dsi_get_modes [i915]();
+ 1)               |  vlv_dsi_mode_valid [i915]() {
+ 1)   1.388 us    |    intel_dsi_mode_valid [i915]();
+ 1)   2.859 us    |  }
+ 1)   8.246 us    |  intel_dsi_get_modes [i915]();
+ 1)               |  vlv_dsi_mode_valid [i915]() {
+ 1)   1.413 us    |    intel_dsi_mode_valid [i915]();
+ 1)   2.705 us    |  }
+ ------------------------------------------
+ 1) kwin_wa-33707  =>  dl2.sh-35986 
+ ------------------------------------------
+
+ 1) ! 175.420 us  |  intel_backlight_device_unregister [i915]();
+ 1)   3.536 us    |  intel_backlight_device_unregister [i915]();
+ 1)   1.110 us    |  intel_backlight_device_unregister [i915]();
+ 1)   6.720 us    |  intel_pps_vdd_off_sync [i915]();
+ 1)   0.574 us    |  intel_pps_wait_power_cycle [i915]();
+ ------------------------------------------
+ 1)  dl2.sh-35986  => kworker-31494 
+ ------------------------------------------
+
+ 1)   1.809 us    |  intel_backlight_destroy [i915]();
+ 1)   0.612 us    |  intel_backlight_destroy [i915]();
+ 1)   0.491 us    |  intel_backlight_destroy [i915]();

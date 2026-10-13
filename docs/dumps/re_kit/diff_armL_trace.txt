@@ -1,0 +1,16 @@
+# tracer: function_graph
+#
+# CPU  DURATION                  FUNCTION CALLS
+# |     |   |                     |   |   |   |
+ 1) ! 109.423 us  |  intel_backlight_device_unregister [i915]();
+ 1)   1.453 us    |  intel_backlight_device_unregister [i915]();
+ 1)   1.004 us    |  intel_backlight_device_unregister [i915]();
+ 1)   1.931 us    |  intel_pps_vdd_off_sync [i915]();
+ 1)   0.503 us    |  intel_pps_wait_power_cycle [i915]();
+ ------------------------------------------
+ 1)  d42.sh-33217  => kworker-32793 
+ ------------------------------------------
+
+ 1)   1.004 us    |  intel_backlight_destroy [i915]();
+ 1)   0.552 us    |  intel_backlight_destroy [i915]();
+ 1)   0.507 us    |  intel_backlight_destroy [i915]();

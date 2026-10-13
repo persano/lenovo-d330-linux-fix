@@ -1,0 +1,50 @@
+[13279.934921]  ? x64_sys_call+0x1b7c/0x26e0
+[13279.934932]  ? do_syscall_64+0x113/0x14d0
+[13279.934944]  ? rcu_core+0x17c/0x330
+[13279.934956]  ? rcu_core_si+0xe/0x20
+[13279.934966]  ? handle_softirqs+0xe5/0x360
+[13279.934980]  ? irqentry_exit+0xb2/0x720
+[13279.934993]  ? clear_bhb_loop+0x70/0xc0
+[13279.935007]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[13279.935018] RIP: 0033:0x7bd3ea2ac802
+[13279.935030] Code: 08 0f 85 61 3a ff ff 49 89 fb 48 89 f0 48 89 d7 48 89 ce 4c 89 c2 4d 89 ca 4c 8b 44 24 08 4c 8b 4c 24 10 4c 89 5c 24 08 0f 05 <c3> 66 2e 0f 1f 84 00 00 00 00 00 66 2e 0f 1f 84 00 00 00 00 00 66
+[13279.935049] RSP: 002b:00007ffe89461db8 EFLAGS: 00000246 ORIG_RAX: 0000000000000003
+[13279.935064] RAX: ffffffffffffffda RBX: 00007ffe89461e40 RCX: 00007bd3ea2ac802
+[13279.935074] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000014
+[13279.935084] RBP: 00007ffe89461de0 R08: 0000000000000000 R09: 0000000000000000
+[13279.935094] R10: 0000000000000000 R11: 0000000000000246 R12: 0000629af06ad770
+[13279.935103] R13: 00007ffe89461ea0 R14: 00007ffe89461ea0 R15: 0000629af04df5f0
+[13279.935121]  </TASK>
+[13279.935127] Modules linked in: rfcomm(E) snd_seq_dummy(E) snd_hrtimer(E) ccm(E) qrtr(E) cmdlinepart(E) spi_nor(E) mtd(E) cmac(E) snd_hda_codec_intelhdmi(E) snd_hda_codec_hdmi(E) algif_hash(E) snd_hda_codec_alc269(E) snd_hda_codec_realtek_lib(E) snd_hda_scodec_component(E) algif_skcipher(E) snd_hda_codec_generic(E) af_alg(E) bnep(E) snd_hda_intel(E) snd_sof_pci_intel_apl(E) snd_sof_intel_hda_generic(E) soundwire_intel(E) snd_sof_intel_hda_sdw_bpt(E) intel_rapl_msr(E) snd_sof_intel_hda_common(E) joydev(E) snd_soc_hdac_hda(E) snd_sof_intel_hda_mlink(E) snd_sof_intel_hda(E) soundwire_cadence(E) snd_sof_pci(E) snd_sof_xtensa_dsp(E) snd_sof(E) snd_sof_utils(E) snd_soc_acpi_intel_match(E) v4l2loopback(OE) snd_soc_acpi_intel_sdca_quirks(E) soundwire_generic_allocation(E) snd_soc_sdw_utils(E) intel_pmc_bxt(E) snd_soc_acpi(E) soundwire_bus(E) intel_telemetry_pltdrv(E) intel_punit_ipc(E) intel_telemetry_core(E) snd_soc_sdca(E) x86_pkg_temp_thermal(E) crc8(E) uvcvideo(E) snd_soc_avs(E) snd_soc_hda_codec(E) snd_hda_ext_core(E)
+[13279.935265]  videobuf2_vmalloc(E) uvc(E) spi_intel_platform(E) videobuf2_memops(E) intel_powerclamp(E) snd_hda_codec(E) snd_hda_core(E) snd_intel_dspcfg(E) snd_intel_sdw_acpi(E) snd_hwdep(E) spi_intel(E) videobuf2_v4l2(E) coretemp(E) videobuf2_common(E) videodev(E) btusb(E) snd_soc_core(E) kvm_intel(E) mc(E) btmtk(E) btrtl(E) lenovo_d330_fix(OE) snd_compress(E) btbcm(E) btintel(E) kvm(E) bluetooth(E) think_lmi(E) irqbypass(E) ac97_bus(E) rapl(E) snd_pcm_dmaengine(E) intel_cstate(E) snd_pcm(E) wmi_bmof(E) firmware_attributes_class(E) snd_seq_midi(E) snd_seq_midi_event(E) snd_rawmidi(E) i2c_i801(E) i2c_smbus(E) i2c_mux(E) snd_seq(E) snd_seq_device(E) iwlmvm(E) snd_timer(E) mac80211(E) libarc4(E) iwlwifi(E) cfg80211(E) processor_thermal_device_pci_legacy(E) processor_thermal_device(E) processor_thermal_wt_hint(E) platform_temperature_control(E) bmi323_i2c(E) bmi323_core(E) snd(E) processor_thermal_soc_slider(E) processor_thermal_rfim(E) processor_thermal_rapl(E) intel_rapl_common(E) processor_thermal_wt_req(E)
+[13279.935482]  binfmt_misc(E) soundcore(E) processor_thermal_power_floor(E) processor_thermal_mbox(E) mei_me(E) intel_soc_dts_iosf(E) mei(E) bmc150_accel_i2c(E) bmc150_accel_core(E) industrialio_triggered_buffer(E) kfifo_buf(E) industrialio(E) goodix_ts(E) ideapad_laptop(E) platform_profile(E) soc_button_array(E) nls_iso8859_1(E) int3406_thermal(E) intel_pmc_core(E) pmt_telemetry(E) dptf_power(E) pmt_discovery(E) pmt_class(E) int3403_thermal(E) intel_pmc_ssram_telemetry(E) intel_vsec(E) intel_hid(E) int340x_thermal_zone(E) int3400_thermal(E) acpi_thermal_rel(E) sparse_keymap(E) input_leds(E) mac_hid(E) lpc_ich(E) sch_fq_codel(E) msr(E) ppdev(E) lp(E) parport(E) efi_pstore(E) zstd(E) zram(E) 842_decompress(E) 842_compress(E) lz4hc_compress(E) lz4_compress(E) dmi_sysfs(E) autofs4(E) btrfs(E) libblake2b(E) xor(E) raid6_pq(E) hid_multitouch(E) hid_generic(E) usbhid(E) hid(E) mmc_block(E) rpmb_core(E) rtsx_pci_sdmmc(E) spi_pxa2xx_platform(E) 8250_dw(E) dw_dmac(E) dw_dmac_core(E) spi_pxa2xx_core(E) sdhci_pci(E) sdhci_uhs2(E)
+[13279.935703]  psmouse(E) ucsi_acpi(E) typec_ucsi(E) sdhci(E) typec(E) ghash_clmulni_intel(E) serio_raw(E) cqhci(E) rtsx_pci(E) thunderbolt(E) i915(E) i2c_algo_bit(E) drm_buddy(E) ttm(E) drm_display_helper(E) cec(E) rc_core(E) pinctrl_geminilake(E) video(E) wmi(E) intel_lpss_pci(E) intel_lpss(E) idma64(E) aesni_intel(E)
+[13279.935895] ---[ end trace 0000000000000000 ]---
+[13280.204912] RIP: 0010:drm_framebuffer_cleanup+0x8f/0x100
+[13280.204951] Code: 8b 4c 24 48 0f b6 41 05 39 c3 72 bf 49 8d 9d 20 02 00 00 48 89 df e8 40 57 5a 00 49 8b 44 24 10 49 8b 54 24 08 49 8d 7c 24 08 <48> 3b 38 75 4c 48 3b 7a 08 75 46 48 89 42 08 48 89 10 48 b8 00 01
+[13280.204971] RSP: 0018:ffffd3290854f998 EFLAGS: 00010246
+[13280.204984] RAX: dead000000000122 RBX: ffff8c6b559f0220 RCX: ffffffffa493e7a0
+[13280.204995] RDX: dead000000000100 RSI: 0000000000000000 RDI: ffff8c6b4481b008
+[13280.205005] RBP: ffffd3290854f9b8 R08: 0000000000000000 R09: 0000000000000000
+[13280.205014] R10: 0000000000000000 R11: 0000000000000000 R12: ffff8c6b4481b000
+[13280.205023] R13: ffff8c6b559f0000 R14: 0000000000000000 R15: ffff8c6b4481bc00
+[13280.205034] FS:  00007bd3e3835e80(0000) GS:ffff8c6c1610b000(0000) knlGS:0000000000000000
+[13280.205046] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[13280.205055] CR2: 0000781982ab7000 CR3: 0000000110ec2000 CR4: 0000000000352ef0
+[13282.628225] D33042 ARM-L BIND
+[13282.628621] i915 0000:00:02.0: [drm] Unknown revision 0x06
+[13282.628639] i915 0000:00:02.0: [drm] Found geminilake (device ID 3185) integrated display version 10.00 stepping **
+[13282.628661] i915 0000:00:02.0: [drm] Unknown revid 0x06
+[13282.629409] i915 0000:00:02.0: [drm] VT-d active for gfx access
+[13282.629431] i915 0000:00:02.0: vgaarb: deactivate vga console
+[13282.629589] i915 0000:00:02.0: [drm] Using Transparent Hugepages
+[13282.629767] i915 0000:00:02.0: [drm] couldn't get memory information
+[13282.634066] i915 0000:00:02.0: [drm] Finished loading DMC firmware i915/glk_dmc_ver1_04.bin (v1.4)
+[13282.637942] [drm] cmdline forces connector DSI-1 panel_orientation to 3
+[13282.650822] i915 0000:00:02.0: [drm] Registered 3 planes with drm panic
+[13282.654322] [drm] Initialized i915 1.6.0 for 0000:00:02.0 on minor 0
+[13282.661155] ACPI: video: Video Device [GFX0] (multi-head: yes  rom: no  post: no)
+[13282.661795] input: Video Bus as /devices/pci0000:00/acpi.video_bus.0/input/input27
+[13282.662239] snd_hda_intel 0000:00:0e.0: bound 0000:00:02.0 (ops intel_audio_component_bind_ops [i915])
+[13283.745883] Console: switching to colour frame buffer device 160x50
+[13283.779636] i915 0000:00:02.0: [drm] fb0: i915drmfb frame buffer device

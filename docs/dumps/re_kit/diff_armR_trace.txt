@@ -1,0 +1,20 @@
+# tracer: function_graph
+#
+# CPU  DURATION                  FUNCTION CALLS
+# |     |   |                     |   |   |   |
+ 0)   6.697 us    |  intel_pps_vdd_off_sync [i915]();
+ 1)   5.424 us    |  intel_pps_unlock_regs_wa [i915]();
+ ------------------------------------------
+ 1) kworker-33285  => kworker-33269 
+ ------------------------------------------
+
+ 1)   5.349 us    |  intel_pps_unlock_regs_wa [i915]();
+ 1)   1.587 us    |  intel_pps_encoder_reset [i915]();
+ 1)   3.650 us    |  intel_dsi_get_hw_state [i915]();
+ 1)   2.046 us    |  intel_dsi_get_hw_state [i915]();
+ ------------------------------------------
+ 1) kworker-33269  => kworker-31494 
+ ------------------------------------------
+
+ 1)   1.648 us    |  intel_pps_vdd_on [i915]();
+ 1)   2.011 us    |  intel_pps_vdd_off [i915]();

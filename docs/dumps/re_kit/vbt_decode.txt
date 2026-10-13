@@ -1,0 +1,1020 @@
+VBT header:
+	VBT signature:		"$VBT BROXTON        "
+	VBT version:		0x0064 (1.0)
+	VBT header size:	0x0030 (48)
+	VBT size:		0x1506 (5382)
+	VBT checksum:		0x72
+	BDB offset:		0x00000030 (48)
+	AIM #1 offset:		0x00000000 (0)
+	AIM #2 offset:		0x00000000 (0)
+	AIM #3 offset:		0x00000000 (0)
+	AIM #4 offset:		0x00000000 (0)
+
+BDB header:
+	BDB signature:		"BIOS_DATA_BLOCK "
+	BDB version:		206
+	BDB header size:	0x0016 (22)
+	BDB size:		0x14d5 (5333)
+
+BDB blocks present:
+	  1   2   3   6   7   8   9  10  12  13  17  18  20  26  27  28
+	 31  32  40  41  42  43  44  46  51  52 252 253 254
+
+BDB block 1 (5 bytes, min 7 bytes) - General features block:
+	Panel fitting: text & graphics (0x3)
+	Flexaim: yes
+	Message: yes
+	Clear screen: 0
+	DVO color flip required: no
+	External VBT: no
+	LVDS SSC Enable: no
+	LVDS SSC frequency: 120 MHz (0x0)
+	LFP on override: no
+	Disable SSC on clone: no
+	Underscan support for VGA timings: no
+	Dynamic CD clock: yes
+	Hotplug support in VBIOS: no
+	Disable smooth vision: no
+	Single DVI for CRT/DVI: no
+	Enable 180 degree rotation: no
+	Inverted FDI Rx polarity: no
+	Extended VBIOS mode: no
+	Copy iLFP DTD to SDVO LVDS DTD: no
+	Best fit panel timing algorithm: no
+	Ignore strap state: no
+	Legacy monitor detect: yes
+	Integrated CRT: no
+	Integrated TV: no
+	Integrated EFP: no
+	DP SSC enable: no
+	DP SSC frequency: 120 MHz (0x0)
+	DP SSC dongle supported: no
+
+BDB block 2 (309 bytes, min 5 bytes) - General definitions block:
+	CRT DDC GMBUS addr: 0x02
+	Use DPMS on AIM devices: yes
+	Skip CRT detect at boot: no
+	Use Non ACPI DPMS CRT power states: no
+	Boot display type: 0x0000
+	Child device size: 38
+	Child device count: 8
+	Child device info:
+		Device handle: 0x0008 (LFP1)
+		Device type: 0x1806 (unknown)
+			Internal connector
+			Not HDMI output
+			DisplayPort output
+			Digital output
+		I2C speed: 100 kHz (0x00)
+		DP onboard redriver:
+			present: no
+			vswing: 0.4V (0x0)
+			pre-emphasis: 0dB (0x0)
+		DP ondock redriver:
+			present: no
+			vswing: 0.4V (0x0)
+			pre-emphasis: 0dB (0x0)
+		HDMI max data rate: <platform max> (0x00)
+		HDMI level shifter value: 0x00
+		Offset to DTD buffer for edidless CHILD: 0x00
+		Dual pipe ganged eDP: no
+		Compression method CPS: no
+		Compression enable: no
+		Edidless EFP: no
+		Compression structure index: 0
+		AIM offset: 0
+		DVO Port: DP-A (0x0a)
+		AIM I2C pin: 0x00
+		AIM Target address: 0x00
+		DDC pin: 0x03
+		EDID buffer ptr: 0x00
+		DVO config: 0x00
+		HPD sense invert: yes
+		Iboost enable: no
+		Onboard LSPCON: no
+		Lane reversal: no
+		EFP routed through dock: no
+		TMDS compatible? no
+		DP compatible? no
+		HDMI compatible? no
+		Aux channel: AUX-A (0x40)
+		Dongle detect: 0x00
+		Integrated encoder instead of SDVO: yes
+		Hotplug connect status: 0x00
+		SDVO stall signal available: no
+		Pipe capabilities: 0x00
+		DVO wiring: 0x00
+		MIPI bridge type: 00 (<unknown>)
+		Device class extension: 0x00
+		DVO function: 0x00
+		DP USB type C support: no
+		2X DP GPIO index: 0x00
+		2X DP GPIO pin number: 0x00
+		IBoost level for DP/eDP: 0x00
+		IBoost level for HDMI: 0x00
+	Child device info:
+		Device handle: 0x0004 (EFP1)
+		Device type: 0x60d6 (DisplayPort/HDMI/DVI)
+			Power management
+			Hotplug signaling
+			Content protection
+			High speed link
+			TMDS/DVI signaling
+			DisplayPort output
+			Digital output
+		I2C speed: 100 kHz (0x00)
+		DP onboard redriver:
+			present: no
+			vswing: 0.8V (0x2)
+			pre-emphasis: 0dB (0x0)
+		DP ondock redriver:
+			present: no
+			vswing: 0.8V (0x2)
+			pre-emphasis: 0dB (0x0)
+		HDMI max data rate: <platform max> (0x00)
+		HDMI level shifter value: 0x08
+		Offset to DTD buffer for edidless CHILD: 0x8ea
+		Dual pipe ganged eDP: no
+		Compression method CPS: no
+		Compression enable: no
+		Edidless EFP: no
+		Compression structure index: 0
+		AIM offset: 0
+		DVO Port: DP-B (0x07)
+		AIM I2C pin: 0x00
+		AIM Target address: 0x00
+		DDC pin: 0x01
+		EDID buffer ptr: 0x00
+		DVO config: 0x00
+		HPD sense invert: yes
+		Iboost enable: no
+		Onboard LSPCON: yes
+		Lane reversal: no
+		EFP routed through dock: no
+		TMDS compatible? no
+		DP compatible? no
+		HDMI compatible? no
+		Aux channel: AUX-B (0x10)
+		Dongle detect: 0x01
+	Block 6 min size 3 less than block size 117
+Block 7 min size 3 less than block size 7
+Block 8 min size 3 less than block size 61
+Block 10 min size 1 less than block size 203
+	Integrated encoder instead of SDVO: yes
+		Hotplug connect status: 0x00
+		SDVO stall signal available: no
+		Pipe capabilities: 0x00
+		DVO wiring: 0x01
+		MIPI bridge type: 00 (<unknown>)
+		Device class extension: 0x00
+		DVO function: 0x00
+		DP USB type C support: no
+		2X DP GPIO index: 0x00
+		2X DP GPIO pin number: 0x00
+		IBoost level for DP/eDP: 0x00
+		IBoost level for HDMI: 0x00
+	Child device info:
+		Device handle: 0x0040 (EFP2)
+		Device type: 0x60d6 (DisplayPort/HDMI/DVI)
+			Power management
+			Hotplug signaling
+			Content protection
+			High speed link
+			TMDS/DVI signaling
+			DisplayPort output
+			Digital output
+		I2C speed: 100 kHz (0x00)
+		DP onboard redriver:
+			present: no
+			vswing: 0.8V (0x2)
+			pre-emphasis: 0dB (0x0)
+		DP ondock redriver:
+			present: no
+			vswing: 0.8V (0x2)
+			pre-emphasis: 0dB (0x0)
+		HDMI max data rate: <platform max> (0x00)
+		HDMI level shifter value: 0x08
+		Offset to DTD buffer for edidless CHILD: 0x8fc
+		Dual pipe ganged eDP: no
+		Compression method CPS: no
+		Compression enable: no
+		Edidless EFP: no
+		Compression structure index: 0
+		AIM offset: 0
+		DVO Port: DP-C (0x08)
+		AIM I2C pin: 0x00
+		AIM Target address: 0x00
+		DDC pin: 0x02
+		EDID buffer ptr: 0x00
+		DVO config: 0x00
+		HPD sense invert: yes
+		Iboost enable: no
+		Onboard LSPCON: no
+		Lane reversal: no
+		EFP routed through dock: no
+		TMDS compatible? no
+		DP compatible? no
+		HDMI compatible? no
+		Aux channel: AUX-C (0x20)
+		Dongle detect: 0x01
+		Integrated encoder instead of SDVO: yes
+		Hotplug connect status: 0x00
+		SDVO stall signal available: no
+		Pipe capabilities: 0x00
+		DVO wiring: 0x01
+		MIPI bridge type: 00 (<unknown>)
+		Device class extension: 0x00
+		DVO function: 0x00
+		DP USB type C support: no
+		2X DP GPIO index: 0x00
+		2X DP GPIO pin number: 0x00
+		IBoost level for DP/eDP: 0x00
+		IBoost level for HDMI: 0x00
+
+BDB block 3 (1 bytes, min 3 bytes) - Display toggle option block:
+	Feature bits: 0x00
+	Num entries: 0
+
+BDB block 6 (117 bytes, min 3 bytes) - Extended MMIO registers:
+	Table Id: 0xfffc
+	Data access size: 0x02
+		0x00070080: 0x00000000
+		0x00070180: 0x00000000
+		0x00071180: 0x00000000
+		0x00041000: 0x8000298e
+		0x0007019c: 0x00000000
+		0x0007119c: 0x00000000
+		0x0004f009: 0x00000000
+		0x0004f00a: 0x00000000
+		0x0004f00b: 0x00000000
+		0x00000000: 0x00000000
+		0x00000000: 0x00000000
+		0x00000000: 0x00000000
+		0x00000000: 0x00000000
+		0x00000000: 0x00000000
+	Table end marker: 0xffff
+
+BDB block 7 (7 bytes, min 3 bytes) - IO software flag:
+	Table Id: 0xfffe
+	Data access size: 0xce
+		0x18: 0x00
+	Table end marker: 0xffff
+
+BDB block 8 (61 bytes, min 3 bytes) - MMIO SWF register table:
+	Table Id: 0xfffc
+	Data access size: 0x02
+		0x0004f040: 0x01000001
+		0x0004f044: 0x00000000
+		0x0004f048: 0x00000000
+		0x0004f04c: 0x03030000
+		0x0004f050: 0x00000000
+		0x0004f054: 0x00000001
+		0x0004f058: 0x00000000
+	Table end marker: 0xffff
+
+BDB block 9 (96 bytes, min 100 bytes) - PSR block:
+	Panel 2 (LFP1)
+		Full link: no
+		Require AUX to wakeup: no
+		Lines to wait before link standby: 0
+		Idle frames to for PSR enable: 0
+		TP1 wakeup time: 200 usec (0x2)
+		TP2/TP3 wakeup time: 200 usec (0x2)
+
+BDB block 10 (203 bytes, min 1 bytes) - Mode removal table:
+	Num entries: 20
+	Row size: 10
+	Entry #1:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #2:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #3:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #4:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #5:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #6:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #7:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #8:
+		Resolution: 0x0
+		Bits per pBlock 20 min size 2 less than block size 158
+ixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #9:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #10:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #11:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #12:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #13:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #14:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #15:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #16:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #17:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #18:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #19:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Entry #20:
+		Resolution: 0x0
+		Bits per pixel: 0x00
+		Refresh rate: 0x0000
+		Removal flags: 0x00
+		Panel flags: 0xffff
+	Terminator: 0x0000
+
+BDB block 12 (19 bytes, min 19 bytes) - Driver feature data block:
+	Use 00000110h ID for Primary LFP: no
+	Enable Sprite in Clone Mode: yes
+	Driver INT 15h hook: no
+	Dual View Zoom: no
+	Hot Plug DVO: yes
+	Allow display switching when in Full Screen DOS: no
+	Allow display switching when DVD active: yes
+	Boot Device Algorithm: OS default
+	Boot Mode X: 1024
+	Boot Mode Y: 768
+	Boot Mode Bpp: 8
+	Boot Mode Refresh: 60
+	Enable LFP as primary: no
+	Selective Mode Pruning: no
+	Dual-Frequency Graphics Technology: yes
+	Default Render Clock Frequency: high
+	NT 4.0 Dual Display Clone Support: no
+	Default Power Scheme user interface: CUI
+	Sprite Display Assignment when Overlay is Active in Clone Mode: secondary
+	Display Maintain Aspect Scaling via CUI: yes
+	Preserve Aspect Ratio: no
+	Enable SDVO device power down: no
+	CRT hotplug: yes
+	LVDS config: Embedded DisplayPort (0x3)
+	TV hotplug: no
+	Display subsystem enable: no
+	Embedded platform: no
+	Define Display statically: no
+	Legacy CRT max X: 0
+	Legacy CRT max Y: 0
+	Legacy CRT max refresh: 85
+	Internal source termination for HDMI: no
+	CEA 861-D HDMI support: no
+	Self refresh enable: no
+	Custom VBT number: 0x0
+	PC Features field validity: yes
+	Hpd Wake: no
+	Assertive Display Technology (ADT): no
+	Dynamic Media Refresh Rate Switching (DMRRS): yes
+	Dynamic Frames Per Second (DFPS): yes
+	Intermediate Pixel Storage (IPS): yes
+	Panel Self Refresh (PSR): yes
+	Turbo Boost Technology: yes
+	Graphics Power Management (GPMT): yes
+	Graphics Render Standby (RS): yes
+	Dynamic Refresh Rate Switching (DRRS): yes
+	Automatic Display Brightness (ADB): yes
+	DxgkDDI Backlight Control (DxgkDdiBLC): yes
+	Display Power Saving Technology (DPST): yes
+	Smart 2D Display Technology (S2DDT): yes
+	Rapid Memory Power Management (RMPM): yes
+
+BDB block 13 (3 bytes, min 3 bytes) - Driver persistent algorithm:
+	Docking persistent algorithm: OS default
+	DVO hotplug persistent on mode: no
+	EDID persistent on mode: no
+	Hotkey persistent on mode: yes
+	Hotkey persistent on restore pipe: yes
+	Hotkey persistent on refresh rate: yes
+	Hotkey persistent on MDS/Twin: yes
+	Power management persistent algorithm: OS default
+	Lid switch persistent algorithm: OS default
+	Hotkey persisentt algorithm: OS default
+	Persistent max config: 10
+
+BDB block 17 (8 bytes, min 0 bytes) - SV test functions, no decoding available:
+
+BDB block 18 (12 bytes, min 12 bytes) - Driver rotation:
+	Rotation enable: yes (0x1)
+	Rotation flags 1: 0x00
+	Rotation flags 2: 0x0000
+	Rotation flags 3: 0x00000000
+	Rotation flags 4: 0x00000000
+
+BDB block 20 (158 byteBlock 28 min size 54 less than block size 72
+Block 31 min size 12 less than block size 92
+s, min 2 bytes) - OEM customizable modes:
+	Num entries: 6
+	Entry size: 26
+	Entry #1:
+		Enable in GOP: no
+		Enable in OS: no
+		Enable in VBIOS: no
+		Resolution: 0x0
+		Display flags: none (0x00)
+		Color depth: 0x07
+		Refresh rate: 60
+		DTD:
+		  hdisplay: 0
+		  hsync [0, 0] -sync
+		  htotal: 0
+		  vdisplay: 0
+		  vsync [0, 0] -sync
+		  vtotal: 0
+		  clock: 0
+	Entry #2:
+		Enable in GOP: no
+		Enable in OS: no
+		Enable in VBIOS: no
+		Resolution: 0x0
+		Display flags: none (0x00)
+		Color depth: 0x07
+		Refresh rate: 60
+		DTD:
+		  hdisplay: 0
+		  hsync [0, 0] -sync
+		  htotal: 0
+		  vdisplay: 0
+		  vsync [0, 0] -sync
+		  vtotal: 0
+		  clock: 0
+	Entry #3:
+		Enable in GOP: no
+		Enable in OS: no
+		Enable in VBIOS: no
+		Resolution: 0x0
+		Display flags: none (0x00)
+		Color depth: 0x07
+		Refresh rate: 60
+		DTD:
+		  hdisplay: 0
+		  hsync [0, 0] -sync
+		  htotal: 0
+		  vdisplay: 0
+		  vsync [0, 0] -sync
+		  vtotal: 0
+		  clock: 0
+	Entry #4:
+		Enable in GOP: no
+		Enable in OS: no
+		Enable in VBIOS: no
+		Resolution: 0x0
+		Display flags: none (0x00)
+		Color depth: 0x07
+		Refresh rate: 60
+		DTD:
+		  hdisplay: 0
+		  hsync [0, 0] -sync
+		  htotal: 0
+		  vdisplay: 0
+		  vsync [0, 0] -sync
+		  vtotal: 0
+		  clock: 0
+	Entry #5:
+		Enable in GOP: no
+		Enable in OS: no
+		Enable in VBIOS: no
+		Resolution: 0x0
+		Display flags: none (0x00)
+		Color depth: 0x07
+		Refresh rate: 60
+		DTD:
+		  hdisplay: 0
+		  hsync [0, 0] -sync
+		  htotal: 0
+		  vdisplay: 0
+		  vsync [0, 0] -sync
+		  vtotal: 0
+		  clock: 0
+	Entry #6:
+		Enable in GOP: no
+		Enable in OS: no
+		Enable in VBIOS: no
+		Resolution: 0x0
+		Display flags: none (0x00)
+		Color depth: 0x07
+		Refresh rate: 60
+		DTD:
+		  hdisplay: 0
+		  hsync [0, 0] -sync
+		  htotal: 0
+		  vdisplay: 0
+		  vsync [0, 0] -sync
+		  vtotal: 0
+		  clock: 0
+
+BDB block 26 (2 bytes, min 2 bytes) - TV options:
+	D connector support: no
+	Add modes to avoid overscan issue: no
+	Undescan/Overscan for HDTV via DVI: Neither
+	Undescan/Overscan for HDTV via component: Neither
+
+BDB block 27 (748 bytes, min 848 bytes) - eDP block:
+	Panel 2 (LFP1)
+		Power Sequence: T1-T3 2000 T8 10 T9 2000 T10 500 T11-T12 5000
+		Panel color depth: 18 bpp (0x0)
+		eDP sDRRS MSA Delay: Lane 1
+		Fast link params:
+			rate: 1.62Gbps (0x0)
+			lanes: X1
+			pre-emphasis: 0dB (0x0)
+			vswing: 0.4V (0x0)
+		Stereo 3D feature: no
+		T3 optimization: yes
+		Vswing/preemphasis table selection: Default (400 mV) (0x1)
+		Fast link training: no
+		DPCD 600h write required: no
+		PWM delays:
+			PWM on to backlight enable: 0
+			Backlight disable to PWM off: 0
+		Full link params provided: no
+		Full link params:
+			pre-emphasis: 0dB (0x0)
+			vswing: 0.4V (0x0)
+
+BDB block 28 (72 bytes, min 54 bytes) - EFP DTD:
+	EFP DTD #1:
+		  hdisplay: 640
+		  hsync [648, 744] -sync
+		  htotal: 784
+		  vdisplay: 480
+		  vsync [482, 484] -sync
+		  vtotal: 509
+		  clock: 25180
+	EFP DTD #2:
+		  hdisplay: 640
+		  hsync [648, 744] -sync
+		  htotal: 784
+		  vdisplay: 480
+		  vsync [482, 484] -sync
+		  vtotal: 509
+		  clock: 25180
+	EFP DTD #3:
+		  hdisplay: 640
+		  hsync [648, 744] -sync
+		  htotal: 784
+		  vdisplay: 480
+		  vsync [482, 484] -sync
+		  vtotal: 509
+		  clock: 25180
+
+BDB block 31 (92 bytes, min 12 bytes) - Display toggle list (HSW+):
+	Toggle list #1
+		Num entries: 16
+		Entry size: 2
+
+		Entry #1:
+			Display select: CRT (0x0001)
+		Entry #2:
+			Display select: CRT,LFP1 (0x0009)
+		Entry #3:
+			Display select: LFP1 (0x0008)
+		Entry #4:
+			Display select: TV (0x0002)
+		Entry #5:
+			Display select: CRT,EFP1 (0x0005)
+		Entry #6:
+			Display select: EFP1 (0x0004)
+		Entry #7:
+			Display select: EFP1,LFP1 (0x000c)
+		Entry #8:
+			Display select: EFP2 (0x0040)
+		Entry #9:
+			Display select: EFP1,EFP2 (0x0044)
+		Entry #10:
+			Display select: EFP2,LFP1 (0x0048)
+		Entry #11:
+			Display select: CRT,EFP2 (0x0041)
+		Entry #12:
+			Display select: none (0x0000)
+		Entry #13:
+			Display select: none (0x0000)
+		Entry #14:
+			Display select: none (0x0000)
+		Entry #15:
+			Display select: none (0x0000)
+		Entry #16:
+			Display select: none (0x0000)
+	Toggle list #2
+		Num entries: 8
+		Entry size: 2
+
+		Entry #1:
+			Display selectBlock 32 min size 2 less than block size 32
+: CRT (0x0001)
+		Entry #2:
+			Display select: CRT,EFP3 (0x0021)
+		Entry #3:
+			Display select: CRT,EFP2 (0x0041)
+		Entry #4:
+			Display select: EFP2,LFP1 (0x0048)
+		Entry #5:
+			Display select: LFP1 (0x0008)
+		Entry #6:
+			Display select: EFP1 (0x0004)
+		Entry #7:
+			Display select: EFP1,LFP1 (0x000c)
+		Entry #8:
+			Display select: EFP2 (0x0040)
+	Toggle list #3
+		Num entries: 8
+		Entry size: 2
+
+		Entry #1:
+			Display select: CRT (0x0001)
+		Entry #2:
+			Display select: EFP2,LFP1 (0x0048)
+		Entry #3:
+			Display select: EFP1,EFP2 (0x0044)
+		Entry #4:
+			Display select: EFP2,EFP3 (0x0060)
+		Entry #5:
+			Display select: EFP1,EFP3 (0x0024)
+		Entry #6:
+			Display select: EFP3,LFP1 (0x0028)
+		Entry #7:
+			Display select: EFP3 (0x0020)
+		Entry #8:
+			Display select: EFP2 (0x0040)
+	Toggle list #4
+		Num entries: 8
+		Entry size: 2
+
+		Entry #1:
+			Display select: CRT (0x0001)
+		Entry #2:
+			Display select: EFP1 (0x0004)
+		Entry #3:
+			Display select: LFP1 (0x0008)
+		Entry #4:
+			Display select: EFP2 (0x0040)
+		Entry #5:
+			Display select: EFP3 (0x0020)
+		Entry #6:
+			Display select: CRT,LFP1 (0x0009)
+		Entry #7:
+			Display select: EFP3,LFP1 (0x0028)
+		Entry #8:
+			Display select: CRT,EFP1 (0x0005)
+
+BDB block 32 (32 bytes, min 2 bytes) - Display removal table (HSW+):
+	Num entries: 15
+	Entry size: 2
+
+	Entry #1:
+			Display select: none (0x0000)
+	Entry #2:
+			Display select: none (0x0000)
+	Entry #3:
+			Display select: none (0x0000)
+	Entry #4:
+			Display select: none (0x0000)
+	Entry #5:
+			Display select: none (0x0000)
+	Entry #6:
+			Display select: none (0x0000)
+	Entry #7:
+			Display select: none (0x0000)
+	Entry #8:
+			Display select: none (0x0000)
+	Entry #9:
+			Display select: none (0x0000)
+	Entry #10:
+			Display select: none (0x0000)
+	Entry #11:
+			Display select: none (0x0000)
+	Entry #12:
+			Display select: none (0x0000)
+	Entry #13:
+			Display select: none (0x0000)
+	Entry #14:
+			Display select: none (0x0000)
+	Entry #15:
+			Display select: none (0x0000)
+
+BDB block 40 (26 bytes, min 34 bytes) - LFP options block:
+	Panel type: 2
+	LVDS EDID available: yes
+	Pixel dither: yes
+	PFIT auto ratio: yes
+	PFIT enhanced graphics mode: no
+	PFIT enhanced text mode: no
+	PFIT mode: 3
+	Panel 2 (LFP1)
+		Channel type: automatic (0x0)
+		SSC: no
+		SSC frequency: 120 MHz (0x0)
+		Disable SSC in dual display twin: no
+		Panel color depth: 18 (0x0)
+		DPS type: seamless DRRS (0x2)
+		Backlight type: LED (0x2)
+		LCDVCC on during S0 state: no
+
+BDB block 41 (148 bytes, min 148 bytes) - LFP data table pointers:
+	Number of entries: 3
+	Panel 2 (LFP1)
+		FP timing offset: 132
+		FP timing table size: 32
+		DVO timing offset: 170
+		DVO timing table size: 18
+		Panel PnP ID offset: 188
+		Panel PnP ID table size: 10
+	Panel name offset: 1056
+	Panel name table size: 13
+
+BDB block 42 (1282 bytes, min 1366 bytes) - LFP data table block:
+	Panel 2 (LFP1)
+		Resolution: 1024x768
+		FP timing data:
+		  LVDS: 0x00000300
+		  PP_ON_DELAYS: 0x025807d0
+		  PP_OFF_DELAYS: 0x01f407d0
+		  PP_DIVISOR: 0x00270f05
+		  PFIT: 0x00414000
+		DVO timing:
+		  hdisplay: 1024
+		  hsync [1048, 1184] -sync
+		  htotal: 1344
+		  vdisplay: 768
+		  vsync [771, 777] -sync
+		  vtotal: 806
+		  clock: 65000
+		PnP ID:
+		  Mfg name: MS_ (0x7f36)
+		  Product code: 3
+		  Serial: 3
+		  Mfg week: 0
+		  Mfg year: 2002
+		Panel name: LFP_PanelName
+		Scaling enable: no
+		Seamless DRRS min refresh rate: 0
+
+BDB block 43 (129 bytes, min 305 bytes) - LFP backlight info block:
+	Entry size: 6
+	Panel 2 (LFP1)
+		Inverter type: PWM (2)
+		Active low: no
+		PWM freq: 200
+		Minimum brightness: 0
+		Level: 180
+		Control type: PWM from Display Engine/Aux Default (2)
+		Controller: 0
+
+BDB block 44 (21 bytes, min 136 bytes) - LFP power conservation features block:
+	ALS enable: yes
+	Display LACE support: no
+	Default Display LACE enabled status: no
+	Power conservation preference level: 6
+	DPST support: yes
+	ALS entry #1
+		ALS backlight adjust: 70
+		ALS Lux: 0
+	ALS entry #2
+		ALS backlight adjust: 73
+		ALS Lux: 10
+	ALS entry #3
+		ALS backlight adjust: 85
+		ALS Lux: 80
+	ALS entry #4
+		ALS backlight adjust: 100
+		ALS Lux: 300
+	ALS entry #5
+		ALS backBlock 253 min size 2 less than block size 50
+light adjust: 150
+		ALS Lux: 1000
+
+BDB block 46 (176 bytes, min 304 bytes) - Chromaticity for narrow gamut panel:
+	Panel 2 (LFP1)
+		Use chromaticity values from EDID base block: no
+		Chromaticity enable: no
+		Red X coordinate: 0.533203 (0x222)
+		Red Y coordinate: 0.531250 (0x220)
+		Green X coordinate: 0.533203 (0x222)
+		Green Y coordinate: 0.531250 (0x220)
+		Blue X coordinate: 0.533203 (0x222)
+		Blue Y coordinate: 0.531250 (0x220)
+		White X coordinate: 0.533203 (0x222)
+		White Y coordinate: 0.531250 (0x220)
+
+BDB block 51 (9 bytes, min 9 bytes) - Fixed set mode:
+	Enable: no (0x00)
+	X Res: 0
+	Y Res: 0
+
+BDB block 52 (822 bytes, min 822 bytes) - MIPI configuration block:
+	Panel 2 (LFP1)
+		General Param
+			 BTA disable: Enabled
+			 Panel Rotation: 0 degrees
+			 Video Mode Color Format: RGB888
+			 PPS GPIO Pins: Using PMIC 
+			 CABC Support: not supported
+			 Mode: VIDEO
+			 Video transfer mode: non-burst with sync events (0x2)
+			 Dithering: done in Panel Controller
+		Port Desc
+			 Pixel overlap: 0
+			 Lane Count: 4
+			 Dual Link Support: not supported
+		Dphy Flags
+			 Clock Stop: DISABLED
+			 EOT disabled: EOT to be sent
+
+		HSTxTimeOut: 0x3fffff
+		LPRXTimeOut: 0xffff
+		TurnAroundTimeOut: 0x14
+		DeviceResetTimer: 0xff
+		MasterinitTimer: 0x7d0
+		DBIBandwidthTimer: 0x0
+		LpByteClkValue: 0x4
+
+		Dphy Params
+			Exit to zero Count: 0x3f
+			Trail Count: 0x1F
+			Clk zero count: 0x7f
+			Prepare count:0xf
+
+		ClockLaneSwitchingCount: 0xa0014
+		HighToLowSwitchingCount: 0x46
+
+		Timings based on Dphy spec
+			TClkMiss: 0x3c
+			TClkPost: 0x3c
+			TClkPre: 0x8
+			TClkPrepare: 0x32
+			TClkSettle: 0x69
+			TClkTermEnable: 0x26
+
+		TClkTrail: 0x46
+		TClkPrepareTClkZero: 0x136
+		THSExit: 0x6e
+		THsPrepare: 0x32
+		THsPrepareTHsZero: 0xc8
+		THSSettle: 0x5f
+		THSSkip: 0x28
+		THsTrail: 0x3c
+		TInit: 0x0
+		TLPX: 0x32
+		MIPI PPS
+			Panel power ON delay: 500
+			Panel power on to Backlight enable delay: 500
+			Backlight disable to Panel power OFF delay: 500
+			Panel power OFF delay: 500
+			Panel power cycle delay: 5000
+		MIPI PWM delays:
+			PWM on to backlight enable: 0
+			Backlight disable to PWM off: 0
+		MIPI PMIC I2C Bus Number: 6
+
+BDB block 252 (122 bytes, min 0 bytes) - INT15h hook, no decoding available:
+
+BDB block 253 (50 bytes, min 2 bytes) - PRD table:
+	Entry #1:
+		Displays attached: none (0x0)
+		Displays in pipe A: EFP1 (0x4)
+		Displays in pipe B: none (0x0)
+	Entry #2:
+		Displays attached: none (0x0)
+		Displays in pipe A: EFP2 (0x40)
+		Displays in pipe B: none (0x0)
+	Entry #3:
+		Displays attached: none (0x0)
+		Displays in pipe A: EFP3 (0x20)
+		Displays in pipe B: none (0x0)
+	Entry #4:
+		Displays attached: none (0x0)
+		Displays in pipe A: LFP1 (0x8)
+		Displays in pipe B: none (0x0)
+	Entry #5:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #6:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #7:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #8:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #9:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #10:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #11:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #12:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #13:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #14:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #15:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #16:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Num entries: 16
+
+BDB block 254 (234 bytes, min 0 bytes) - VBIOS only, no decoding available:
+

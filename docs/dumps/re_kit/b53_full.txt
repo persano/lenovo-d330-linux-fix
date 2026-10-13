@@ -1,0 +1,115 @@
+		MIPI PMIC I2C Bus Number: 6
+
+BDB block 53 (225 bytes, min 1 bytes) - MIPI sequence block:
+	Sequence block version v3
+	Panel 0 (LFP1)(LFP2)
+		Sequence 1 - MIPI_SEQ_DEASSERT_RESET
+		Sequence 3 - MIPI_SEQ_DISPLAY_ON
+			Send DCS: Port A, VC 0, LP, Type 05, Length 1, Data 11
+			Delay: 200000 us
+			Send DCS: Port A, VC 0, LP, Type 05, Length 1, Data 29
+			Delay: 10000 us
+		Sequence 4 - MIPI_SEQ_DISPLAY_OFF
+			Send DCS: Port A, VC 0, LP, Type 05, Length 2, Data 28 00
+			Delay: 200000 us
+			Send DCS: Port A, VC 0, LP, Type 05, Length 2, Data 10 00
+			Delay: 100000 us
+		Sequence 2 - MIPI_SEQ_INIT_OTP
+			Delay: 10000 us
+			GPIO index 0, number 160, set 1 (0x01)
+			Delay: 10000 us
+			GPIO index 0, number 160, set 0 (0x00)
+			Delay: 10000 us
+			GPIO index 0, number 160, set 1 (0x01)
+			Delay: 20000 us
+		Sequence 10 - MIPI_SEQ_POWER_ON
+			GPIO index 3, number 144, set 1 (0x01)
+			Delay: 1000 us
+		Sequence 11 - MIPI_SEQ_POWER_OFF
+			Delay: 100000 us
+			GPIO index 3, number 144, set 0 (0x00)
+		Sequence 6 - MIPI_SEQ_BACKLIGHT_ON
+			Delay: 150000 us
+			GPIO index 4, number 145, set 1 (0x01)
+			Delay: 2000 us
+		Sequence 5 - MIPI_SEQ_ASSERT_RESET
+			Delay: 100000 us
+			GPIO index 0, number 160, set 0 (0x00)
+			Delay: 1000 us
+		Sequence 7 - MIPI_SEQ_BACKLIGHT_OFF
+			GPIO index 4, number 145, set 0 (0x00)
+			Delay: 1000 us
+
+BDB block 55 (258 bytes, min 0 bytes) - Unknown:
+
+BDB block 252 (122 bytes, min 0 bytes) - INT15h hook, no decoding available:
+
+BDB block 253 (50 bytes, min 2 bytes) - PRD table:
+	Entry #1:
+		Displays attached: none (0x0)
+		Displays in pipe A: LFP1 (0x8)
+		Displays in pipe B: none (0x0)
+	Entry #2:
+		Displays attached: none (0x0)
+		Displays in pipe A: EFP1 (0x4)
+		Displays in pipe B: none (0x0)
+	Entry #3:
+		Displays attached: none (0x0)
+		Displays in pipe A: EFP2 (0x40)
+		Displays in pipe B: none (0x0)
+	Entry #4:
+		Displays attached: none (0x0)
+		Displays in pipe A: EFP3 (0x20)
+		Displays in pipe B: none (0x0)
+	Entry #5:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #6:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #7:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #8:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #9:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #10:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #11:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #12:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #13:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #14:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #15:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Entry #16:
+		Displays attached: none (0x0)
+		Displays in pipe A: none (0x0)
+		Displays in pipe B: none (0x0)
+	Num entries: 16
+
+BDB block 254 (234 bytes, min 0 bytes) - VBIOS only, no decoding available:
+
