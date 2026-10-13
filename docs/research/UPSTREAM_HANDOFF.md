@@ -2,6 +2,9 @@
 
 <!-- planner-discipline-allow: bl_power -->
 <!-- planner-discipline-allow: rebind -->
+<!-- planner-discipline-allow: PMIC -->
+<!-- planner-discipline-allow: panel power-cycle -->
+<!-- planner-discipline-allow: MIPI_SEQ_INIT_OTP -->
 
 Purpose: everything a maintainer (or you, filing by hand per the phase 44 decision) needs
 to reproduce, evidence, and reason about this bug. Machine evidence first, honest outcome

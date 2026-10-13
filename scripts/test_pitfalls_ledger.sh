@@ -168,7 +168,16 @@ build_scan_list() {
         return 0
     fi
     if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        list="$(git ls-files 2>/dev/null | grep -E '^\.planning/phases/[^/]+/[^/]+-(PLAN|SUMMARY)\.md$|^docs/research/[^/]+\.md$' || true)"
+        # Active phases live under .planning/phases/; the active milestone's
+        # archived phases live under .planning/milestones/<vN>-phases/ (the
+        # v8.0 archive move). Older milestones' archives are historical
+        # disproof records and are not scanned.
+        active="$(sed -n 's/^milestone:[[:space:]]*//p' .planning/STATE.md 2>/dev/null | head -1 | tr -d '[:space:]')"
+        pat='^\.planning/phases/[^/]+/[^/]+-(PLAN|SUMMARY)\.md$'
+        if [ -n "$active" ]; then
+            pat="^\\.planning/(phases|milestones/${active}-phases)/[^/]+/[^/]+-(PLAN|SUMMARY)\\.md\$"
+        fi
+        list="$(git ls-files 2>/dev/null | grep -E "${pat}|^docs/research/[^/]+\.md$" || true)"
     fi
     if [ -z "$list" ]; then
         for d in .gsd/phases .planning/phases; do
@@ -227,10 +236,13 @@ gate_scan() {
     done
     printf 'Ledger gate: files=%s hits=%s\n' "$GATE_FILES" "$([ "$GATE_STATUS" -eq 0 ] && echo 0 || echo 1)"
     if [ "$mode" = "normal" ]; then
+        # Between milestones (none active in STATE.md) there are no plans to
+        # scan; docs/research coverage is then the full, legitimate scan.
+        active="$(sed -n 's/^milestone:[[:space:]]*//p' .planning/STATE.md 2>/dev/null | head -1 | tr -d '[:space:]')"
         if [ "$GATE_FILES" -eq 0 ]; then
             echo "Ledger gate: FAIL - scan produced zero files (mechanism failure)"
             GATE_STATUS=1
-        elif [ "$GATE_SUBSET" -eq 0 ]; then
+        elif [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ]; then
             echo "Ledger gate: FAIL - plan/summary subset is empty (docs/research-only coverage never counts as a passing scan)"
             GATE_STATUS=1
         fi
