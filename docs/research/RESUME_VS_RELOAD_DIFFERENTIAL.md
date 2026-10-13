@@ -110,3 +110,49 @@ re-runs the full driver probe: VBT parse, DSI link bring-up, block-53 sequences 
 Implication for 45-02: the fix is to make the resume path re-enable the DSI encoder (a full
 modeset/re-probe of the connector), not to tune PP delays. The block-53 sequence table in
 GOP_DSI_RE_FINDINGS §2 is the reference for what a correct enable replays.
+
+## Phase 45-02: pre-iteration diagnostic (screen-ON suspend shape) and fix design
+
+Re-run after a clean reboot (2026-10-12 21:26, kernel 7.0.14-d330-fix, KWin active,
+dpms On pre-suspend). Artifacts: `docs/dumps/re_kit/diag43.out`, `diag_B_resume_trace.txt`,
+`diag44.out`, `diag44_trace.txt`, `diag44_dmesg.txt`.
+
+- With the screen ON pre-suspend, the S3 path runs the **complete VBT cycle** — traced:
+  suspend side `intel_dsi_disable` (backlight-off seq) + `intel_dsi_post_disable`
+  (DISPLAY_OFF ≈ 300 ms + POWER_OFF ≈ 101 ms sequences); resume side `intel_dsi_pre_enable`
+  with `intel_dsi_wait_panel_power_cycle`, POWER_ON, INIT_OTP (50 ms, GPIO 160 toggles),
+  DISPLAY_ON (152 ms, DCS 0x11→0x29), `intel_backlight_enable` (`diag44_trace.txt`).
+- Post-resume sysfs: `enabled=enabled`, `dpms=On`, `bl_power=0`, `brightness=640` (pre-suspend
+  value restored without any manual write).
+- Physical observation (user, orientation only — not acceptance evidence): **"Lit but
+  black"** — backlight on, no image. The kernel-side enable is electrically partial: DCS LP
+  writes complete, backlight on, but the video stream does not display.
+- Consequence: the failing scenario is NOT "sequences missing" (they run) and NOT "rails
+  never cycle" (they cycle across suspend/resume). The difference vs the working reload is
+  the **video path / encoder state**: only a full re-probe re-creates it from a quiesced
+  base. This is exactly the module's own resume log hint ("TCON timing is not enforced …
+  see Option 2 kernel patch").
+
+### Candidate cross-check (45-02-T1 step 2, against docs/research/RESUME_FIX_LEDGER.md)
+
+| Candidate | Verdict | Reason |
+|---|---|---|
+| (a) Execute skipped VBT sequences at resume | **VETOED (moot)** | Not skipped: diag44 trace shows the resume path already runs all block-53 sequences. Also adjacent to ledger row 20. |
+| Option 2 PPS clamp (device-tree intel_pps.c change) | **VETOED** | Ledger row 1 (PPS timing clamp disproven); the clamp was already rolled back out of the device tree — re-adding it would regress that rollback. Deviation from 45-02 step (ii) recorded. |
+| (b) Force PPS/VDD rail assert order | **VETOED (moot)** | Rails already cycle in the right order across suspend/resume (traced). No ordering difference left to force. |
+| (c) Restore the state the re-probe rebuilds — **deferred full DSI encoder cycle** | **PROCEED** | Post-resume (link quiesced), atomic disable-all → wait → commit duplicated state with mode_changed forced; DMI-gated to 82H0. Row 20's disproof ("early sequences over a not-ready link, modeset fails") does not cover this: our cycle runs after resume completes, through full atomic commits, and the diag traces document the ordering difference. Row 11 (keep powered) not used — we power off AND on. |
+
+Iteration #1 = candidate (c): `patches/d330_dsi_resume_cycle.patch` (quirk
+`QUIRK_DSI_RESUME_FULL_CYCLE` + DMI table entry `DMI_MATCH(DMI_PRODUCT_NAME, "82H0")` +
+deferred work in `intel_display_driver.c` resume path), applied by
+`.github/workflows/build-kernel.yml` together with the CCS patch
+(`patches/d330_display_resume_fix.patch`). Known-good rollback
+`linux-image-7.0.14-d330-fix_7.0.14-1_amd64.deb` retained before the first deploy
+(sha256 `20dc04db5dab7066333e2382896af43cf50622276b9d8f62c75d3d92a2839e91`,
+host copy `C:\Users\Familia\AppData\Local\Temp\opencode\rollback\`).
+
+### Iteration log (≤5)
+
+| # | Build | Deployed kernel | Machine evidence | Outcome |
+|---|---|---|---|---|
+| 1 | CI run 38329104027 (`fix/d330-dsi-resume-cycle`, both patches) | pending | pending | pending |

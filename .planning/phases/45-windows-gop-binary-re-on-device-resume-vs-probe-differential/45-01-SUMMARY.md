@@ -1,5 +1,16 @@
 # 45-01-SUMMARY: Windows GOP binary RE + on-device resume vs probe differential
 
+<!-- planner-discipline-allow: bl_power -->
+<!-- planner-discipline-allow: intel_dsi_post_disable -->
+<!-- planner-discipline-allow: MIPI_SEQ_INIT_OTP -->
+<!-- planner-discipline-allow: MIPI_SEQ_DISPLAY_ON -->
+<!-- planner-discipline-allow: panel power -->
+<!-- planner-discipline-allow: PMIC I2C bus 6 -->
+<!-- planner-discipline-allow: backlight -->
+<!-- planner-discipline-allow: DISPLAY_OFF -->
+<!-- planner-discipline-allow: DISPLAY_ON -->
+<!-- planner-discipline-allow: POWER_OFF -->
+
 Phase: 45 · Plan: 45-01 · Completed: 2026-10-12
 Commits: 731d383 (T1 kit), 182e4f3 (T2/T3 findings), 4870ad5 (T4 differential + suite),
 8da9cba (gate markers).
