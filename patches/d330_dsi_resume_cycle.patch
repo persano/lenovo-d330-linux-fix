@@ -1,0 +1,177 @@
+--- a/drivers/gpu/drm/i915/display/intel_quirks.h
++++ b/drivers/gpu/drm/i915/display/intel_quirks.h
+@@ -22,6 +22,7 @@
+ 	QUIRK_FW_SYNC_LEN,
+ 	QUIRK_EDP_LIMIT_RATE_HBR2,
+ 	QUIRK_DISABLE_EDP_PANEL_REPLAY,
++	QUIRK_DSI_RESUME_FULL_CYCLE,
+ };
+ 
+ void intel_init_quirks(struct intel_display *display);
+--- a/drivers/gpu/drm/i915/display/intel_quirks.c
++++ b/drivers/gpu/drm/i915/display/intel_quirks.c
+@@ -94,6 +94,25 @@
+ 	drm_info(display->drm, "Applying disable Panel Replay quirk\n");
+ }
+ 
++/*
++ * Lenovo IdeaPad D330-10IGL (82H0): after S3 the MIPI panel comes back lit
++ * but with no image; the built-in resume path already re-runs the VBT
++ * sequences. A full i915 re-probe (the only known recovery) tears the
++ * encoder down and re-enables it from a quiesced state; defer one such
++ * cycle until after resume has settled.
++ */
++static void quirk_dsi_resume_full_cycle(struct intel_display *display)
++{
++	intel_set_quirk(display, QUIRK_DSI_RESUME_FULL_CYCLE);
++	drm_info(display->drm, "Applying DSI resume full-cycle quirk\n");
++}
++
++static int intel_dmi_dsi_resume_full_cycle(const struct dmi_system_id *id)
++{
++	DRM_INFO("DSI resume full-cycle quirk on %s\n", id->ident);
++	return 1;
++}
++
+ struct intel_quirk {
+ 	int device;
+ 	int subsystem_vendor;
+@@ -182,6 +201,20 @@
+ 		},
+ 		.hook = quirk_no_pps_backlight_power_hook,
+ 	},
++{
++	.dmi_id_list = &(const struct dmi_system_id[]) {
++		{
++			.callback = intel_dmi_dsi_resume_full_cycle,
++			.ident = "Lenovo IdeaPad D330-10IGL",
++			.matches = {
++				DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "82H0"),
++			},
++		},
++		{ }
++	},
++	.hook = quirk_dsi_resume_full_cycle,
++},
+ };
+ 
+ static struct intel_quirk intel_quirks[] = {
+--- a/drivers/gpu/drm/i915/display/intel_display_driver.c
++++ b/drivers/gpu/drm/i915/display/intel_display_driver.c
+@@ -8,6 +8,8 @@
+  */
+ 
+ #include <linux/vga_switcheroo.h>
++#include <linux/delay.h>
++#include <linux/workqueue.h>
+ #include <acpi/video.h>
+ #include <drm/display/drm_dp_mst_helper.h>
+ #include <drm/drm_atomic_helper.h>
+@@ -744,6 +746,95 @@
+ 	return ret;
+ }
+ 
++/*
++ * Lenovo D330 (82H0) DSI resume quirk: the panel is lit but shows no image
++ * right after S3 resume even though the VBT panel-power sequences ran. A
++ * full i915 re-probe (unbind/bind) restores the image; the difference is a
++ * complete encoder teardown plus re-enable from a quiesced state. Schedule
++ * one such cycle a moment after the normal resume has settled.
++ *
++ * The quirk matches a single machine type, so a file-static work item is
++ * acceptable; a multi-quirk-driver version would hang the work off
++ * struct intel_display instead.
++ */
++static struct intel_display *d330_cycle_display;
++static void intel_d330_dsi_resume_cycle(struct work_struct *w);
++static DECLARE_DELAYED_WORK(d330_dsi_resume_cycle_work,
++			    intel_d330_dsi_resume_cycle);
++
++static void intel_d330_dsi_resume_cycle(struct work_struct *w)
++{
++	struct intel_display *display = d330_cycle_display;
++	struct drm_device *dev;
++	struct drm_atomic_state *state;
++	struct drm_modeset_acquire_ctx ctx;
++	struct drm_crtc_state *crtc_state;
++	struct drm_crtc *crtc;
++	int ret, i;
++
++	if (!display || !intel_has_quirk(display, QUIRK_DSI_RESUME_FULL_CYCLE))
++		return;
++
++	dev = display->drm;
++
++	drm_modeset_acquire_init(&ctx, 0);
++	for (;;) {
++		state = drm_atomic_helper_duplicate_state(dev, &ctx);
++		if (!IS_ERR(state) || PTR_ERR(state) != -EDEADLK)
++			break;
++		drm_modeset_backoff(&ctx);
++	}
++	drm_modeset_drop_locks(&ctx);
++	drm_modeset_acquire_fini(&ctx);
++	if (IS_ERR(state)) {
++		drm_err(dev, "D330 DSI cycle: snapshot failed %pe\n", state);
++		return;
++	}
++
++	/* Full teardown: the encoder disable path runs the DISPLAY_OFF /
++	 * POWER_OFF VBT sequences and drops the panel rails. */
++	drm_modeset_acquire_init(&ctx, 0);
++	for (;;) {
++		ret = drm_atomic_helper_disable_all(dev, &ctx);
++		if (ret != -EDEADLK)
++			break;
++		drm_modeset_backoff(&ctx);
++	}
++	drm_modeset_drop_locks(&ctx);
++	drm_modeset_acquire_fini(&ctx);
++	if (ret) {
++		drm_err(dev, "D330 DSI cycle: disable failed %d\n", ret);
++		drm_atomic_state_put(state);
++		return;
++	}
++
++	/* Rails down; the PP machinery completes the remaining power-cycle
++	 * window itself during the re-enable. */
++	msleep(2000);
++
++	state->acquire_ctx = &ctx;
++	drm_modeset_acquire_init(&ctx, 0);
++	for (;;) {
++		ret = drm_modeset_lock_all_ctx(dev, &ctx);
++		if (ret != -EDEADLK)
++			break;
++		drm_modeset_backoff(&ctx);
++	}
++	for_each_new_crtc_in_state(state, crtc, crtc_state, i)
++		crtc_state->mode_changed = true;
++	if (!ret)
++		ret = drm_atomic_helper_commit_duplicated_state(state, &ctx);
++	drm_modeset_drop_locks(&ctx);
++	drm_modeset_acquire_fini(&ctx);
++	drm_atomic_state_put(state);
++	if (ret)
++		drm_err(dev, "D330 DSI cycle: re-enable failed %d\n", ret);
++	else
++		drm_info(dev, "D330 DSI cycle: encoder re-enabled\n");
++
++	drm_kms_helper_hotplug_event(dev);
++}
++
+ void intel_display_driver_resume(struct intel_display *display)
+ {
+ 	struct drm_atomic_state *state = display->restore.modeset_state;
+@@ -782,4 +873,10 @@
+ 			"Restoring old state failed with %i\n", ret);
+ 	if (state)
+ 		drm_atomic_state_put(state);
++
++	if (intel_has_quirk(display, QUIRK_DSI_RESUME_FULL_CYCLE)) {
++		d330_cycle_display = display;
++		schedule_delayed_work(&d330_dsi_resume_cycle_work,
++				      msecs_to_jiffies(3000));
++	}
+ }

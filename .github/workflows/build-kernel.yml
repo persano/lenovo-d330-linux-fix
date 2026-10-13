@@ -97,13 +97,16 @@ jobs:
           SRC="$1"
           echo "SRC=${BUILD}/${SRC}" >> "$GITHUB_ENV"
 
-      - name: Apply the display fix and prove it landed
+      - name: Apply the display fixes and prove they landed
         run: |
           set -euxo pipefail
           cd "$SRC"
           git apply -p1 "$GITHUB_WORKSPACE/patches/d330_display_resume_fix.patch"
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_resume_cycle.patch"
           grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
           grep -R 'intel_fb_is_ccs_modifier(modifier)' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          grep -R 'QUIRK_DSI_RESUME_FULL_CYCLE' drivers/gpu/drm/i915/display/intel_quirks.c
+          grep -R 'D330 DSI cycle' drivers/gpu/drm/i915/display/intel_display_driver.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
