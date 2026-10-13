@@ -1,0 +1,298 @@
+--- /dev/null
++++ b/drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
+@@ -0,0 +1,263 @@
++// SPDX-License-Identifier: MIT
++/*
++ * Additive D330 instrumentation: MIPI-DSI / display MMIO snapshot node.
++ *
++ * Lenovo IdeaPad D330-10IGL (82H0) boot-vs-resume register capture
++ * (phase 47).  Write side ("echo 1 > ...") walks the locked display MMIO
++ * ranges once, into a frozen kernel-side buffer; read side ("cat ...")
++ * emits that frozen buffer.  The instrument performs zero register writes
++ * and no mode changes, so re-running it at any point cannot perturb what
++ * it measures.
++ *
++ * DSI-block reads are gated on bxt_dsi_pll_is_enabled() exactly like
++ * intel_dsi_get_hw_state() does:
++ *   "On Broxton the PLL needs to be enabled with a valid divider
++ *    configuration, otherwise accessing DSI registers will hang the
++ *    machine. See BSpec North Display Engine registers/MIPI[BXT]."
++ *
++ * Output contract (parsed by phase-47 diff tooling):
++ *   # RANGE <lo>-<hi> (<N> words)   before each walked range
++ *   0x<off>=<8-hex-value>           one data line per walked word
++ *   # SKIPPED: DSI PLL off - DSI block reads skipped
++ *                                   replaces the DSI section's # RANGE
++ *                                   header when the PLL gate trips (a
++ *                                   present-but-empty section is
++ *                                   unrepresentable)
++ *   NAME 0x<off>=<8-hex> <decode>   # NAMED OVERLAY section rows (the
++ *                                   leading NAME keeps overlay rows out
++ *                                   of the ^0x...=... record regex)
++ */
++
++#include <linux/debugfs.h>
++#include <linux/fs.h>
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/mutex.h>
++#include <linux/string.h>
++#include <linux/uaccess.h>
++
++#include <drm/drm_modeset_lock.h>
++#include <drm/drm_print.h>
++
++#include "i915_reg.h"
++#include "intel_de.h"
++#include "intel_display_rpm.h"
++#include "intel_display_types.h"
++#include "vlv_dsi_pll.h"
++
++/* ~7.3k data lines x 14 bytes + headers/overlay: 256 KiB is ample. */
++#define D330_DSI_DUMP_BUF_SIZE (256u * 1024u)
++
++extern const struct file_operations d330_dsi_dump_ops;
++
++struct d330_dsi_dump_buf {
++	char *buf;
++	size_t size;
++	size_t len;
++	unsigned int words;
++};
++
++/*
++ * Single global snapshot.  The D330 instrument targets exactly one i915
++ * card; a re-probe (unbind/bind) re-registers and reuses the buffer.
++ */
++static struct d330_dsi_dump_buf d330_dsi_dump;
++static DEFINE_MUTEX(d330_dsi_dump_lock);
++
++__printf(1, 2)
++static void d330_dsi_dump_add(const char *fmt, ...)
++{
++	va_list args;
++	int n;
++
++	if (!d330_dsi_dump.buf || d330_dsi_dump.len >= d330_dsi_dump.size)
++		return;
++
++	va_start(args, fmt);
++	n = vscnprintf(d330_dsi_dump.buf + d330_dsi_dump.len,
++		       d330_dsi_dump.size - d330_dsi_dump.len, fmt, args);
++	va_end(args);
++
++	if (n > 0)
++		d330_dsi_dump.len += n;
++}
++
++static void d330_dsi_dump_range(struct intel_display *display, u32 lo, u32 hi)
++{
++	u32 reg;
++
++	d330_dsi_dump_add("# RANGE 0x%x-0x%x (%u words)\n", lo, hi,
++			  (hi - lo) / 4);
++	for (reg = lo; reg < hi; reg += 4) {
++		d330_dsi_dump.words++;
++		d330_dsi_dump_add("0x%x=%08x\n", reg,
++				  intel_de_read(display, _MMIO(reg)));
++	}
++}
++
++/*
++ * Curated named rows for interpretation.  Addresses are raw _MMIO() so the
++ * overlay cannot drift from the walked scope; names follow the tree's
++ * register macros (verified in the 7.0.0 tree this patch was authored
++ * against; 0x160018 is unnamed there and is cited by address only).
++ */
++static void d330_dsi_dump_overlay(struct intel_display *display, bool dsi_ok)
++{
++	d330_dsi_dump_add("# NAMED OVERLAY\n");
++
++	if (dsi_ok) {
++		d330_dsi_dump_add("MIPI_DEVICE_READY_A 0x6b000=%08x (bit0 device ready)\n",
++				  intel_de_read(display, _MMIO(0x6b000)));
++		d330_dsi_dump_add("MIPI_INTR_STAT_A 0x6b004=%08x (write-1-to-clear)\n",
++				  intel_de_read(display, _MMIO(0x6b004)));
++		d330_dsi_dump_add("MIPI_DPHY_PARAM_A 0x6b080=%08x\n",
++				  intel_de_read(display, _MMIO(0x6b080)));
++		d330_dsi_dump_add("BXT_MIPI_PORT_CTRL_A 0x6b0c0=%08x (bit31 DPI_ENABLE bit17 AFE_LATCHOUT bit16 LP_OUTPUT_HOLD)\n",
++				  intel_de_read(display, _MMIO(0x6b0c0)));
++		d330_dsi_dump_add("MIPI_CTRL_A 0x6b104=%08x (RO bits: 31 PHY status port ready, 30 ULPS not active, 28 MIPIIO reset released, 27 clock lane stop state, 26 data lane stop state, 1 MIPIIO port powered)\n",
++				  intel_de_read(display, _MMIO(0x6b104)));
++		d330_dsi_dump_add("MIPI_DEVICE_READY_C 0x6b800=%08x (bit0 device ready)\n",
++				  intel_de_read(display, _MMIO(0x6b800)));
++		d330_dsi_dump_add("MIPI_INTR_STAT_C 0x6b804=%08x (write-1-to-clear)\n",
++				  intel_de_read(display, _MMIO(0x6b804)));
++		d330_dsi_dump_add("BXT_MIPI_PORT_CTRL_C 0x6b8c0=%08x (bit31 DPI_ENABLE bit17 AFE_LATCHOUT bit16 LP_OUTPUT_HOLD)\n",
++				  intel_de_read(display, _MMIO(0x6b8c0)));
++		d330_dsi_dump_add("MIPI_CTRL_C 0x6b904=%08x (RO bits: 31 PHY status port ready, 30 ULPS not active, 28 MIPIIO reset released, 27 clock lane stop state, 26 data lane stop state, 1 MIPIIO port powered)\n",
++				  intel_de_read(display, _MMIO(0x6b904)));
++	}
++
++	d330_dsi_dump_add("DSI_PHY_0x160018 0x160018=%08x (unnamed in tree; DSI-PHY-area register known to differ cold-vs-resume)\n",
++			  intel_de_read(display, _MMIO(0x160018)));
++	d330_dsi_dump_add("BXT_PORT_CL1CM_DW0 0x162000=%08x (bit16 PHY_POWER_GOOD)\n",
++			  intel_de_read(display, _MMIO(0x162000)));
++	d330_dsi_dump_add("BXT_PORT_REF_DW3 0x16218c=%08x (bit22 GRC_DONE)\n",
++			  intel_de_read(display, _MMIO(0x16218c)));
++	d330_dsi_dump_add("BXT_PORT_REF_DW6 0x162198=%08x (GRC calibration codes)\n",
++			  intel_de_read(display, _MMIO(0x162198)));
++	d330_dsi_dump_add("BXT_DSI_PLL_CTL 0x161000=%08x\n",
++			  intel_de_read(display, _MMIO(0x161000)));
++	d330_dsi_dump_add("CDCLK_CTL 0x46000=%08x\n",
++			  intel_de_read(display, _MMIO(0x46000)));
++	d330_dsi_dump_add("BXT_DE_PLL_ENABLE 0x46070=%08x\n",
++			  intel_de_read(display, _MMIO(0x46070)));
++	d330_dsi_dump_add("BXT_DSI_PLL_ENABLE 0x46080=%08x\n",
++			  intel_de_read(display, _MMIO(0x46080)));
++	d330_dsi_dump_add("PP_STATUS 0xc7200=%08x (timing-volatile sequence state)\n",
++			  intel_de_read(display, _MMIO(0xc7200)));
++	d330_dsi_dump_add("PP_CONTROL 0xc7204=%08x (unlock key 0xabcd bits31:16; bit3 EDP_FORCE_VDD bit2 EDP_BLC_ENABLE)\n",
++			  intel_de_read(display, _MMIO(0xc7204)));
++	d330_dsi_dump_add("BXT_P_CR_GT_DISP_PWRON 0x138090=%08x (bit2 MIPIO_RST_CTRL)\n",
++			  intel_de_read(display, _MMIO(0x138090)));
++}
++
++static void d330_dsi_dump_walk(struct intel_display *display)
++{
++	struct ref_tracker *wakeref;
++	bool dsi_ok;
++
++	wakeref = intel_display_rpm_get(display);
++	drm_modeset_lock_all(display->drm);
++
++	/*
++	 * BSpec North Display Engine registers/MIPI[BXT]: DSI access with a
++	 * bad/off PLL state can hang BXT/GLK machines.  Gate exactly like
++	 * intel_dsi_get_hw_state() does.
++	 */
++	dsi_ok = !((display->platform.geminilake || display->platform.broxton) &&
++		   !bxt_dsi_pll_is_enabled(display));
++	if (!dsi_ok) {
++		/*
++		 * Emit the skip marker INSTEAD of the DSI section's
++		 * # RANGE header: a present-but-empty section is
++		 * unrepresentable in this format.
++		 */
++		d330_dsi_dump_add("# SKIPPED: DSI PLL off - DSI block reads skipped\n");
++	} else {
++		d330_dsi_dump_range(display, 0x6b000, 0x6c000);
++	}
++	d330_dsi_dump_range(display, 0x160000, 0x164000);
++	d330_dsi_dump_range(display, 0x46000, 0x47000);
++	d330_dsi_dump_range(display, 0xc7200, 0xc7400);
++	d330_dsi_dump_range(display, 0x138000, 0x139000);
++
++	d330_dsi_dump_overlay(display, dsi_ok);
++
++	drm_modeset_unlock_all(display->drm);
++	intel_display_rpm_put(display, wakeref);
++}
++
++void d330_dsi_dump_register(struct intel_display *display)
++{
++	if (d330_dsi_dump.buf)
++		return; /* already allocated; a re-probe reuses it */
++
++	d330_dsi_dump.buf = kvzalloc(D330_DSI_DUMP_BUF_SIZE, GFP_KERNEL);
++	if (!d330_dsi_dump.buf) {
++		drm_err(display->drm,
++			"D330DSIREG: snapshot buffer alloc failed - dump node not created\n");
++		return;
++	}
++	d330_dsi_dump.size = D330_DSI_DUMP_BUF_SIZE;
++
++	debugfs_create_file("i915_dsi_regs", 0600, display->drm->debugfs_root,
++			    display, &d330_dsi_dump_ops);
++}
++
++static ssize_t d330_dsi_dump_read(struct file *filp, char __user *ubuf,
++				  size_t cnt, loff_t *ppos)
++{
++	ssize_t ret;
++
++	if (mutex_lock_interruptible(&d330_dsi_dump_lock))
++		return -ERESTARTSYS;
++
++	ret = simple_read_from_buffer(ubuf, cnt, ppos, d330_dsi_dump.buf,
++				      d330_dsi_dump.len);
++
++	mutex_unlock(&d330_dsi_dump_lock);
++
++	return ret;
++}
++
++static ssize_t
++d330_dsi_dump_write(struct file *filp, const char __user *ubuf,
++		    size_t cnt, loff_t *ppos)
++{
++	struct intel_display *display = filp->private_data;
++	bool trigger;
++	int ret;
++
++	ret = kstrtobool_from_user(ubuf, cnt, &trigger);
++	if (ret)
++		return ret;
++
++	if (!trigger)
++		return cnt;
++
++	if (!mutex_trylock(&d330_dsi_dump_lock))
++		return -EBUSY; /* concurrent trigger: never corrupt the buffer */
++
++	if (!d330_dsi_dump.buf) {
++		mutex_unlock(&d330_dsi_dump_lock);
++		return -ENOMEM;
++	}
++
++	d330_dsi_dump.len = 0;
++	d330_dsi_dump.words = 0;
++	d330_dsi_dump_walk(display);
++
++	pr_info("D330DSIREG: snapshot captured (%u words, %zu bytes buffered)\n",
++		d330_dsi_dump.words, d330_dsi_dump.len);
++
++	mutex_unlock(&d330_dsi_dump_lock);
++
++	return cnt;
++}
++
++const struct file_operations d330_dsi_dump_ops = {
++	.owner = THIS_MODULE,
++	.open = simple_open,
++	.read = d330_dsi_dump_read,
++	.write = d330_dsi_dump_write,
++	.llseek = default_llseek,
++};
+--- a/drivers/gpu/drm/i915/display/intel_display_debugfs.c
++++ b/drivers/gpu/drm/i915/display/intel_display_debugfs.c
+@@ -824,6 +824,9 @@
+ 	{"i915_lpsp_status", i915_lpsp_status, 0},
+ };
+ 
++/* Additive D330 instrumentation (intel_dsi_dump_debugfs.c). */
++void d330_dsi_dump_register(struct intel_display *display);
++
+ void intel_display_debugfs_register(struct intel_display *display)
+ {
+ 	struct dentry *debugfs_root = display->drm->debugfs_root;
+@@ -831,6 +834,9 @@
+ 	debugfs_create_file("i915_fifo_underrun_reset", 0644, debugfs_root,
+ 			    display, &i915_fifo_underrun_reset_ops);
+ 
++	/* Additive D330 instrumentation: DSI MMIO snapshot (read-only). */
++	d330_dsi_dump_register(display);
++
+ 	drm_debugfs_create_files(intel_display_debugfs_list,
+ 				 ARRAY_SIZE(intel_display_debugfs_list),
+ 				 debugfs_root, display->drm->primary);
+--- a/drivers/gpu/drm/i915/Makefile
++++ b/drivers/gpu/drm/i915/Makefile
+@@ -328,6 +328,7 @@
+ i915-$(CONFIG_DEBUG_FS) += \
+ 	display/intel_display_debugfs.o \
+ 	display/intel_display_debugfs_params.o \
++	display/intel_dsi_dump_debugfs.o \
+ 	display/intel_pipe_crc.o
+ 
+ # modesetting output/encoder code

@@ -111,6 +111,13 @@ jobs:
           git apply -p1 "$GITHUB_WORKSPACE/patches/d330_display_resume_fix.patch"
           grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
           grep -R 'intel_fb_is_ccs_modifier(modifier)' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          # patches/d330_dsi_dump.patch is strictly-additive phase-47 instrumentation
+          # (47-01): one new debugfs snapshot node + 2 wiring lines. It touches no
+          # DSI enable/disable path and writes no registers, so it cannot change
+          # what the boot-vs-resume arms measure.
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_dump.patch"
+          grep -R 'i915_dsi_regs' drivers/gpu/drm/i915/display/
+          grep -R 'bxt_dsi_pll_is_enabled' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
