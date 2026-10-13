@@ -1,12 +1,20 @@
 # Milestones
 
-## v8.0 v8.0 (Shipped: 2026-10-13)
+## v9.0 Actually Fix the D330 Resume Black Screen (In Progress)
+
+**Phases:** 47-49 (DSI MMIO truth; clean DMI-gated fix; delivery + closure). Carries the unmet v8.0 promise: make the D330 resume show an image. Self-sufficient: no upstream dependency.
+
+## v8.0 v8.0 (Closed: 2026-10-13 - RE + honest closure; BUG NOT FIXED, continues in v9.0)
 
 **Phases completed:** 4 phases, 8 plans, 0 tasks
 
 **Key accomplishments:**
 
-- (none recorded)
+- GOP driver identified + two-VBT handoff decoded (SPI VBT vs runtime OpRegion VBT, block-53 sequences)
+- Resume-vs-reload differential + decisive displayinfo experiment: kernel display state byte-identical working-vs-broken; failure below the kernel model
+- 29-row binding disproven-lever ledger with machine gate; rebind "recovery" myth-busted (only a full reboot restores the panel)
+- 3 deployed, eyes-on-tested fix candidates all falsified; ROOT-4 honest closure (NO_CLEAN_FIX_PROOF.md)
+- The resume black screen is NOT fixed. The fix hunt continues as milestone v9.0.
 
 ---
 

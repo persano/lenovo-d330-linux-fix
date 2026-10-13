@@ -9,7 +9,8 @@
 - ✅ **v5.0 CI/CD & Remastered Live ISO Distribution** — Phases 21-23 (shipped)
 - ✅ **v6.0 System Resilience, Performance & Usability Polish** — Phases 24-31 (shipped)
 - ✅ **v7.0 Pre-Deployment Audit Remediation** — Phases 32-42 (shipped 2026-10-08)
-- 🚧 **v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen** — Phases 43-46 (in progress)
+- ✅ **v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen** — Phases 43-46 (shipped 2026-10-13: RE + differential + honest closure; **bug NOT fixed** — the fix hunt continues in v9.0)
+- 🚧 **v9.0 Actually Fix the D330 Resume Black Screen** — Phases 47-49 (in progress)
 
 ## Phases
 
@@ -215,6 +216,77 @@ Plans:
 | 44. Community & Upstream Survey + Cheap Levers | 1/1 | Complete    | 2026-10-12 |
 | 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 2/2 | Complete (ROOT-04 honest closure)| 2026-10-13 |
 | 46. Verification, Delivery & Upstream (conditional) | 1/1 | Complete (upstream clause skipped — condition failed)| 2026-10-13 |
+| 47. DSI MMIO Truth (Boot vs Resume Hardware Register Diff) | 0/0 | Not started | - |
+| 48. Clean DMI-Gated Fix (MMIO-Guided) | 0/0 | Not started | - |
+| 49. Delivery, No-Regression & Closure | 0/0 | Not started | - |
+
+---
+
+### 🚧 v9.0 Actually Fix the D330 Resume Black Screen (In Progress)
+
+**Milestone Goal:** v8.0 promised a fix and did not ship one. It shipped the map instead:
+the GOP boot-time panel init, the two-VBT handoff, 29 disproven levers, and the decisive
+fact that the kernel's display state is byte-identical working-vs-broken. v9.0 goes below
+the kernel's model: capture the hardware-level DSI/DPHY register truth (boot vs resume),
+name the mechanism, and land a clean DMI-gated (`82H0`) kernel fix. No upstream
+dependency — we are the only people working on this.
+
+**Process rules (v8.0 lessons, binding):** the user triggers every suspend/resume
+themselves and reports the verdict in their own time; no SSH-triggered test ever requires
+the user's eyes; machine evidence (traces, register dumps) runs every cycle; one test per
+session, scheduled with the user. Never attribute a failed test to the user.
+
+**Phase Ordering Rationale:** the hardware-register diff (Phase 47) must come first —
+three v8.0 candidates failed because every kernel-visible state was already identical;
+the only unknown lives below the kernel's model. The fix (Phase 48) is then
+MMIO-guided — replicating the GOP's boot-time panel init in the resume path or restoring
+the differing registers — with the user-triggered eyes-on protocol and the ≤5-iteration
+budget. Delivery (Phase 49) proves the observable bar and closes honestly either way.
+
+**Phases:**
+
+- [ ] **Phase 47: DSI MMIO Truth (Boot vs Resume Hardware Register Diff)** - Capture the DSI/DPHY transcoder register state the kernel tooling cannot show (CI-built dump patch or devcoredump), diff working-boot vs broken-resume, and name the mechanism (`docs/research/DSI_MMIO_DIFF.md`) (MMIO-01, MMIO-02)
+- [ ] **Phase 48: Clean DMI-Gated Fix (MMIO-Guided)** - Land a clean `82H0`-gated kernel fix that makes the panel show an image after resume, verified eyes-on by the user plus machine evidence; ≤5 iterations or an updated honest closure (FIX-01, FIX-02, FIX-03)
+- [ ] **Phase 49: Delivery, No-Regression & Closure** - Prove the observable bar across 3+ user-triggered resume cycles, keep the guard chain green, and close the milestone honestly (DONE-01, DONE-02)
+
+### Phase 47: DSI MMIO Truth (Boot vs Resume Hardware Register Diff)
+
+**Goal**: Get below the kernel's software model — capture the DSI/DPHY/transcoder hardware register state that v8.0 could not see, on both a working fresh boot and a broken resume, and name the differing mechanism.
+**Depends on**: Nothing (first phase of Milestone 9; v8.0's NO_CLEAN_FIX_PROOF.md future-work list is the direct input)
+**Requirements**: MMIO-01, MMIO-02
+**Success Criteria** (what must be TRUE):
+
+  1. A register dump covering the DSI/DPHY/transcoder block exists for BOTH states (working boot, broken resume), captured on-device with the CI-built kernel or dump tooling, checksummed and registered in the RE kit manifest
+  2. `docs/research/DSI_MMIO_DIFF.md` records the diff, excludes volatile/irrelevant registers with reasons, and names the mechanism as a testable claim (which hardware state the GOP sets that the resume path does not)
+  3. Every claim is machine-evidenced; the ledger gate stays green
+
+**Plans**: TBD
+
+### Phase 48: Clean DMI-Gated Fix (MMIO-Guided)
+
+**Goal**: Land the actual fix: a DMI-gated (`82H0`) kernel change that makes the panel show an image after resume, guided by the Phase 47 mechanism — replicating the GOP's boot-time panel init in the resume path or restoring the differing hardware state.
+**Depends on**: Phase 47
+**Requirements**: FIX-01, FIX-02, FIX-03
+**Success Criteria** (what must be TRUE):
+
+  1. The fix is built by CI, deployed with the known-good rollback `.deb` retained first, and DMI-gated to `82H0`
+  2. The user triggers every suspend/resume test themselves and reports the verdict in their own time; the panel shows the desktop image (not just sysfs state) after resume
+  3. ≤5 fix iterations; on failure the honest-closure document is updated with a v9.0 section — never a fake fix; every attempt is ledger-recorded
+
+**Plans**: TBD
+
+### Phase 49: Delivery, No-Regression & Closure
+
+**Goal**: Prove the observable bar on real hardware and close the milestone honestly — fix shipped and proven, or mechanism documented as unreachable with a concrete next instrument.
+**Depends on**: Phase 48
+**Requirements**: DONE-01, DONE-02
+**Success Criteria** (what must be TRUE):
+
+  1. After the fix (if landed): the desktop is visible and usable across 3+ consecutive user-triggered suspend/resume cycles with no manual action
+  2. The full guard harness chain is green at close; the ledger reflects the final truth (new disproven rows appended if the fix failed again)
+  3. The upstream post is optional and never blocks anything
+
+**Plans**: TBD
 
 ---
 

@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v8.0
-milestone_name: Reverse-Engineer & Fix the D330 Resume Black Screen
-status: Awaiting next milestone
-stopped_at: Phase 44 complete, ready to plan Phase 45
+milestone: v9.0
+milestone_name: Actually Fix the D330 Resume Black Screen
+status: Roadmap created; awaiting Phase 47 plan
+stopped_at: Milestone v8.0 closed without a fix; v9.0 roadmap created, ready to plan Phase 47
 last_updated: "2026-10-13T16:19:16.457Z"
 last_activity: 2026-10-13
-last_activity_desc: Milestone v8.0 completed and archived
+last_activity_desc: v9.0 milestone created (fix continues; no upstream dependency)
 state_head: 4093d070c247c38b9665d20e865125c3eaf91f38
 progress:
   total_phases: 4
@@ -18,7 +18,7 @@ progress:
 
 # STATE: Project Execution State
 
-- **Active Milestone**: Milestone 8 (v8.0) — Reverse-Engineer & Fix the D330 Resume Black Screen
+- **Active Milestone**: Milestone 9 (v9.0) — Actually Fix the D330 Resume Black Screen
 - **Active Phase**: — (roadmap created; Phases 43-46 defined, awaiting `/gsd-plan-phase 43`)
 - **Status**: Roadmap created. 4 phases (43-46), 19/19 v1 requirements mapped, 0 planned. Start with Phase 43 (Guardrails, Ledger & Safe Recovery Baseline).
 - **Blockers**:
