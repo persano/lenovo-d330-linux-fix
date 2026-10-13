@@ -1,0 +1,5 @@
+23,24c23
+< 		uapi: [FB:195] AR24 little-endian (0x34325241),0x0,64x64, visible=visible, src=64.000000x64.000000+0.000000+0.000000, dst=64x64+341+635, rotation=0 (0x00000001)
+< 		hw: [FB:195] AR24 little-endian (0x34325241),0x0,64x64, visible=yes, src=64.000000x64.000000+0.000000+0.000000, dst=64x64+341+635, rotation=0 (0x00000001)
+---
+> 		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=64.000000x64.000000+0.000000+0.000000, dst=64x64+341+635, rotation=0 (0x00000001)

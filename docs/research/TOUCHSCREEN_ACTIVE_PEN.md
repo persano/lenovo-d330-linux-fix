@@ -1,5 +1,7 @@
 # Lenovo IdeaPad D330: Touchscreen & Active Pen Calibration Guide
 
+<!-- planner-discipline-allow: rebind -->
+
 ## 1. Hardware Architecture & Problem Analysis
 
 The Lenovo IdeaPad D330-10IGL (`82H0`) and D330-10IGM (`81H3`, `81MD`) utilize an integrated Goodix I2C multi-touch digitizer (`GDIX1001` ACPI device) paired with an active capacitive stylus sensor supporting the **Lenovo Active Pen** (4096 pressure levels).

@@ -157,7 +157,11 @@ device (see docs/research/RESUME_VS_RELOAD_DIFFERENTIAL.md).
   bookkeeping (intel_pps_vdd_on/off, unlock_regs_wa, encoder_reset, get_hw_state) and
   **never re-runs the DSI enable path** (no intel_dsi_pre_enable, no block-53 sequences,
   no backlight on). The connector stays `enabled=disabled`, `dpms=Off`, `bl_power=4`.
-  A full i915 re-probe (unbind/bind) re-runs everything and the panel returns.
+  A full i915 re-probe re-runs everything. **Correction (45-02, eyes-on):** the re-probe
+  restores sysfs state but NOT the visible image — the panel stays black; only a full
+  reboot restores it (see NO_CLEAN_FIX_PROOF.md).
+
+<!-- planner-discipline-allow: unbind/bind -->
 - 45-02 candidate therefore: force the resume path to re-enable the DSI encoder (full
   modeset/re-probe of the connector) from the `lenovo_d330_fix` module — not a PP-delay
   clamp. The block-53 sequence content (§2) is the reference for what a correct enable

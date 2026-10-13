@@ -33,12 +33,14 @@ hit appears, fix the text or add a narrow marker with a reason.
 
 ## Proven bar (not a lever)
 
-Only one recovery has ever worked on-device: a **full i915 unbind/bind reload**
-of `0000:00:02.0` (shipped as the `system-sleep` hook
-`lenovo-d330-display-resume.sh`). Bare PCI reset, remove+rescan, module
-unloading and every lighter lever below do **not** recover the panel. The
-reload is the proven baseline (Phase 43 hardens and ships it); a clean resume
-fix must beat it, not re-chase the levers below.
+**Corrected 2026-10-13 (45-02, eyes-on):** the only recovery that has ever restored a
+visible image is a **full reboot**. The full i915 unbind/bind reload of `0000:00:02.0`
+(`system-sleep` hook `lenovo-d330-display-resume.sh`) restores *sysfs* state
+(`dpms=On`, `bl_power=0`) but **not the visible image** — the "reload works" claim in
+older phases was sysfs-only evidence and was myth-busted with human eyes-on tests
+(45-02 iteration 2). Bare PCI reset, remove+rescan, module unloading and every lighter
+lever below do **not** recover the panel. A clean resume fix must therefore make the
+kernel's own resume path restore a *visible* panel — sysfs state alone proves nothing.
 
 ## Corrected VBT claim (do not re-chase the stale note)
 
@@ -53,7 +55,7 @@ fix. Evidence: `DSI_RESUME_TRACE_ANALYSIS.md` §"i915 *does* drive the panel
 GPIOs on GLK"; correction also recorded in
 `DISPLAY_RESUME_CCS_MODIFIER.md` §"Resume vs reload" (**Correction:** note).
 
-## Lever rows: 27
+## Lever rows: 29
 
 <!-- LEDGER-LEVERS-START -->
 | # | Lever (canonical) | Alias regex (ERE, case-insensitive) | Disproof one-liner | Evidence |
@@ -67,7 +69,7 @@ GPIOs on GLK"; correction also recorded in
 | 7 | `0x138090` as an enabled/disabled state marker | `0x138090` | reads `0` in the working console state and `0xb` after the working reload, so no simple value distinguishes working from broken | DSI_RESUME_TRACE_ANALYSIS.md §Ruled out by these traces |
 | 8 | DSI PLL math / clock-gating "chicken" registers | `DSI PLL math\|BXT_DSI_PLL_CTL` | the differing registers are `GEN9_CLKGATE_DIS_*`/`CHICKEN`/DE-PLL control, not PLL ratios; `BXT_DSI_PLL_CTL` reads `0x132` on both paths | DSI_RESUME_TRACE_ANALYSIS.md §Ruled out by these traces + §Reload vs resume |
 | 9 | Post-resume CRTC read-state lever (trust late CRTC reads) | `CRTC read\|readout path` | a CRTC reading taken minutes after resume is meaningless (flaky `enable=yes/no`, KDE idle blanking); the readout path itself decides "still enabled" and skips re-init — that is the bug, not a fix | DSI_RESUME_TRACE_ANALYSIS.md §Ruled out by these traces + §Result 3 |
-| 10 | Suspend depth choice (`deep` vs `s2idle`) | `mem_sleep\|suspend depth` | both `deep` (S3) and `s2idle` resume black | DISPLAY_RESUME_CCS_MODIFIER.md §Disproven theories (do not retry) + §Suspend depth and panel power |
+| 10 | Suspend depth choice (`deep` vs `s2idle`) | `mem_sleep\|suspend depth` | both `deep` (S3) and `s2idle` resume black; s2idle additionally leaves the backlight off (`bl_power=4`) and re-enabling it gives a lit-but-blank panel | DISPLAY_RESUME_CCS_MODIFIER.md §Disproven theories (do not retry) + §Suspend depth and panel power + NO_CLEAN_FIX_PROOF.md §1 iteration 3 |
 | 11 | Keep the panel powered (early-return from `intel_dsi_post_disable`) | `early-return from\|keep the panel powered\|intel_dsi_post_disable` | still black, so the panel does not survive suspend even when i915 leaves it alone | DISPLAY_RESUME_CCS_MODIFIER.md §Disproven theories (do not retry) + §Suspend depth and panel power + §vlv_dsi.c experiments |
 | 12 | PMIC on I2C bus 6 (GOP-programmed, i915-missing) | `PMIC\|I2C bus 6` | no Linux I2C client exists on bus 6 and the GOP binary has no I2C/PMIC MMIO or strings — not the cause | DISPLAY_RESUME_CCS_MODIFIER.md §Disproven theories (do not retry) + §GOP reverse engineering |
 | 13 | `modprobe -r i915` after resume | `modprobe -r` | the module stays "in use" (~28 refs) and cannot be unloaded; the lower-level PCI unbind/bind is the working alternative | DISPLAY_RESUME_CCS_MODIFIER.md §Disproven theories (do not retry) |
@@ -85,10 +87,13 @@ GPIOs on GLK"; correction also recorded in
 | 25 | Kernel param `i915.enable_dpcd_backlight=0` | `enable_dpcd_backlight=0` | community suggestion for eDP DPCD backlight; the D330 panel is DSI, and backlight is a separate second bug | COMMUNITY_FINDINGS.md §2.4 Kernel Boot Parameters & Driver Flags; DISPLAY_RESUME_CCS_MODIFIER.md §Backlight is a second, separate bug |
 | 26 | Keep the display power well / DC on across suspend (`i915.disable_power_well=1 i915.enable_dc=0`) | `disable_power_well\|enable_dc=0` | still resumes black; disabling i915's display power management does not save the panel | DISPLAY_RESUME_CCS_MODIFIER.md §Suspend depth and panel power are not the cause |
 | 27 | Backlight re-enable as the black-screen fix | `bl_power\|actual_brightness` | forcing the backlight on shows the panel backlit but still blank — a separate second bug, not the missing image | DISPLAY_RESUME_CCS_MODIFIER.md §Backlight is a second, separate bug; DSI_RESUME_TRACE_ANALYSIS.md §Backlight is a second, separate bug |
+| 28 | Deferred atomic full DSI encoder cycle post-resume (`disable_all` → `commit_duplicated_state`, 82H0-gated quirk) | `disable_all\|commit_duplicated_state` | the cycle ran and traced (`intel_dsi_disable` 35 ms → `post_disable` → `pre_enable`, "encoder re-enabled", `bl_power=0`, `brightness=640`) and the panel was still lit-black with eyes on — re-running the enable path on the living driver does not produce an image | NO_CLEAN_FIX_PROOF.md §1 iteration 1 + §3; RESUME_VS_RELOAD_DIFFERENTIAL.md §Iteration log |
+| 29 | Post-resume i915 re-probe / rebind as a recovery (service or manual module rebind; incl. the unbind/bind reload) | `rebind` | the re-probe ran (`reprobe done rc=0`, module reloaded) and the panel went fully black; manual rebind also left it black — the rebind restores sysfs state, never the visible image; the "rebind recovers the panel" claim was myth-busted with eyes-on tests (45-02) | NO_CLEAN_FIX_PROOF.md §1 iteration 2 + §2; RESUME_VS_RELOAD_DIFFERENTIAL.md §Iteration log |
 <!-- LEDGER-LEVERS-END -->
 
-Row-count note: 27 distinct levers from the three source docs (the roadmap bar
-is 22; the honest enumeration lands above it — no padding, no merging below
-distinctness). Cross-doc duplicates (CDCLK, force-init, panel power-cycle,
-early-return, glk_cold_boot, backlight) are merged into single rows carrying
-every evidence link; the forced-MIPI-register batch is one row.
+Row-count note: 29 distinct levers from the three source docs plus the 45-02
+iteration closure (the roadmap bar is 22; the honest enumeration lands above
+it — no padding, no merging below distinctness). Cross-doc duplicates (CDCLK,
+force-init, panel power-cycle, early-return, glk_cold_boot, backlight) are
+merged into single rows carrying every evidence link; the forced-MIPI-register
+batch is one row.

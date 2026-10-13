@@ -1,0 +1,77 @@
+CRTC info
+---------
+[CRTC:77:pipe A]:
+	uapi: enable=yes, active=yes, mode="800x1280": 60 78500 800 880 900 980 1280 1310 1315 1335 0x48 0xa
+	hw: enable=yes, active=yes
+	adjusted_mode="800x1280": 60 78500 800 880 900 980 1280 1310 1315 1335 0x48 0x0
+	pipe__mode="800x1280": 61 80000 800 880 900 980 1280 1310 1315 1335 0x40 0x0
+	pipe src=800x1280+0+0, dither=no, bpp=24
+	port_clock=80000, lane_count=0
+	num_scalers=2, scaler_users=0 scaler_id=-1 scaling_filter=0, scalers[0]: use=no, mode=0, scalers[1]: use=no, mode=0
+	[ENCODER:181:DSI A]: connectors:
+		[CONNECTOR:182:DSI-1]
+	[PLANE:35:plane 1A]: type=PRI
+		uapi: [FB:185] AR24 little-endian (0x34325241),0x100000000000002,800x1280, visible=visible, src=800.000000x1280.000000+0.000000+0.000000, dst=800x1280+0+0, rotation=0 (0x00000001)
+		hw: [FB:185] AR24 little-endian (0x34325241),0x100000000000002,800x1280, visible=yes, src=800.000000x1280.000000+0.000000+0.000000, dst=800x1280+0+0, rotation=0 (0x00000001)
+	[PLANE:44:plane 2A]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:53:plane 3A]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:62:plane 4A]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:71:cursor A]: type=CUR
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=64.000000x64.000000+0.000000+0.000000, dst=64x64+341+635, rotation=0 (0x00000001)
+	underrun reporting: cpu=yes pch=yes
+[CRTC:120:pipe B]:
+	uapi: enable=no, active=no, mode="": 0 0 0 0 0 0 0 0 0 0 0x0 0x0
+	hw: enable=no, active=no
+	adjusted_mode="": 0 0 0 0 0 0 0 0 0 0 0x0 0x0
+	pipe__mode="": 0 0 0 0 0 0 0 0 0 0 0x0 0x0
+	pipe src=0x0+0+0, dither=no, bpp=0
+	port_clock=0, lane_count=0
+	num_scalers=2, scaler_users=0 scaler_id=-1 scaling_filter=0, scalers[0]: use=no, mode=0, scalers[1]: use=no, mode=0
+	[PLANE:78:plane 1B]: type=PRI
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:87:plane 2B]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:96:plane 3B]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:105:plane 4B]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:114:cursor B]: type=CUR
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	underrun reporting: cpu=yes pch=yes
+[CRTC:163:pipe C]:
+	uapi: enable=no, active=no, mode="": 0 0 0 0 0 0 0 0 0 0 0x0 0x0
+	hw: enable=no, active=no
+	adjusted_mode="": 0 0 0 0 0 0 0 0 0 0 0x0 0x0
+	pipe__mode="": 0 0 0 0 0 0 0 0 0 0 0x0 0x0
+	pipe src=0x0+0+0, dither=no, bpp=0
+	port_clock=0, lane_count=0
+	num_scalers=1, scaler_users=0 scaler_id=-1 scaling_filter=0, scalers[0]: use=no, mode=0
+	[PLANE:121:plane 1C]: type=PRI
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:130:plane 2C]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:139:plane 3C]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:148:plane 4C]: type=OVL
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	[PLANE:157:cursor C]: type=CUR
+		uapi: [FB:0] n/a,0x0,0x0,, visible=hidden, src=0.000000x0.000000+0.000000+0.000000, dst=0x0+0+0, rotation=0 (0x00000001)
+	underrun reporting: cpu=yes pch=yes
+
+Connector info
+--------------
+[CONNECTOR:182:DSI-1]: status: connected
+	physical dimensions: 135x216mm
+	subpixel order: Horizontal RGB
+	CEA rev: 0
+	HDCP version: No Connector Support
+	max bpc: 0
+	fixed modes:
+		"800x1280": 60 78500 800 880 900 980 1280 1310 1315 1335 0x48 0xa
+	modes:
+		"800x1280": 60 78500 800 880 900 980 1280 1310 1315 1335 0x48 0xa
+[CONNECTOR:165:DP-1]: status: disconnected
+[CONNECTOR:176:HDMI-A-1]: status: disconnected

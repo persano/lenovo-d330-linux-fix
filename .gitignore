@@ -6,6 +6,8 @@ docs/dumps/safety_kit/*
 # Phase 45 RE kit: binaries are gitignored, the integrity manifest is committed.
 docs/dumps/re_kit/*
 !docs/dumps/re_kit/MANIFEST.sha256
+# Text evidence dumps (45-02 displayinfo pair) are committed; only binaries stay out.
+!docs/dumps/re_kit/*.txt
 drivers_base/*.exe
 drivers_base/*.zip
 *.o

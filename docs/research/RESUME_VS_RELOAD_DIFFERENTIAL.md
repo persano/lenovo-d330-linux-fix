@@ -111,6 +111,10 @@ Implication for 45-02: the fix is to make the resume path re-enable the DSI enco
 modeset/re-probe of the connector), not to tune PP delays. The block-53 sequence table in
 GOP_DSI_RE_FINDINGS §2 is the reference for what a correct enable replays.
 
+<!-- planner-discipline-allow: mem_sleep -->
+<!-- planner-discipline-allow: dsi-reprobe -->
+<!-- planner-discipline-allow: rebind -->
+
 ## Phase 45-02: pre-iteration diagnostic (screen-ON suspend shape) and fix design
 
 Re-run after a clean reboot (2026-10-12 21:26, kernel 7.0.14-d330-fix, KWin active,
@@ -155,4 +159,15 @@ host copy `C:\Users\Familia\AppData\Local\Temp\opencode\rollback\`).
 
 | # | Build | Deployed kernel | Machine evidence | Outcome |
 |---|---|---|---|---|
-| 1 | CI run 38329104027 (`fix/d330-dsi-resume-cycle`, both patches) | pending | pending | pending |
+| 1 | CI run 38329104027 (`fix/d330-dsi-resume-cycle`, both patches) | — | workflow failed at fetch (noble backport shadowing questing; suite moved to `resolute`) | superseded by rerun |
+| 1r | CI run 38334925479 (`resolute`, both patches) | 7.0.14-d330-fix + QUIRK_DSI_RESUME_FULL_CYCLE | cycle traced (`intel_dsi_disable` 35 ms → `post_disable` → `pre_enable`), "encoder re-enabled", `bl_power=0 brightness=640` | **FAILED** — eyes-on: lit but black (fresh boot + 2nd resume) |
+| 2 | on-device systemd oneshot `d330-dsi-reprobe.service` (rebind after suspend.target) + manual rebind test | same kernel | `reprobe done rc=0`, module reloaded; dpms stuck `Off`, pipe B `enable=no` | **FAILED** — fully black; **the rebind was never a working recovery** (45-01 T4 "panel restored" was sysfs-only) |
+| 3 | s2idle resume (`mem_sleep` echo, non-persistent) | same kernel | `PM: suspend entry (s2idle)`, post-resume `bl_power=4` | **FAILED** — fully black; backlight re-enable → lit but black |
+| — | KScreen DPMS cycle / `systemctl restart sddm` | same kernel | dpms stuck Off; fresh KWin pipe B disabled | **FAILED** — compositor cannot re-drive the connector |
+
+All outcomes verified by human eyes on the panel (the user), not sysfs. Decisive
+experiment: `i915_display_info` boot-vs-resumed diff shows the kernel display state
+byte-identical (only the cursor plane FB differs) while the panel is dark — the failure is
+below the kernel's model. Full closure in `NO_CLEAN_FIX_PROOF.md` (ROOT-04). The
+known-good `7.0.14-d330-fix` was redeployed and verified; CI reverted to the CCS-only
+patch application.

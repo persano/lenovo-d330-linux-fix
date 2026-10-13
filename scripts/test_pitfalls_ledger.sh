@@ -49,6 +49,8 @@ SOURCE_DOCS=(
     "docs/research/DISPLAY_RESUME_CCS_MODIFIER.md"
     "docs/research/DSI_RESUME_TRACE_ANALYSIS.md"
     "docs/research/COMMUNITY_FINDINGS.md"
+    "docs/research/RESUME_VS_RELOAD_DIFFERENTIAL.md"
+    "docs/research/NO_CLEAN_FIX_PROOF.md"
 )
 ALLOWLIST=(
     "RESUME_FIX_LEDGER.md"
