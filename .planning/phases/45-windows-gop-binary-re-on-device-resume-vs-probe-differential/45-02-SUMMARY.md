@@ -7,6 +7,7 @@
 <!-- planner-discipline-allow: disable_all -->
 <!-- planner-discipline-allow: commit_duplicated_state -->
 <!-- planner-discipline-allow: modprobe -r -->
+<!-- planner-discipline-allow: rebind -->
 
 Phase: 45 · Plan: 45-02 · Completed: 2026-10-13
 
@@ -24,7 +25,7 @@ Phase: 45 · Plan: 45-02 · Completed: 2026-10-13
 - `docs/research/RESUME_FIX_LEDGER.md` — proven-bar corrected (reboot is the only
   eyes-on-verified recovery; the unbind/bind reload was sysfs-only evidence, myth-busted
   45-02), rows 28-29 added, row 10 evidence extended, count 27→29. Ledger gate green
-  (files=43 hits=0).
+  (files=45 hits=0, tracked tree).
 - `docs/research/RESUME_VS_RELOAD_DIFFERENTIAL.md` — candidate cross-check table
   (plan step 2), pre-iteration diagnostic section, full iteration log with per-iteration
   machine + human evidence.

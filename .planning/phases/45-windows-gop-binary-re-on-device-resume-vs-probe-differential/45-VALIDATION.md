@@ -34,7 +34,7 @@ created: 2026-10-12
 | 45-01-T3 | 45-01 | 1 | WRE-03 | T-45-02 fabricated RE | intel_vbt_decode output recorded verbatim (DSI link config, MIPI seq version) | device (SSH) | decode output greps in evidence doc | ❌ created in task | ⬜ pending |
 | 45-01-T4 | 45-01 | 1 | ROOT-01 | T-45-01 sweep tampering | Two-arm differential with ftrace/MMIO/backlight evidence, ≥18 s windows, rtcwake | device (SSH) | evidence suite arm-structure greps + chain | ❌ created in task | ⬜ pending |
 | 45-02-T1 | 45-02 | 2 | ROOT-02, ROOT-03 | T-45-03 false-fix claim | DMI-gated fix built in CI, deployed, outcome recorded per iteration. **Correction (45-02 evidence): sysfs/register state was proven a mirage (byte-identical while the panel is visually dead); outcomes verified with human eyes-on, machine traces kept as secondary evidence** | device (SSH) + eyes-on | per-iteration rtcwake + sysfs/ftrace logs in the iteration log + user verdict | ✅ green (candidates executed; all FAILED, recorded) | ✅ green |
-| 45-02-T2 | 45-02 | 2 | ROOT-04 (conditional) | T-45-03 false-fix claim | ROOT-04 branch taken: NO_CLEAN_FIX_PROOF.md + ledger rows 28-29 + proven-bar correction + known-good redeploy; D330_REAL_FIX=1 correctly absent | unit (static) | ledger gate (files=43 hits=0) + evidence greps + full chain | ✅ green | ✅ green |
+| 45-02-T2 | 45-02 | 2 | ROOT-04 (conditional) | T-45-03 false-fix claim | ROOT-04 branch taken: NO_CLEAN_FIX_PROOF.md + ledger rows 28-29 + proven-bar correction + known-good redeploy; D330_REAL_FIX=1 correctly absent | unit (static) | ledger gate (files=45 hits=0, tracked tree) + evidence greps + full chain (CHAIN_EXIT=0) | ✅ green | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
