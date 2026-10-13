@@ -481,7 +481,7 @@ Every subsystem includes an automated bash verification test script supporting `
 10. `scripts/test_iso_integrity.sh`: Validates El Torito boot catalog, EFI system partition, and Live ISO build prerequisites.
 11. `scripts/test_ci_workflows.sh`: Validates GitHub Actions workflow YAML schemas.
 12. `scripts/test_re_diff_evidence.sh`: Validates the checksummed RE kit manifest, the GOP/DSI findings citations, and the resume-vs-reload differential evidence anchors (Phase 45).
-13. `scripts/test_pitfalls_ledger.sh`: Banned-lever ledger gate. Phase 45-02: `SOURCE_DOCS` extended with the differential and ROOT-04 closure docs (new rows 28-29 must match them for the non-vacuity check); ledger grew to 29 rows; proven-bar corrected (reboot is the only eyes-on-verified recovery).
+13. `scripts/test_pitfalls_ledger.sh`: Banned-lever ledger gate. Phase 45-02: `SOURCE_DOCS` extended with the differential and ROOT-04 closure docs (new rows 28-29 must match them for the non-vacuity check); ledger grew to 29 rows; proven-bar corrected (reboot is the only eyes-on-verified recovery). Post-archive: scan covers the active milestone's phases (`.planning/phases/` or `.planning/milestones/<active>-phases/`), older milestone archives are treated as historical disproof records, and a between-milestones state (no active milestone in `.planning/STATE.md`) allows a docs/research-only scan.
 
 ---
 
