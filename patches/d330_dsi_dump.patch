@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,276 @@
 +// SPDX-License-Identifier: MIT
 +/*
 + * Additive D330 instrumentation: MIPI-DSI / display MMIO snapshot node.
@@ -12,8 +12,8 @@
 + * and no mode changes, so re-running it at any point cannot perturb what
 + * it measures.
 + *
-+ * DSI-block reads are gated on bxt_dsi_pll_is_enabled() exactly like
-+ * intel_dsi_get_hw_state() does:
++ * DSI-block and DSI-PHY reads are gated on bxt_dsi_pll_is_enabled()
++ * (the DSI-block gate matches intel_dsi_get_hw_state()):
 + *   "On Broxton the PLL needs to be enabled with a valid divider
 + *    configuration, otherwise accessing DSI registers will hang the
 + *    machine. See BSpec North Display Engine registers/MIPI[BXT]."
@@ -22,10 +22,11 @@
 + *   # RANGE <lo>-<hi> (<N> words)   before each walked range
 + *   0x<off>=<8-hex-value>           one data line per walked word
 + *   # SKIPPED: DSI PLL off - DSI block reads skipped
-+ *                                   replaces the DSI section's # RANGE
-+ *                                   header when the PLL gate trips (a
-+ *                                   present-but-empty section is
-+ *                                   unrepresentable)
++ *   # SKIPPED: DSI PLL off - PHY reads skipped
++ *                                   replace the DSI-block / DSI-PHY
++ *                                   section's # RANGE header when the
++ *                                   PLL gate trips (a present-but-empty
++ *                                   section is unrepresentable)
 + *   NAME 0x<off>=<8-hex> <decode>   # NAMED OVERLAY section rows (the
 + *                                   leading NAME keeps overlay rows out
 + *                                   of the ^0x...=... record regex)
@@ -129,16 +130,23 @@
 +				  intel_de_read(display, _MMIO(0x6b904)));
 +	}
 +
-+	d330_dsi_dump_add("DSI_PHY_0x160018 0x160018=%08x (unnamed in tree; DSI-PHY-area register known to differ cold-vs-resume)\n",
-+			  intel_de_read(display, _MMIO(0x160018)));
-+	d330_dsi_dump_add("BXT_PORT_CL1CM_DW0 0x162000=%08x (bit16 PHY_POWER_GOOD)\n",
-+			  intel_de_read(display, _MMIO(0x162000)));
-+	d330_dsi_dump_add("BXT_PORT_REF_DW3 0x16218c=%08x (bit22 GRC_DONE)\n",
-+			  intel_de_read(display, _MMIO(0x16218c)));
-+	d330_dsi_dump_add("BXT_PORT_REF_DW6 0x162198=%08x (GRC calibration codes)\n",
-+			  intel_de_read(display, _MMIO(0x162198)));
-+	d330_dsi_dump_add("BXT_DSI_PLL_CTL 0x161000=%08x\n",
-+			  intel_de_read(display, _MMIO(0x161000)));
++	if (dsi_ok) {
++		/*
++		 * PHY-area rows are gated behind the same PLL gate as the
++		 * PHY walk (see d330_dsi_dump_walk): with the PLL off these
++		 * reads are unproven on this hardware.
++		 */
++		d330_dsi_dump_add("DSI_PHY_0x160018 0x160018=%08x (unnamed in tree; DSI-PHY-area register known to differ cold-vs-resume)\n",
++				  intel_de_read(display, _MMIO(0x160018)));
++		d330_dsi_dump_add("BXT_PORT_CL1CM_DW0 0x162000=%08x (bit16 PHY_POWER_GOOD)\n",
++				  intel_de_read(display, _MMIO(0x162000)));
++		d330_dsi_dump_add("BXT_PORT_REF_DW3 0x16218c=%08x (bit22 GRC_DONE)\n",
++				  intel_de_read(display, _MMIO(0x16218c)));
++		d330_dsi_dump_add("BXT_PORT_REF_DW6 0x162198=%08x (GRC calibration codes)\n",
++				  intel_de_read(display, _MMIO(0x162198)));
++		d330_dsi_dump_add("BXT_DSI_PLL_CTL 0x161000=%08x\n",
++				  intel_de_read(display, _MMIO(0x161000)));
++	}
 +	d330_dsi_dump_add("CDCLK_CTL 0x46000=%08x\n",
 +			  intel_de_read(display, _MMIO(0x46000)));
 +	d330_dsi_dump_add("BXT_DE_PLL_ENABLE 0x46070=%08x\n",
@@ -163,22 +171,27 @@
 +
 +	/*
 +	 * BSpec North Display Engine registers/MIPI[BXT]: DSI access with a
-+	 * bad/off PLL state can hang BXT/GLK machines.  Gate exactly like
-+	 * intel_dsi_get_hw_state() does.
++	 * bad/off PLL state can hang BXT/GLK machines.  The DSI-block gate
++	 * matches intel_dsi_get_hw_state(); the PHY walk and the PHY-area
++	 * overlay reads sit behind the same gate because the rule's scope
++	 * is not proven to exclude the PHY/MIPIO region, and PHY reads with
++	 * the PLL off are unproven on this hardware (the gate never tripped
++	 * on any of the four captures).
 +	 */
 +	dsi_ok = !((display->platform.geminilake || display->platform.broxton) &&
 +		   !bxt_dsi_pll_is_enabled(display));
 +	if (!dsi_ok) {
 +		/*
-+		 * Emit the skip marker INSTEAD of the DSI section's
-+		 * # RANGE header: a present-but-empty section is
-+		 * unrepresentable in this format.
++		 * Emit the skip markers INSTEAD of the DSI-block and
++		 * DSI-PHY sections' # RANGE headers: a present-but-empty
++		 * section is unrepresentable in this format.
 +		 */
 +		d330_dsi_dump_add("# SKIPPED: DSI PLL off - DSI block reads skipped\n");
++		d330_dsi_dump_add("# SKIPPED: DSI PLL off - PHY reads skipped\n");
 +	} else {
 +		d330_dsi_dump_range(display, 0x6b000, 0x6c000);
++		d330_dsi_dump_range(display, 0x160000, 0x164000);
 +	}
-+	d330_dsi_dump_range(display, 0x160000, 0x164000);
 +	d330_dsi_dump_range(display, 0x46000, 0x47000);
 +	d330_dsi_dump_range(display, 0xc7200, 0xc7400);
 +	d330_dsi_dump_range(display, 0x138000, 0x139000);
