@@ -1,111 +1,102 @@
 ---
 phase: 47-dsi-mmio-truth-boot-vs-resume-hardware-register-diff
-reviewed: 2026-10-14T17:19:34-03:00
+reviewed: 2026-10-14T18:05:48-03:00
 depth: standard
+iteration: 2
 files_reviewed: 8
 files_reviewed_list:
-  - .github/workflows/build-kernel.yml (main + branch 30f077c diff)
-  - patches/d330_dsi_dump.patch (via git show 30f077c)
+  - .github/workflows/build-kernel.yml (main + branch; re-checked unchanged by b753d39)
+  - patches/d330_dsi_dump.patch (via git show b753d39 — the WR-02 fix commit on instrument/d330-dsi-dump)
   - scripts/capture_dsi_dumps.sh
   - scripts/dsi_mmio_diff.sh
   - scripts/test_dsi_mmio_evidence.sh
   - docs/research/DSI_MMIO_DIFF.md
-  - docs/dumps/re_kit/MANIFEST.sha256 (+ all 27 kit artifacts hash-verified)
-  - docs/dumps/re_kit/dsi_regs_diff.txt (+ 4 dump files format/citation-checked)
+  - docs/dumps/re_kit/MANIFEST.sha256 (+ kit verify incl. dsi_regs_diff.txt, dsi_regs_diff_names.txt)
+  - docs/dumps/re_kit/dsi_regs_diff.txt (rebuild-proven byte-identical, lines 1-32)
 findings:
   critical: 0
-  warning: 3
-  info: 5
-  total: 8
+  warning: 0
+  info: 6
+  total: 6
 status: issues_found
 ---
 
-# Phase 47: Code Review Report
+# Phase 47: Code Review Report (iteration 2 — re-review after fix loop)
 
-**Reviewed:** 2026-10-14T17:19:34-03:00
+**Reviewed:** 2026-10-14T18:05:48-03:00
 **Depth:** standard
 **Files Reviewed:** 8
-**Status:** issues_found
+**Status:** issues_found (info-only; all three warnings from iteration 1 verified fixed)
 
 ## Summary
 
-Reviewed the phase-47 instrumentation set: the kernel dump-node patch (branch `instrument/d330-dsi-dump` @ 30f077c), the CI workflow change on that branch, the capture/diff/test bash scripts, the DIFF research doc, and the registered evidence kit. Reviewed read-only; suite binaries were executed as evidence (selftest, fixtures, real-mode guard, fresh diff rebuild).
+Iteration-2 re-review of the phase-47 instrumentation set after the fix loop closed WR-01, WR-02, WR-03. Every fix was **executed, not just read**: selftest 35/35, fixtures 8/8, real-mode guard 7/7, ledger gate 4/4, kit verify green (now 38 lines incl. the registered names file), fresh WR-03 rebuild `cmp`-clean, and the b753d39 patch blob parse/hunk-count/marker checks all clean. No regressions found in the pinned contracts (record regex, header format, marker wording, manifest verify), and no regression to the CI anchors (b753d39 touches only `patches/d330_dsi_dump.patch`). No critical or warning findings remain. Six info items: IN-01…IN-05 carried forward unchanged (out of the critical+warning fix scope), plus one new IN-06.
 
-**Verified clean (executed, not just read):**
+## Fix verification (all executed this iteration)
 
-- **Patch security surface holds.** debugfs node created with mode `0600` (root-only); the write handler is trigger-only (`kstrtobool_from_user`, false → no-op); every `intel_de_*` call in the patch is a read — **zero register writes**, no mode changes. Read/write are serialized on `d330_dsi_dump_lock` (write resets+rebuilds the frozen buffer under the lock; reader can never observe a half-built snapshot); concurrent trigger returns `-EBUSY`; buffer-full writes return early. Word math matches the pinned contract: 1024+4096+1024+128+1024 = 7296 records/arm.
-- **Kit integrity:** all 37 MANIFEST lines hash-match the on-disk artifacts (`sha256sum -c` and an independent PowerShell `Get-FileHash` pass, 0 mismatches). The 5 newly registered entries (`boot_dsi_regs.txt`, `broken_dsi_regs.txt`, both session-1 dumps, `dsi_regs_diff.txt`) match the sha256s quoted in the doc.
-- **Dump format vs pinned contract:** all four dump files parse as 5 `# RANGE` headers, 7296 record lines, 0 skip markers, 0 warnings — exactly the 47-01/47-02 format.
-- **Doc evidence is real.** Every one of the 14 §4.1 rows and all §4.2 values were checked against the actual dump bytes at the cited lines (boot/broken lines 3, 6, 19, 34, 36, 39, 40, 1033, 1060, 6306, 6307, 6344, 6369, 6381 — all match; session-1 positions likewise). The "two all-ones constants" claim (0x6b008, 0x138080) is exact (1 all-ones word in each block, all four arms). 0x6b104 session columns (d4000003 → d0000003) verified. Identical counts (1017/4094/1024/128/1019 = 7282 + 14 = 7296) reconcile.
-- **Executed suites:** `dsi_mmio_diff.sh --selftest` 26/26 OK; `test_dsi_mmio_evidence.sh` real mode 7/7 OK; `--fixtures` mode 8/8 OK including the non-vacuity backstop. A fresh `dsi_mmio_diff.sh` run over the registered dumps is deterministic (two rebuilds `cmp`-identical).
-- **CI anchors (branch diff):** the two new greps are additive; both pre-existing CCS-fix anchors remain, so no existing proof was weakened. `git apply` failure is loud (set -euxo pipefail).
+### WR-01 — VERIFIED FIXED
 
-No critical findings. Three warnings below, all fixable without re-capturing hardware.
+`scripts/dsi_mmio_diff.sh:219-220` keys each skip marker to exactly its own range: `sk = (skip[arm] == 1 && p[1] == dsi_lo && p[2] == dsi_hi)`, `skp = (skipphy[arm] == 1 && p[1] == phy_lo && p[2] == phy_hi)` — the exact prescribed classification order (skipped-pll-off only when `n == 0`; marker-with-records → `parse-warning`; no marker + empty → `parse-warning`). Executed: selftest **35/35** including fixture H (`dsi_mmio_diff.sh:607-627`: marker on resume + boot-only 0x46000 range → DSI row `DSI block skipped: PLL off`, 0x46000 row `malformed dump … parse-warning`, zero "PLL off" wording on 0x46000) and fixture I (both markers on one arm, both state rows, per-range marker-line citation, marker-free range stays joinable).
 
-## Warnings
+### WR-02 — VERIFIED FIXED
 
-### WR-01: Arm-global PLL-off skip flag misclassifies corrupted non-DSI sections as "PLL off"
+Patch blob `b753d39` (parent `30f077c`, only file changed: `patches/d330_dsi_dump.patch`):
+- `d330_dsi_dump_walk()` moves the PHY walk (`0x160000-0x164000`) inside the `else` (dsi_ok) branch and emits the second marker `# SKIPPED: DSI PLL off - PHY reads skipped` when `!dsi_ok` (blob lines 183-194).
+- `d330_dsi_dump_overlay()` gates all five PHY-area reads (0x160018, 0x162000, 0x16218c, 0x162198, 0x161000) behind `if (dsi_ok)` (blob lines 133-149). No ungated DSI/MIPIO-area read remains in the patch; the residual unconditional reads (0x46000 block, 0xc7200, 0x138000, 0x46070/0x46080) are outside the MIPI/MIPIO hazard region and were read fine by the deployed kernel on all four captures.
+- Marker strings byte-match the scripts: patch `# SKIPPED: DSI PLL off - DSI block reads skipped` / `# SKIPPED: DSI PLL off - PHY reads skipped` ≡ `SKIP_MARKER` / `PHY_SKIP_MARKER` (`dsi_mmio_diff.sh:56-57`); capture script's prefix `# SKIPPED: DSI PLL off` (`capture_dsi_dumps.sh:61`) counts both spellings.
+- Consistency of the three accepted shapes: header contract lists both markers and 7296/6272/2176 (`capture_dsi_dumps.sh:32-42`); floor gate keys off SKIPCOUNT (2 markers → 2176 records stays warning-only, rc 0); `[MISS]` surfaces a missing PHY section without failing when markers present; diff script classifies the PHY marker as its own `skipped-pll-off` row with the distinct `DSI PHY block skipped: PLL off` wording (`dsi_mmio_diff.sh:192-194, 219-228, 261-262`).
+- Executed: `git apply --numstat` on the blob parses cleanly (276/0, 6/0, 1/0); hunk-1 body = 276 lines ≡ `@@ -0,0 +1,276 @@`; 0 CR bytes; both markers present. Kernel compile remains the human/CI gate on next branch push (unverifiable on this machine — documented in the fix report).
 
-**File:** `scripts/dsi_mmio_diff.sh:196-199` (with the marker bookkeeping at lines 178-180)
-**Issue:** `skip[arm]` is keyed by arm only, but the state classifier applies it to *every* range of that arm: `sk = (skip[arm] == 1) ? 1 : 0`. The skip marker semantically belongs to exactly one range (0x6b000-0x6c000 — the code itself only seeds `seen[dsi_lo FS dsi_hi]` from it). Consequence: if the resume arm carries the DSI PLL-off marker and a *different* range (e.g. 0x46000) has a corrupted/missing section header on that arm, that range classifies `skipped-pll-off` and the diff emits the row "DSI block skipped: PLL off" for 0x46000-0x47000 instead of the intended `parse-warning` / "malformed dump". The hardening goal ("zero-record section can never classify readable") holds, but a real corruption signal is masked as the one documented, benign skip reason — on the resume arm, which is exactly the arm where a capture is most fragile. The capture script would separately warn on the per-section count mismatch, so this does not silently corrupt the claim, but the diff artifact itself would carry a wrong interpretation.
-**Fix:**
-```awk
-# in the classification END block — honor the marker only for the DSI range:
-sk = (skip[arm] == 1 && p[1] == dsi_lo && p[2] == dsi_hi) ? 1 : 0
-if (sk && n == 0)         st = "skipped-pll-off"
-else if (n == 0)          st = "parse-warning"
-else if (sk)              st = "parse-warning"
-else if (f * 10 > n * 9)  st = "unreadable-0xffffffff"
-else                      st = "readable"
-```
-Then add a fixture: marker on resume + a boot-only second range whose header is missing on resume → expect `parse-warning`, not `skipped-pll-off`.
+### WR-03 — VERIFIED FIXED (executed byte-compare)
 
-### WR-02: Patch's BSpec machine-hang gate does not cover the DSI PHY range or overlay reads
+- `dsi_regs_diff_names.txt` registered: MANIFEST.sha256 is 38 lines / 28 unique artifacts, last line `ef55677dab14ccd2ae1ca24a0137339911e437cc6e6287bf42ab4df6f7518ba6  dsi_regs_diff_names.txt`; `prepare_safety_kit.sh --verify` green incl. the names file.
+- Executed rebuild from `docs/dumps/re_kit/`: `dsi_mmio_diff.sh boot_dsi_regs.txt broken_dsi_regs.txt --names dsi_regs_diff_names.txt` → lines 1-32 **byte-identical** to the canonical `dsi_regs_diff.txt` (`cmp` clean). Control rebuild without `--names` differs in exactly the two cited name cells (0x138108 / 0x13816c). This simultaneously proves the WR-01/WR-02 classifier changes did not alter canonical output.
+- Doc §1 (line 22) and §7 (lines 309-322) now state the exact rebuild command, the registration, and the no-`--names` control result. Doc §2 (lines 36-41) documents the extended gate with commit hash and the honest "not yet in a deployed kernel" caveat.
 
-**File:** `patches/d330_dsi_dump.patch` (`d330_dsi_dump_walk` / `d330_dsi_dump_overlay` in `drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c`)
-**Issue:** The patch's own header states the hazard: "accessing DSI registers will hang the machine" when the PLL is in a bad/off state (BSpec MIPI[BXT]). `d330_dsi_dump_walk()` gates only the 0x6b000-0x6c000 block on `bxt_dsi_pll_is_enabled()`. When `!dsi_ok` it still (a) walks 0x160000-0x164000 — the doc itself labels this "BXT/GLK DSI PHY" — and (b) the overlay unconditionally reads 0x160018, 0x162000 (`BXT_PORT_CL1CM_DW0`), 0x16218c, 0x162198, 0x161000 (`BXT_DSI_PLL_CTL`). So the only branch of the instrument never exercised (the gate never tripped on any of the four captures) is exactly the one the BSpec rule warns about, if the rule's scope includes the PHY/MIPIO region. Reads of the PLL registers themselves are safe (that is what `bxt_dsi_pll_is_enabled` does), and empirically the PHY area read fine with the PLL *on*, but PHY reads with the PLL *off* are unproven on this hardware. If the hazard extends there, the instrument hangs the machine precisely in the failure scenario it exists to capture, losing the 18 s window and the session.
-**Fix:** Either (a) cite the BSpec clause that PHY/MIPIO (0x160000-0x164000) reads are safe with the DSI PLL off and record that in the patch comment and doc §2, or (b) extend the gate to the PHY range and emit a second, distinct skip marker (e.g. `# SKIPPED: DSI PLL off - PHY reads skipped`) with matching handling in `parse_arm`, the capture script's expected-counts table, and the diff classifier. Cheap to do now while the kernel is still the deployed baseline.
+## Regressions — none found
 
-### WR-03: Canonical `dsi_regs_diff.txt` is not reproducible from registered inputs — contradicts the doc's determinism claim
-
-**File:** `docs/dumps/re_kit/dsi_regs_diff.txt` (lines 18-19); claim at `docs/research/DSI_MMIO_DIFF.md:22` and `:307-308`
-**Issue:** The doc claims the diff artifact was "generated by `scripts/dsi_mmio_diff.sh` from the two registered session-2 dumps (deterministic: full pipeline rebuild byte-identical)". Executed check: a fresh run of the script over the two registered dumps reproduces the artifact **except for 2 lines** — the artifact's offset cells read `0x138108 GEN6_GT_GFX_RC6` and `0x13816c GEN9_GT_PM_CONFIG`, while the script alone emits bare offsets. Those names come from a `--names` file that is **not registered** in the kit/manifest, so the "full pipeline rebuild byte-identical" claim cannot be reproduced from registered inputs; as committed, the artifact's provenance (machine-computed, deterministic) is overstated and the two name cells are the only non-reproducible content. Everything else (25/27 header lines, values, citations, summary counts) is byte-identical to a fresh rebuild, which confirms the engine itself is deterministic.
-**Fix:** Register the names file in the kit + manifest and state the exact rebuild command (`dsi_mmio_diff.sh boot broken --names <file>`), or regenerate `dsi_regs_diff.txt` without names (offsets only; the doc and annex already carry the names) and update its pinned sha256. Either closes the provenance gap; do not leave the artifact as-is with the current §7 wording.
+- **Pinned record regex:** `dsi_mmio_diff.sh:128` still inlines the expanded mawk-compatible `[0-9a-fA-F]`-tolerant contract; parse_arm untouched in its record handling.
+- **Header format / marker wording:** exact-string marker equality preserved (see WR-02 above); `# RANGE` parsing unchanged.
+- **Manifest verify:** green, 38 lines / 28 unique, doc §7 wording now exact.
+- **CI anchors:** `git diff 30f077c b753d39` touches only the patch file; both pre-existing CCS greps and the two dsi greps remain in the branch workflow; `git apply -p1` still fails loudly.
+- **Evidence suites (all executed):** selftest 35/35; `test_dsi_mmio_evidence.sh --fixtures` 8/8 (non-vacuity backstop green); real mode 7/7; `test_pitfalls_ledger.sh` 4/4 (files=40 hits=0); `test_re_diff_evidence.sh` 6/6 (§7 gate claim true).
+- **Deferred-commit mode:** uncommitted state on main is by design; every file the ledger claims exists (`scripts/dsi_mmio_diff.sh`, `scripts/capture_dsi_dumps.sh`, `docs/dumps/re_kit/dsi_regs_diff_names.txt`, `docs/dumps/re_kit/MANIFEST.sha256`, `docs/research/DSI_MMIO_DIFF.md`, and commit `b753d39` on `instrument/d330-dsi-dump`). No missing-file flag.
 
 ## Info
 
-### IN-01: MANIFEST.sha256 carries 10 duplicate entries; doc's "37 artifacts" phrasing is imprecise
+### IN-01: MANIFEST.sha256 carries 10 duplicate entries (carried forward, unchanged)
 
-**File:** `docs/dumps/re_kit/MANIFEST.sha256:10-23` (dup lines 1-9 vs 14-23)
-**Issue:** 37 manifest lines but only 27 unique artifacts; `bios_raw_8dfae5d4.bin`, `vbt.bin`, `spi2.bin`, both `.efi` GOP/VBT files, `igdkmd64.sys`, both `.inf`, `vbt_decode.txt` each appear twice (identical hashes, so verification still passes). Pre-existing at HEAD (this phase's 5 appended lines are clean); the duplicates also mean `register_one`'s dedup (suffix match, `prepare_safety_kit.sh:122-128`) never removed them — likely they were appended outside that path in an earlier phase. Doc §7 says "37 lines; … all 37 artifacts OK" — 37 lines ≠ 37 artifacts.
-**Fix:** One-time cleanup: `awk` the manifest to unique lines (hashes identical so order-safe), re-run verify, and fix the §7 wording to "27 artifacts / 37 lines". Optionally harden `register_one` to also dedupe exact-duplicate lines.
+**File:** `docs/dumps/re_kit/MANIFEST.sha256:14-23`
+**Issue:** 38 lines, 28 unique artifacts — the 10 duplicate lines predate this phase (verified: 38 − 28 = 10, matching doc §7's honest wording). Verification still passes (identical hashes). Out of the iteration-1 fix scope (info); dedup remains available as a one-time cleanup.
 
-### IN-02: Dead constant `RECORD_BASH_RE`
+### IN-02: Dead constant `RECORD_BASH_RE` (carried forward, unchanged)
 
-**File:** `scripts/dsi_mmio_diff.sh:46`
-**Issue:** `RECORD_BASH_RE` is defined as the pinned contract regex but never used — the record regex is re-inlined (expanded, mawk-compatible) inside `parse_arm`'s awk. Two copies of the contract regex can drift.
-**Fix:** Either delete `RECORD_BASH_RE` or build the awk `valre` from it (e.g. pass `-v valre="$RECORD_BASH_RE"` and drop the `{8}`-expansion comment by expanding it here once).
+**File:** `scripts/dsi_mmio_diff.sh:55`
+**Issue:** defined but never used; the record regex is still re-inlined (expanded) inside `parse_arm`'s awk at line 128. Two copies of the contract regex can drift.
 
-### IN-03: Capture script's record regex diverges from the pinned contract
+### IN-03: Capture script's record regex diverges from the pinned contract (carried forward, unchanged)
 
-**File:** `scripts/capture_dsi_dumps.sh:55`
-**Issue:** `RECORD_RE` matches lowercase hex only (`[0-9a-f]{8}` spelled out), while the pinned 47-01/47-02 contract (and the diff script at `dsi_mmio_diff.sh:46`) accepts `[0-9a-fA-F]{8}`. The kernel's `%08x` always emits lowercase, so this cannot bite today — but if a future dump source (or hand-merged dump) used uppercase, capture would under-count records and could spuriously fail the 5000 floor while diff accepts the same file.
-**Fix:** Make both scripts derive the regex from one contract definition (uppercase-tolerant), or add a one-line comment in the capture script pinning "kernel emits lowercase; contract tolerates uppercase".
+**File:** `scripts/capture_dsi_dumps.sh:60`
+**Issue:** lowercase-hex-only (`[0-9a-f]` spelled out) vs the contract's `[0-9a-fA-F]`. Cannot bite today (kernel `%08x` emits lowercase); a one-line pinning comment would close it.
 
-### IN-04: Patch hygiene — redundant self-declaration; node registered for all platforms
+### IN-04: Patch hygiene — redundant self-declaration; node registered for all platforms (carried forward, unchanged)
 
-**File:** `patches/d330_dsi_dump.patch` (top of `intel_dsi_dump_debugfs.c`; `i915_debugfs.c` hunk)
-**Issue:** (a) `extern const struct file_operations d330_dsi_dump_ops;` is declared in the same file that defines it a few lines later — redundant. (b) `d330_dsi_dump_register()` is called unconditionally from `i915_debugfs_register()`, so the node exists on every i915 platform running this custom kernel, not just the D330. Acceptable for a single-purpose CI kernel, but anyone reusing the kernel elsewhere gets a root-only node that walks raw display MMIO on `echo 1`.
-**Fix:** Drop the redundant extern; optionally gate registration on the 82H0 DMI match the project already uses, or leave as-is with a comment stating the kernel is D330-only by policy.
+**File:** `patches/d330_dsi_dump.patch` (blob line 55; `i915_debugfs.c` hunk)
+**Issue:** (a) `extern const struct file_operations d330_dsi_dump_ops;` self-declared in the file that defines it. (b) `d330_dsi_dump_register()` called unconditionally — node exists on every i915 platform running this kernel. Acceptable for the single-purpose CI kernel.
 
-### IN-05: Minor robustness nits in capture/test scripts
+### IN-05: Minor robustness nits in capture/test scripts (carried forward, unchanged)
 
-**File:** `scripts/capture_dsi_dumps.sh:188`; `scripts/test_dsi_mmio_evidence.sh:87-96,116-117,124,128,134`
-**Issue:** (a) `SIZE=$(stat -c '%s' … || stat -f '%z' …)` — on Linux (the only target) the `-f` fallback means filesystem stats, so if `stat -c` ever failed the fallback would report nonsense rather than fail loudly. (b) The evidence suite's `check()` evals condition strings built with unquoted `$doc`; safe for the current relative paths and mktemp dirs, but any path containing spaces (this repo's own root does) would break the quoted-ness — currently unreachable, since `doc` is always repo-relative.
-**Fix:** Drop the `stat -f` fallback (fail on error instead); quote `$doc` inside the eval'd conditions (double-quote in the template strings).
+**File:** `scripts/capture_dsi_dumps.sh:193`; `scripts/test_dsi_mmio_evidence.sh:87-96,116-117,124,128,134`
+**Issue:** (a) `stat -c '%s' … || stat -f '%z' …` — the `-f` fallback reports filesystem stats (nonsense) instead of failing loudly. (b) `check()` evals conditions with unquoted `$doc`; safe today (repo-relative paths only), breaks if a spaced path ever reaches it.
+
+### IN-06 (new): Stated rebuild command's script path doesn't resolve from the stated cwd
+
+**File:** `docs/research/DSI_MMIO_DIFF.md:22` and `:317-318`
+**Issue:** §1/§7 say the artifact is generated by "`scripts/dsi_mmio_diff.sh …` (run in `docs/dumps/re_kit/`)" — from that cwd the literal path resolves to `docs/dumps/re_kit/scripts/…` and fails (reproduced this iteration: "No such file or directory"; the correct prefix is `../../../scripts/…`). The command's inputs, order, and semantics are otherwise exact and the rebuild itself is proven byte-identical, so this only degrades the reproducibility instructions, not the provenance.
+**Fix:** Change the doc wording to the literally executable form, e.g. `bash ../../../scripts/dsi_mmio_diff.sh boot_dsi_regs.txt broken_dsi_regs.txt --names dsi_regs_diff_names.txt` (run in `docs/dumps/re_kit/`), or give the repo-root invocation with kit-relative paths (output is basename-cited, so either form reproduces the artifact byte-for-byte).
 
 ---
 
-_Reviewed: 2026-10-14T17:19:34-03:00_
+_Reviewed: 2026-10-14T18:05:48-03:00_
 _Reviewer: the agent (gsd-code-reviewer)_
-_Depth: standard_
+_Depth: standard (iteration 2)_
