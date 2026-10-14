@@ -216,7 +216,7 @@ Plans:
 | 44. Community & Upstream Survey + Cheap Levers | 1/1 | Complete    | 2026-10-12 |
 | 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 2/2 | Complete (ROOT-04 honest closure)| 2026-10-13 |
 | 46. Verification, Delivery & Upstream (conditional) | 1/1 | Complete (upstream clause skipped — condition failed)| 2026-10-13 |
-| 47. DSI MMIO Truth (Boot vs Resume Hardware Register Diff) | 3/4 | In Progress|  |
+| 47. DSI MMIO Truth (Boot vs Resume Hardware Register Diff) | 4/4 | In Progress|  |
 | 48. Clean DMI-Gated Fix (MMIO-Guided) | 0/0 | Not started | - |
 | 49. Delivery, No-Regression & Closure | 0/0 | Not started | - |
 
@@ -245,7 +245,7 @@ budget. Delivery (Phase 49) proves the observable bar and closes honestly either
 
 **Phases:**
 
-- [ ] **Phase 47: DSI MMIO Truth (Boot vs Resume Hardware Register Diff)** - Capture the DSI/DPHY transcoder register state the kernel tooling cannot show (CI-built dump patch or devcoredump), diff working-boot vs broken-resume, and name the mechanism (`docs/research/DSI_MMIO_DIFF.md`) (MMIO-01, MMIO-02)
+- [x] **Phase 47: DSI MMIO Truth (Boot vs Resume Hardware Register Diff)** - Capture the DSI/DPHY transcoder register state the kernel tooling cannot show (CI-built dump patch or devcoredump), diff working-boot vs broken-resume, and name the mechanism (`docs/research/DSI_MMIO_DIFF.md`) (MMIO-01, MMIO-02) (completed 2026-10-14)
 - [ ] **Phase 48: Clean DMI-Gated Fix (MMIO-Guided)** - Land a clean `82H0`-gated kernel fix that makes the panel show an image after resume, verified eyes-on by the user plus machine evidence; ≤5 iterations or an updated honest closure (FIX-01, FIX-02, FIX-03)
 - [ ] **Phase 49: Delivery, No-Regression & Closure** - Prove the observable bar across 3+ user-triggered resume cycles, keep the guard chain green, and close the milestone honestly (DONE-01, DONE-02)
 
@@ -260,7 +260,7 @@ budget. Delivery (Phase 49) proves the observable bar and closes honestly either
   2. `docs/research/DSI_MMIO_DIFF.md` records the diff, excludes volatile/irrelevant registers with reasons, and names the mechanism as a testable claim (which hardware state the GOP sets that the resume path does not)
   3. Every claim is machine-evidenced; the ledger gate stays green
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
@@ -274,7 +274,7 @@ Plans:
 
 **Wave 3** *(blocked on Waves 1-2 completion)*
 
-- [ ] 47-04-PLAN.md — Diff the pair, name the mechanism, Phase-48 handoff (MMIO-01, MMIO-02)
+- [x] 47-04-PLAN.md — Diff the pair, name the mechanism, Phase-48 handoff (MMIO-01, MMIO-02)
 
 ### Phase 48: Clean DMI-Gated Fix (MMIO-Guided)
 
