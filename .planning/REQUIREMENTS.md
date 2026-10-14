@@ -50,6 +50,18 @@ disproven lever.
 | 48: Clean DMI-gated fix (GOP-init replication or MMIO-guided) | FIX-01, FIX-02, FIX-03 |
 | 49: Delivery, no-regression & closure | DONE-01, DONE-02 |
 
+## Traceability
+
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| MMIO-01 | 47 | Complete (2026-10-14, 47-VERIFICATION.md) |
+| MMIO-02 | 47 | Complete (2026-10-14, DSI_MMIO_DIFF.md) |
+| FIX-01 | 48 | Pending |
+| FIX-02 | 48 | Pending |
+| FIX-03 | 48 | Pending |
+| DONE-01 | 49 | Pending |
+| DONE-02 | 49 | Pending |
+
 ## Success criteria (milestone)
 
 - SC1: After Phase 48, resume shows the desktop (eyes-on, user-triggered), or the
