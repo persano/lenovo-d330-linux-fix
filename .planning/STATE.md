@@ -4,17 +4,17 @@ milestone: v9.0
 milestone_name: Actually Fix the D330 Resume Black Screen
 current_phase: 47
 current_phase_name: DSI MMIO Truth (Boot vs Resume Hardware Register Diff)
-status: Roadmap created; awaiting Phase 47 plan
+status: executing
 stopped_at: Milestone v8.0 closed without a fix; v9.0 roadmap created, ready to plan Phase 47
-last_updated: "2026-10-13T20:49:33.903Z"
+last_updated: "2026-10-14T01:18:45.157Z"
 last_activity: 2026-10-13
-last_activity_desc: v9.0 milestone created (fix continues; no upstream dependency)
-state_head: b9d3721b9eeb4d1f2186672203a4fc1ff8533682
+last_activity_desc: Phase 47 execution started
+state_head: 245be627cf3acc026d34ac01251082c7d9871963
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 0
   total_plans: 4
-  completed_plans: 8
+  completed_plans: 0
   percent: 0
 ---
 
@@ -33,14 +33,14 @@ progress:
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** Phase null
+**Current focus:** Phase 47 — DSI MMIO Truth (Boot vs Resume Hardware Register Diff)
 
 ## Current Position
 
-Phase: 47 (DSI MMIO Truth (Boot vs Resume Hardware Register Diff)) — READY TO EXECUTE
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-13 — Milestone v8.0 completed and archived
+Phase: 47 (DSI MMIO Truth (Boot vs Resume Hardware Register Diff)) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 47
+Last activity: 2026-10-13 — Phase 47 execution started
 
 ## Performance Metrics
 

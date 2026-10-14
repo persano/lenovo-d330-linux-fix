@@ -216,7 +216,7 @@ Plans:
 | 44. Community & Upstream Survey + Cheap Levers | 1/1 | Complete    | 2026-10-12 |
 | 45. Windows/GOP Binary RE + On-Device Resume-vs-Probe Differential | 2/2 | Complete (ROOT-04 honest closure)| 2026-10-13 |
 | 46. Verification, Delivery & Upstream (conditional) | 1/1 | Complete (upstream clause skipped — condition failed)| 2026-10-13 |
-| 47. DSI MMIO Truth (Boot vs Resume Hardware Register Diff) | 0/0 | Not started | - |
+| 47. DSI MMIO Truth (Boot vs Resume Hardware Register Diff) | 2/4 | In Progress|  |
 | 48. Clean DMI-Gated Fix (MMIO-Guided) | 0/0 | Not started | - |
 | 49. Delivery, No-Regression & Closure | 0/0 | Not started | - |
 
@@ -260,13 +260,13 @@ budget. Delivery (Phase 49) proves the observable bar and closes honestly either
   2. `docs/research/DSI_MMIO_DIFF.md` records the diff, excludes volatile/irrelevant registers with reasons, and names the mechanism as a testable claim (which hardware state the GOP sets that the resume path does not)
   3. Every claim is machine-evidenced; the ledger gate stays green
 
-**Plans**: 4 plans
+**Plans**: 2/4 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 47-01-PLAN.md — Dump instrument: additive i915 debugfs snapshot node + CI build (MMIO-01)
-- [ ] 47-02-PLAN.md — Diff tooling + static evidence guard (MMIO-01)
+- [x] 47-01-PLAN.md — Dump instrument: additive i915 debugfs snapshot node + CI build (MMIO-01)
+- [x] 47-02-PLAN.md — Diff tooling + static evidence guard (MMIO-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
