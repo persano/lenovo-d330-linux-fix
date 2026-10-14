@@ -282,7 +282,7 @@
  				 debugfs_root, i915->drm.primary);
  
 +	/* Additive D330 instrumentation: DSI MMIO snapshot (read-only). */
-+	d330_dsi_dump_register(&i915->display);
++	d330_dsi_dump_register(i915->display);
 +
  	i915_gpu_error_debugfs_register(i915);
 --- a/drivers/gpu/drm/i915/Makefile
