@@ -199,3 +199,33 @@ the reload-identical fresh branch does not restore the image — the
 retained-DEVICE_READY/ULPS divergence is falsified as the sole cause. Ledger
 row 30. Next rung: full panel power cycle inside pre_enable (the only
 remaining resume-vs-reload difference at the panel power domain level).
+
+## v9.0 iterations 2-3 + falsification (2026-10-15)
+
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: MIPI_SEQ_POWER_OFF -->
+<!-- planner-discipline-allow: MIPIO_RST_CTRL -->
+
+Iteration 2 (full panel power cycle at the top of pre_enable: assert reset +
+MIPI_SEQ_POWER_OFF + 1.5 s reload-scale hold + full re-init, DMI-gated):
+the failure mode CHANGED — the panel now comes up backlit-but-blank (user:
+"black but lit") where every previous resume left it dark. The panel-side
+power rails now behave like the reload path; the image still does not
+appear. At-wake signature unchanged (10 differs rows, same broken values).
+
+Iteration 3 (DSI-block MIPIO reset pulse — drop + re-assert MIPIO_RST_CTRL,
+mimicking the power-well-cycle reset the re-probe performs): verdict
+"Black but lit", signature unchanged.
+
+**Falsification (the decisive capture):** with the iteration-3 instrument
+fix (dump node survives unbind/bind), the working-lit state was captured
+immediately after a reload workaround while the panel SHOWED THE IMAGE
+(`docs/dumps/re_kit/reload_lit_dsi_regs.txt`). Versus the broken-wake arm:
+the entire DSI block 0x6b000-0x6c000 is bit-identical (1024/1024); the
+whole-file delta is 5 GT monotonic-counter/residency rows. **The MMIO state
+of the image-showing panel equals the MMIO state of the black panel.**
+Combined with the v8.0 software-state identity, the mechanism is below host
+MMIO (panel TCON side); no register write or enable-path sequence can fix
+it. Iterations stop at 3 of ≤5. Full closure: NO_CLEAN_FIX_PROOF.md §7;
+DSI_MMIO_DIFF.md §5.1; ledger row 32. The reload (unbind/bind) workaround
+remains the only recovery, now formalized as the honest mitigation.

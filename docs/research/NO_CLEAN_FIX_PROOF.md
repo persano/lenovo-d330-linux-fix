@@ -93,3 +93,80 @@ still an imageless panel).
 - s2idle mode switch: **DISPROVEN** (i915 tears down in s2idle; backlight left off).
 - New disproven lever: "sysfs dpms/bl_power state == visible image" (never trust sysfs;
   eyes-on or bust).
+
+## 7. v9.0 closure (phase 48, 2026-10-15): the mechanism is below host MMIO
+
+<!-- planner-discipline-allow: ULPS_STATE_MASK -->
+<!-- planner-discipline-allow: MIPI_SEQ_POWER_OFF -->
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: MIPIO_RST_CTRL -->
+
+Phase 48 (milestone v9.0, ≤5 pre-allocated iterations) ran the DSI_MMIO_DIFF
+§5 claim's ladder with machine evidence at every rung. Ladder (all DMI-gated
+82H0, CI-built `7.0.14-d330-fix`, one user-authorized rtcwake session each,
+eyes-on verdicts verbatim):
+
+| # | Candidate (sequence-state, never a value restore) | CI sha | Verdict (user) | At-wake signature |
+|---|---|---|---|---|
+| 1 | Fresh-device-state branch: clear retained ULPS_STATE_MASK + DEVICE_READY before the cold-boot probe (reload ordering, ULPS dance skipped) — commit 1418a8b | 43b2e7c2…8932 | "Still black" | X=Z unchanged (diff it1: 9 differs + 4 excl.) |
+| 2 | Full panel power cycle at top of pre_enable (assert reset, MIPI_SEQ_POWER_OFF, 1.5 s reload-scale hold, full re-init) — commit f1914da | FEA98E57…C876 | "black but lit" | X=Z unchanged (10 differs); failure mode changed dark→lit-blank |
+| 3 | DSI-block MIPIO reset pulse (drop + re-assert MIPIO_RST_CTRL) before the sequence — commit 41325d1 | C2C2CD89…1073 | "Black but lit" | X=Z unchanged (10 differs) |
+
+Then the decisive capture (enabled by the iteration-3 instrument fix that
+makes the dump node survive an unbind/bind): the **working-lit state** — the
+panel restored by the user's reload workaround while the node stayed alive —
+compared against the broken-wake arm shows **the entire DSI block
+0x6b000-0x6c000 bit-identical (1024/1024 registers)** and a whole-file delta
+of 5 rows, all GT monotonic counters/residency (0x138070/0x138074
+excluded-volatile, 0x138108/0x13819c time-dependent). The state that SHOWS
+THE IMAGE and the state that is BLACK are the same in every host-visible
+register.
+
+Falsification (DSI_MMIO_DIFF.md §5.1): the §5 branch fired at maximum
+strength — not "X=Y held + black" but "black MMIO == working MMIO". Combined
+with the v8.0 kernel-software identity (§3), the failure is below host MMIO:
+the panel TCON's internal state (or the DSI link's dynamic state). **No host
+register write or enable-path sequence can fix what no register state
+discriminates.** Iterations stop at 3 of ≤5; further register-level levers
+are disproven BY this evidence.
+
+What remains true for the user: the panel recovers **only** via the full
+i915 re-probe (unbind/bind, the daily workaround) or a reboot — the
+workaround is now formalized as the honest mitigation. Phase 49 delivery:
+no-regression guards + the workaround packaging follow the v9.0 roadmap's
+honest-closure branch (SC1: mechanism proven unreachable with documented
+reason and concrete next instrument).
+
+### What a real fix would require (v9.0 refinement of §4)
+
+1. **Panel-side instrumentation**: the TCON's internal state is not
+   host-readable (DSI RX-only, no feedback path in the register map). A
+   logic analyzer on the panel flex (DSI lanes + reset + power rails) during
+   a broken wake vs a working reload would localize whether the TCON loses
+   its OTP-init state or the link's LP/HS handoff never completes. Cost:
+   hardware access to the panel connector.
+2. **GOP re-execution at resume** (per §4.2 of the v8.0 doc): replay the
+   GOP's exact register programming (gop_driver_dc90d1e2.efi RE,
+   GOP_DSI_RE_FINDINGS) — but §5.1 above removes the premise that a
+   register replay discriminates: the GOP sequence would have to drive
+   something the MMIO map does not expose (same TCON-side conclusion).
+3. **TCON datasheet / panel identification** (block-55 VBT table still
+   undecoded) to read the controller's documented wake requirements.
+
+## 8. v9.0 state left behind (rollback complete)
+
+- Device runs the phase-48 iteration-3 kernel (sha C2C2CD89…1073) — panel
+  black on resume (unchanged bug), working on boot and after the reload
+  workaround; the fix branches (it1/it2/it3) are DMI-gated 82H0 and
+  harmless on other machines.
+- Rollback chain on device: `/home/santiago/deploy_incoming_*.deb` (it2,
+  sha FEA98E57…C876) and `/home/santiago/d47_dump_kernel.deb` (47-era dump
+  kernel, ba47df8d…87be); deploy script verifies a rollback asset before
+  every install. The original 20dc04db…9e91 deb was clobbered by the first
+  deploy's upload-name collision (documented in 48-02-SUMMARY); its
+  replacement chain is verified.
+- CI branch `instrument/d330-dsi-dump` applies: dump node (+ re-probe fix),
+  it2 panel power cycle, it3 MIPIO reset pulse. The it1 patch
+  (d330_dsi_device_ready_fix.patch) is in git history only (ledger row 30).
+- /gsd-ship merges the branch to main; the deferred-commit ledger of
+  uncommitted code (scripts, kit, docs) ships with it.

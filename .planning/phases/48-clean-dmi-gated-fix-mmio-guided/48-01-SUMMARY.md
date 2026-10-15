@@ -1,106 +1,89 @@
 ---
 plan: 48-01
 phase: 48-clean-dmi-gated-fix-mmio-guided
-status: complete
-completed: 2026-10-14
-duration_min: 12.5
+status: complete-falsified
+completed: 2026-10-15
+iterations: 3 of ≤5 (honest closure, DSI_MMIO_DIFF §5.1)
 fix_branch: instrument/d330-dsi-dump
-fix_branch_commits: [1418a8b, 122a75c]
-pushed_to_origin: true (30f077c..122a75c)
-artifact_free: true (no CI dispatch, no artifact download; 48-02 owns dispatch)
+fix_branch_commits: [1418a8b, 122a75c, f1914da, 65c0b01, 18c12f7, 41325d1, 550cb55]
 ---
 
-# 48-01-SUMMARY: Iteration-1 fix patch + CI wiring
-
-<!-- planner-discipline-allow: ULPS_STATE_MASK -->
+# 48-01-SUMMARY: The iteration ladder (it1-it3) — all DMI-gated, all falsified by evidence
 
 ## What Was Built
 
-The iteration-1 DMI-gated fix patch (`patches/d330_dsi_device_ready_fix.patch`,
-branch commit `1418a8b`): strictly additive, in `intel_dsi_pre_enable()`, right
-after the panel VBT power-on and before the `glk_dsi_enable_io()` cold-boot
-probe, DMI-gated to `dmi_match(DMI_PRODUCT_NAME, "82H0")` (one static-bool
-helper, computed once): when a DSI port is observed with retained DEVICE_READY
-(the S3-resume state), clear `ULPS_STATE_MASK + DEVICE_READY` (device off) so
-the cold-boot probe reports fresh like the working reload path (`cold_boot=1`,
-`intel_dsi_prepare()` before `intel_dsi_device_ready()`) and the existing
-plain `!(DEVICE_READY)` branch of `glk_dsi_device_ready()` re-arms it — the
-whole pre_enable then matches the reload-probe ordering. Sequencing only: no
-operational register values written. CI wiring (`122a75c`): the fix patch is
-applied in the "Apply the display fixes and prove they landed" step and one new
-grep anchor proves the DMI gate in `vlv_dsi.c`. Branch pushed to origin.
+Three DMI-gated (82H0) sequence-state candidates on branch
+instrument/d330-dsi-dump, each CI-built, device-deployed behind a verified
+rollback, and tested with one user-authorized rtcwake session:
 
-## Tasks
+| # | Patch (commit) | Variant | CI sha | Verdict (user, verbatim) | Ledger row |
+|---|---|---|---|---|---|
+| 1 | patches/d330_dsi_device_ready_fix.patch (1418a8b) | Clear retained ULPS_STATE_MASK + DEVICE_READY before the cold-boot probe (fresh-probe branch, reload ordering) | 43b2e7c2…8932 | "Still black" | 30 |
+| 2 | patches/d330_dsi_panel_power_cycle.patch (f1914da) | Full panel power cycle at top of pre_enable (assert reset + MIPI_SEQ_POWER_OFF + 1.5 s hold + full re-init) | FEA98E57…C876 | "black but lit" | 31 |
+| 3 | patches/d330_dsi_mipio_reset.patch (41325d1) | DSI-block MIPIO reset pulse (drop + re-assert MIPIO_RST_CTRL, ending released) | C2C2CD89…1073 | "Black but lit" | 32 |
 
-| # | Task | Status | Proof |
-|---|------|--------|-------|
-| 1 | Author iter-1 fix patch on the fix branch | DONE | commit `1418a8b` (patch sha256 `27965072…2B65F68F`, byte-identical to the device-tested file); device compile on `santiago-D330` `~/d330-kernel/linux-7.0.0`: `git apply --check` OK → `git apply` OK → `make M=drivers/gpu/drm/i915 modules` **exit 0** (`CC [M] display/vlv_dsi.o`, `i915.ko` linked, vlv_dsi.o 872,392 B) → `git apply -R` revert, tree byte-identical to pre-patch (md5 `b9338cdf…` match); patch greps: banned offsets 7/7 zero hits, `dmi_match(DMI_PRODUCT_NAME, "82H0")` exactly 1, diff-body removal lines 0 |
-| 2 | Wire CI grep anchor for the DMI gate + push | DONE | commit `122a75c`: 1 added anchor line `grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/vlv_dsi.c` adjacent to the 4 pre-existing anchors (unchanged); branch pushed, origin fast-forward `30f077c..122a75c` |
+Instrument fix riding along (18c12f7): the dump node now re-creates its
+debugfs file on every probe (the once-guard kept only for the snapshot
+buffer) — an unbind/bind no longer kills the node, which enabled the
+decisive working-lit capture.
+
+CI wiring (122a75c → 65c0b01 → 550cb55): each iteration replaced the
+previous fix patch's CI application (it1 is git-history-only, ledger row
+30); the dump patch and all 5 anchors (2× CCS, 2× dump-node, DMI gate +
+it3's unique anchor) proven green in every run.
+
+## The Falsification (the ladder's outcome)
+
+After it3, with the node surviving an unbind/bind, the working-lit state
+was captured (panel SHOWING THE IMAGE, post-reload-workaround,
+`docs/dumps/re_kit/reload_lit_dsi_regs.txt`). Versus the broken-wake arm:
+DSI block 1024/1024 registers IDENTICAL; whole-file delta = 5 GT
+monotonic-counter rows. **The MMIO state of the image-showing panel equals
+the MMIO state of the black panel** (DSI_MMIO_DIFF §5.1; NO_CLEAN_FIX_PROOF
+§7). The mechanism is below host MMIO (panel TCON side); no host register
+write or enable-path sequence can fix it. Iterations stopped at 3 of ≤5 per
+the disproof discipline — every remaining register-level lever is disproven
+BY this evidence, not by budget exhaustion.
 
 ## Ledger Gate
 
-`bash scripts/test_pitfalls_ledger.sh` exit 0 (4/4) — see Deviations: the gate
-was RED before any executor change; fixed via the gate's own sanctioned
-planner-discipline-allow markers.
+`bash scripts/test_pitfalls_ledger.sh` exit 0 (4/4) after every iteration
+(row additions 30/31/32, Lever rows 32; markers per the gate's sanctioned
+mechanism).
 
 ## Key Hashes
 
-- Fix-branch (instrument/d330-dsi-dump) commits: `1418a8b` (fix patch), `122a75c` (CI apply + anchor). b753d39 dump-node baseline untouched and now also on origin.
-- Branch HEAD on origin: `122a75c`. /gsd-ship must merge instrument/d330-dsi-dump into main (now 6 commits: fdafc43, fb86c6a, 30f077c, b753d39, 1418a8b, 122a75c).
+- Branch HEAD on origin: 550cb55 (8 commits ahead of the v9.0 start:
+  fdafc43, fb86c6a, 30f077c, b753d39, 1418a8b, 122a75c, f1914da, 65c0b01,
+  18c12f7, 41325d1, 550cb55). /gsd-ship merges to main.
+- CI runs: 38665460355 (it1), 38743898749 (it2), 38789067483 (it3) — all
+  SUCCESS, polled inline (FIX-03 strategy).
+- Device currently runs the it3 kernel (sha C2C2CD89…1073); rollback chain
+  on device: it2 deb (FEA98E57…C876) + d47 dump kernel (ba47df8d…87be),
+  both sha-verified on device.
 
-## Deviations from Plan
+## Deviations from Plan (aggregated across iterations)
 
-<!-- planner-discipline-allow: 0x160018 -->
-<!-- planner-discipline-allow: intel_dsi_post_disable -->
-<!-- planner-discipline-allow: panel power cycle -->
-<!-- planner-discipline-allow: glk_cold_boot = glk_dsi_enable_io() -->
-
-1. **[Rule 3 - Blocking] Ledger gate red before execution started (pre-existing).**
-   `test_pitfalls_ledger.sh` exited 1 at session start: pristine scan hit
-   `48-01-PLAN.md:41/:47` (lever-4 alias via the banned-offset list in the
-   acceptance criteria; lever-11 alias via the "no changes to
-   intel_dsi_post_disable" prohibition) and `48-03-PLAN.md:41/:56` (lever-4 via
-   the diff-row list; lever-20 via the iteration-ladder text). These are prose
-   mentions of banned levers inside ban-verification text, not proposals; the
-   gate's own remedy ("add a per-string planner-discipline-allow marker") was
-   applied: markers `0x160018` + `intel_dsi_post_disable` in 48-01-PLAN.md,
-   `0x160018` + `panel power cycle` in 48-03-PLAN.md (per-string, per-file, the
-   same mechanism DSI_MMIO_DIFF.md already carries). Gate re-run: 4/4 green.
-   Files touched: the two PLAN.md files only (uncommitted; orchestrator
-   commits planning docs).
-2. **[Plan gap, Rule 1] Task 2 needed one extra line beyond the named anchor.**
-   The plan action says "add exactly one grep anchor line", but the anchor greps
-   `$SRC` (fetched kernel source); without applying the new patch in CI the
-   anchor would fail the next build. Added the 47-01-established
-   `git apply -p1 …/patches/d330_dsi_device_ready_fix.patch` line + 4-line
-   comment next to the anchor (workflow diff: 6 added lines, 0 removed;
-   pre-existing anchors untouched). Without it, 48-02's dispatch would fail.
-3. **Insertion-point choice (documented, no behavioral scope change).** The plan
-   offers "top of glk_dsi_device_ready() — or equivalently in
-   intel_dsi_pre_enable() immediately before intel_dsi_device_ready()". The
-   clear block sits in `intel_dsi_pre_enable()` immediately BEFORE the
-   `glk_cold_boot = glk_dsi_enable_io()` probe instead, because the plan's own
-   requirement "with the state cleared the probe now reports fresh like
-   reload" only holds there; it also yields the research §3 iteration-1
-   "prepare-before-device_ready" consistency, i.e. the whole pre_enable
-   matches the reload ordering, not just the device_ready branch. Existing
-   `glk_dsi_device_ready()` code is untouched (it then takes its fresh-probe
-   branch naturally).
-
-## Risks / Notes for 48-02
-
-- CI applies the fix patch to Ubuntu resolute 7.0.14 source; context matching
-  was proven on the device 7.0.0 tree (stable upstream region, git apply
-  context-tolerant). If CI fails at apply, that is a patch-context issue to fix
-  before any iteration verdict.
-- CI was NOT dispatched (plan 48-02 owns dispatch). No CI waits, no artifact.
-- Device tree left byte-identical to its pre-task state; staged patch removed
-  from `/home/santiago/`.
+1. Plans were authored inline (planner subagent failures, documented at
+   plan time); the checker verified them (2 fix rounds, 3rd check PASSED).
+2. Research authored inline (3 researcher-spawn 504s) — documented in
+   48-RESEARCH.md header.
+3. Rollback-asset clobber on the first it1 deploy (upload-name collision)
+   — detected by post-deploy sha check, asset re-established (d47 dump
+   kernel), script hardened (sha-keyed incoming upload name + overridable
+   rollback target). Documented in 48-02-SUMMARY.
+4. WSL networking broke mid-session (it2 deploy) — deploy completed via
+   git-bash + pwsh-native ssh; session/deploy discipline unchanged.
+5. it3 polarity: the tree proves SET=release/CLEAR=reset for MIPIO_RST_CTRL;
+   implemented drop+re-assert ending released (research §3's own wording).
+6. The device kernel tree carries phase-45 leftovers
+   (QUIRK_DSI_RESUME_FULL_CYCLE in intel_display_driver.c + .orig files) —
+   untouched throughout; CI builds clean source.
 
 ## Self-Check
 
-- Committed patch sha256 equals the device-tested file sha256: `27965072BCD066646B0B6710374F2CBB16F5A513D4F04FCC7BAEB68E2B65F68F` — match.
-- Both branch commits exist and are pushed: `30f077c..122a75c` on origin.
-- No deletions in either commit (`git diff --diff-filter=D` empty).
-- Ledger gate final run: `passed=4 failed=0`, exit 0.
+- Every iteration: patch sha256 recorded, device compile exit 0, CI grep
+  anchors green, artifact sha verified host+device, rollback verified
+  BEFORE install, one session, verbatim verdict, at-wake dump registered,
+  ledger row appended, gate green.
 - `## Self-Check: PASSED`
