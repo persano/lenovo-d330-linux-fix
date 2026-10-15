@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,280 @@
 +// SPDX-License-Identifier: MIT
 +/*
 + * Additive D330 instrumentation: MIPI-DSI / display MMIO snapshot node.
@@ -204,17 +204,21 @@
 +
 +void d330_dsi_dump_register(struct intel_display *display)
 +{
-+	if (d330_dsi_dump.buf)
-+		return; /* already allocated; a re-probe reuses it */
-+
-+	d330_dsi_dump.buf = kvzalloc(D330_DSI_DUMP_BUF_SIZE, GFP_KERNEL);
 +	if (!d330_dsi_dump.buf) {
-+		drm_err(display->drm,
-+			"D330DSIREG: snapshot buffer alloc failed - dump node not created\n");
-+		return;
++		d330_dsi_dump.buf = kvzalloc(D330_DSI_DUMP_BUF_SIZE, GFP_KERNEL);
++		if (!d330_dsi_dump.buf) {
++			drm_err(display->drm,
++				"D330DSIREG: snapshot buffer alloc failed - dump node not created\n");
++			return;
++		}
++		d330_dsi_dump.size = D330_DSI_DUMP_BUF_SIZE;
 +	}
-+	d330_dsi_dump.size = D330_DSI_DUMP_BUF_SIZE;
 +
++	/*
++	 * Created on every probe: an unbind/bind tears the debugfs file
++	 * down with the old drm device, so a re-probe must re-create it
++	 * (reusing the existing snapshot buffer).
++	 */
 +	debugfs_create_file("i915_dsi_regs", 0600, display->drm->debugfs_root,
 +			    display, &d330_dsi_dump_ops);
 +}
