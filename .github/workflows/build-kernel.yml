@@ -118,6 +118,12 @@ jobs:
           git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_dump.patch"
           grep -R 'i915_dsi_regs' drivers/gpu/drm/i915/display/
           grep -R 'bxt_dsi_pll_is_enabled' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
+          # patches/d330_dsi_device_ready_fix.patch is the phase-48 iteration-1
+          # fix (48-01): DMI-gated to 82H0, clears retained DSI DEVICE_READY
+          # state before the GLK enable probe so the resume enable path takes
+          # the fresh-probe branch the working reload path takes.
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_device_ready_fix.patch"
+          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/vlv_dsi.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
