@@ -171,3 +171,31 @@ byte-identical (only the cursor plane FB differs) while the panel is dark — th
 below the kernel's model. Full closure in `NO_CLEAN_FIX_PROOF.md` (ROOT-04). The
 known-good `7.0.14-d330-fix` was redeployed and verified; CI reverted to the CCS-only
 patch application.
+
+## v9.0 iteration 1 (fresh-branch force, 2026-10-15)
+
+<!-- planner-discipline-allow: ULPS_STATE_MASK -->
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: 0x160018 -->
+
+Phase 47's MMIO diff (§5 of `DSI_MMIO_DIFF.md`) found the one code-visible
+divergence between the always-black resume path and the always-lit reload path:
+retained `MIPI_DEVICE_READY` across S3 makes `glk_dsi_device_ready()` run the
+ULPS enter/exit dance (rmw `ULPS_STATE_MASK` + DEVICE_READY poke on a live
+device) instead of the plain fresh-probe re-arm the reload path takes.
+
+Iteration 1 of the v9.0 ladder (`patches/d330_dsi_device_ready_fix.patch`,
+CI `7.0.14-d330-fix` sha `43b2e7c2…8932`) cleared the retained
+`ULPS_STATE_MASK + DEVICE_READY` before the cold-boot probe so the whole
+pre_enable matched the reload ordering. Deployed behind a verified rollback
+(d47 dump kernel `ba47df8d…87be`); one user-authorized rtcwake session;
+eyes-on verdict: **still black** (user, verbatim).
+
+At-wake MMIO (wake+1 s, `docs/dumps/re_kit/dsi_regs_diff_it1.txt`) shows the
+same broken operational signature as the unpatched session-2 pair (0x6b010,
+0x6b044, 0x6b080/0x6b098, 0x6b088, 0x160018, 0x6b004 timeout-marked) while
+0x6b000 DEVICE_READY and 0x160084 read identical to boot. Conclusion: running
+the reload-identical fresh branch does not restore the image — the
+retained-DEVICE_READY/ULPS divergence is falsified as the sole cause. Ledger
+row 30. Next rung: full panel power cycle inside pre_enable (the only
+remaining resume-vs-reload difference at the panel power domain level).

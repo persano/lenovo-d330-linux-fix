@@ -55,7 +55,7 @@ fix. Evidence: `DSI_RESUME_TRACE_ANALYSIS.md` §"i915 *does* drive the panel
 GPIOs on GLK"; correction also recorded in
 `DISPLAY_RESUME_CCS_MODIFIER.md` §"Resume vs reload" (**Correction:** note).
 
-## Lever rows: 29
+## Lever rows: 30
 
 <!-- LEDGER-LEVERS-START -->
 | # | Lever (canonical) | Alias regex (ERE, case-insensitive) | Disproof one-liner | Evidence |
@@ -89,11 +89,12 @@ GPIOs on GLK"; correction also recorded in
 | 27 | Backlight re-enable as the black-screen fix | `bl_power\|actual_brightness` | forcing the backlight on shows the panel backlit but still blank — a separate second bug, not the missing image | DISPLAY_RESUME_CCS_MODIFIER.md §Backlight is a second, separate bug; DSI_RESUME_TRACE_ANALYSIS.md §Backlight is a second, separate bug |
 | 28 | Deferred atomic full DSI encoder cycle post-resume (`disable_all` → `commit_duplicated_state`, 82H0-gated quirk) | `disable_all\|commit_duplicated_state` | the cycle ran and traced (`intel_dsi_disable` 35 ms → `post_disable` → `pre_enable`, "encoder re-enabled", `bl_power=0`, `brightness=640`) and the panel was still lit-black with eyes on — re-running the enable path on the living driver does not produce an image | NO_CLEAN_FIX_PROOF.md §1 iteration 1 + §3; RESUME_VS_RELOAD_DIFFERENTIAL.md §Iteration log |
 | 29 | Post-resume i915 re-probe / rebind as a recovery (service or manual module rebind; incl. the unbind/bind reload) | `rebind` | the re-probe ran (`reprobe done rc=0`, module reloaded) and the panel went fully black; manual rebind also left it black — the rebind restores sysfs state, never the visible image; the "rebind recovers the panel" claim was myth-busted with eyes-on tests (45-02) | NO_CLEAN_FIX_PROOF.md §1 iteration 2 + §2; RESUME_VS_RELOAD_DIFFERENTIAL.md §Iteration log |
+| 30 | v9.0 iteration 1: DMI-gated (82H0) clear of retained DSI DEVICE_READY + ULPS state before the GLK cold-boot probe in pre_enable, forcing the resume enable path onto the fresh-probe branch (reload ordering; ULPS dance skipped) | `ULPS_STATE_MASK` | CI kernel 7.0.14-d330-fix sha 43b2e7c2…8932 deployed behind a verified rollback (d47 dump kernel ba47df8d…87be); one rtcwake 45 s session (user-authorized scripted trigger); eyes-on verdict verbatim: "Still black" (user); at-wake dump (wake+1 s, 7296 records, 0 skipped) shows the SAME broken operational signature as the unpatched session-2 pair — 0x6b010 003fffff→0000b8ea, 0x6b044 0000001d→0000001e, 0x6b080/0x6b098 09051003→0a051003, 0x6b088 0022000f→0014000c, 0x160018 00000115→00000001, 0x6b004 W1C 00080000→40200000 — while 0x6b000 DEVICE_READY and 0x160084 read identical to boot. The enable path ran the reload-identical branch and the panel stayed black: the retained-DEVICE_READY/ULPS-dance divergence is falsified as the sole cause. Next rung (§48-RESEARCH ladder): full panel power cycle inside pre_enable (iter 2) | 48-01-SUMMARY.md; 48-02-SUMMARY.md; 48-03-PROGRESS-it1.md; docs/dumps/re_kit/dsi_regs_diff_it1.txt; it1 dumps (boot f104496e…fcf0 / resume 52bd720c…0e62) |
 <!-- LEDGER-LEVERS-END -->
 
-Row-count note: 29 distinct levers from the three source docs plus the 45-02
-iteration closure (the roadmap bar is 22; the honest enumeration lands above
-it — no padding, no merging below distinctness). Cross-doc duplicates (CDCLK,
-force-init, panel power-cycle, early-return, glk_cold_boot, backlight) are
-merged into single rows carrying every evidence link; the forced-MIPI-register
-batch is one row.
+Row-count note: 30 distinct levers from the three source docs plus the 45-02
+iteration closure and the v9.0 phase-48 iterations (the roadmap bar is 22; the
+honest enumeration lands above it — no padding, no merging below
+distinctness). Cross-doc duplicates (CDCLK, force-init, panel power-cycle,
+early-return, glk_cold_boot, backlight) are merged into single rows carrying
+every evidence link; the forced-MIPI-register batch is one row.

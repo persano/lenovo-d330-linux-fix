@@ -12,6 +12,8 @@ artifact_free: true (no CI dispatch, no artifact download; 48-02 owns dispatch)
 
 # 48-01-SUMMARY: Iteration-1 fix patch + CI wiring
 
+<!-- planner-discipline-allow: ULPS_STATE_MASK -->
+
 ## What Was Built
 
 The iteration-1 DMI-gated fix patch (`patches/d330_dsi_device_ready_fix.patch`,
