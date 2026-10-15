@@ -303,8 +303,16 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 49-01-PLAN.md — 3-cycle evidence protocol (checkpoint sessions) + ledger-gate restore
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 49-02-PLAN.md — close-out docs: traceability rows, v9.0 close-out, optional upstream addendum
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 49-03-PLAN.md — final guard-chain sweep + ship checklist (49-SHIP-CHECKLIST.md)
 
 ---
