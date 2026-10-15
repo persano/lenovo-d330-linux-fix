@@ -56,9 +56,9 @@ disproven lever.
 |--------|-------|--------|
 | MMIO-01 | 47 | Complete (2026-10-14, 47-VERIFICATION.md) |
 | MMIO-02 | 47 | Complete (2026-10-14, DSI_MMIO_DIFF.md) |
-| FIX-01 | 48 | Pending |
-| FIX-02 | 48 | Pending |
-| FIX-03 | 48 | Pending |
+| FIX-01 | 48 | Falsified (2026-10-15, 48-VERIFICATION.md; mechanism below host MMIO - DSI_MMIO_DIFF §5.1; honest closure NO_CLEAN_FIX_PROOF §7) |
+| FIX-02 | 48 | Complete (2026-10-15; 3 iterations, rollback-before-every-deploy, NO_CLEAN_FIX_PROOF v9.0 section) |
+| FIX-03 | 48 | Complete (2026-10-15; no upstream waits, CI polling inline) |
 | DONE-01 | 49 | Pending |
 | DONE-02 | 49 | Pending |
 
