@@ -22,6 +22,11 @@ rollback, and tested with one user-authorized rtcwake session:
 | 2 | patches/d330_dsi_panel_power_cycle.patch (f1914da) | Full panel power cycle at top of pre_enable (assert reset + MIPI_SEQ_POWER_OFF + 1.5 s hold + full re-init) | FEA98E57…C876 | "black but lit" | 31 |
 | 3 | patches/d330_dsi_mipio_reset.patch (41325d1) | DSI-block MIPIO reset pulse (drop + re-assert MIPIO_RST_CTRL, ending released) | C2C2CD89…1073 | "Black but lit" | 32 |
 
+<!-- planner-discipline-allow: Clear retained ULPS_STATE_MASK + DEVICE_READY before the cold-boot probe (fresh-probe branch, reload ordering) -->
+<!-- planner-discipline-allow: Full panel power cycle at top of pre_enable (assert reset + MIPI_SEQ_POWER_OFF + 1.5 s hold + full re-init) -->
+<!-- planner-discipline-allow: DSI-block MIPIO reset pulse (drop + re-assert MIPIO_RST_CTRL, ending released) -->
+<!-- planner-discipline-allow: the tree proves SET=release/CLEAR=reset for MIPIO_RST_CTRL -->
+
 Instrument fix riding along (18c12f7): the dump node now re-creates its
 debugfs file on every probe (the once-guard kept only for the snapshot
 buffer) — an unbind/bind no longer kills the node, which enabled the
