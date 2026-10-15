@@ -300,7 +300,12 @@ Plans:
   2. The full guard harness chain is green at close; the ledger reflects the final truth (new disproven rows appended if the fix failed again)
   3. The upstream post is optional and never blocks anything
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 49-01-PLAN.md — 3-cycle evidence protocol (checkpoint sessions) + ledger-gate restore
+- [ ] 49-02-PLAN.md — close-out docs: traceability rows, v9.0 close-out, optional upstream addendum
+- [ ] 49-03-PLAN.md — final guard-chain sweep + ship checklist (49-SHIP-CHECKLIST.md)
 
 ---
 
