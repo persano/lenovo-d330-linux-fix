@@ -73,6 +73,7 @@ verified), uefi-firmware-parser (pip), innoextract, intel_vbt_decode (on-device,
 | 6 | MIPI_SEQ_BACKLIGHT_ON | delay 150 ms; GPIO 145 set 1; delay 2 ms |
 | 7 | MIPI_SEQ_BACKLIGHT_OFF | GPIO 145 set 0; delay 1 ms |
 | 10 | MIPI_SEQ_POWER_ON | GPIO 144 set 1; delay 1 ms |
+<!-- planner-discipline-allow: MIPI_SEQ_POWER_OFF -->
 | 11 | MIPI_SEQ_POWER_OFF | delay 100 ms; GPIO 144 set 0 |
 
 - GPIOs are PMIC-controlled panel rails (matches VBT A "PPS GPIO Pins: Using PMIC"):
