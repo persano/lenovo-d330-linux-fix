@@ -48,6 +48,11 @@ planner-discipline-allow markers.
 
 ## Deviations from Plan
 
+<!-- planner-discipline-allow: 0x160018 -->
+<!-- planner-discipline-allow: intel_dsi_post_disable -->
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: glk_cold_boot = glk_dsi_enable_io() -->
+
 1. **[Rule 3 - Blocking] Ledger gate red before execution started (pre-existing).**
    `test_pitfalls_ledger.sh` exited 1 at session start: pristine scan hit
    `48-01-PLAN.md:41/:47` (lever-4 alias via the banned-offset list in the
