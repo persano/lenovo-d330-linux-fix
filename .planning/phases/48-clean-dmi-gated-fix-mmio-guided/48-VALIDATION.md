@@ -38,11 +38,13 @@ created: 2026-10-14
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 48-01-01 | 01 | 1 | FIX-01 | — | DMI-gated only; no banned lever re-proposal | static/source | `grep -c 'dmi_match' patch` + CI grep anchors + ledger gate | ❌ W0 | ⬜ pending |
-| 48-01-02 | 01 | 1 | FIX-02 | — | patch applies + CI builds .deb artifact | static/source | CI run success + grep-proof step + artifact sha256 | ❌ W0 | ⬜ pending |
-| 48-02-01 | 02 | 1 | FIX-02 | — | rollback retained+verified BEFORE every deploy | unit | device-side sha256 checks in deploy script/log | ❌ W0 | ⬜ pending |
-| 48-02-02 | 02 | 2 | FIX-01, FIX-02 | — | user-triggered suspend/resume; eyes-on verdict; at-wake dump evidence; failures ledgered | manual | See Manual-Only table | N/A | ⬜ pending |
-| 48-03-01 | 03 | 2 | FIX-01, FIX-02 | — | kit registration + guard chain green each iteration | unit | `prepare_safety_kit.sh --verify` + full suite | ✅ exists | ⬜ pending |
+| 48-01-1 | 01 | 1 | FIX-01, FIX-02 | TM-48-01 | DMI-gated only; no banned lever re-proposal; patch compiles | static/source | `git apply --check` + banned-offset grep + ledger gate | ❌ W0 | ⬜ pending |
+| 48-01-2 | 01 | 1 | FIX-02 | TM-48-01 | CI grep anchor for DMI gate | static/source | workflow YAML grep + CI run success | ❌ W0 | ⬜ pending |
+| 48-02-1 | 02 | 2 | FIX-02 | TM-48-02 | rollback verified BEFORE every deploy; no credential leakage | unit | script failure-path tests exit non-zero | ❌ W0 | ⬜ pending |
+| 48-02-2 | 02 | 2 | FIX-01, FIX-02 | TM-48-02 | artifact sha recorded; uname -r; dump node live; rollback sha re-verify | unit | ssh checks in SUMMARY | ❌ W0 | ⬜ pending |
+| 48-02-3 | 02 | 2 | FIX-01, FIX-02 | — | user-triggered suspend/resume; eyes-on verdict; at-wake dump evidence | manual | See Manual-Only table | N/A | ⬜ pending |
+| 48-03-1 | 03 | 3 | FIX-01, FIX-02 | TM-48-03 | diff analysis + kit registration | unit | `prepare_safety_kit.sh --verify` | ✅ exists | ⬜ pending |
+| 48-03-2 | 03 | 3 | FIX-01, FIX-02 | TM-48-03 | verbatim verdict in ledger row; guard chain green | unit | full suite command | ✅ exists | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
