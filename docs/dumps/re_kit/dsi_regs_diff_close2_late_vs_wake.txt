@@ -1,0 +1,22 @@
+# DSI MMIO dump diff
+
+# parse summary
+records close2_lateblack_dsi_regs.txt=7296 warnings=0
+records close2_resume_dsi_regs.txt=7296 warnings=0
+
+| offset | boot | resume | interpretation | verdict | citation |
+|---|---|---|---|---|---|
+| 0x138070 | 0000026a | 000000d3 | monotonic counters, not config | excluded-volatile | close2_lateblack_dsi_regs.txt:6306; close2_resume_dsi_regs.txt:6306 |
+| 0x138074 | 0000157f | 0000086a | monotonic counters, not config | excluded-volatile | close2_lateblack_dsi_regs.txt:6307; close2_resume_dsi_regs.txt:6307 |
+| 0x138108 GEN6_GT_GFX_RC6 | 0322d868 | 004fbd83 | - | differs | close2_lateblack_dsi_regs.txt:6344; close2_resume_dsi_regs.txt:6344 |
+| 0x13819c | 000003a1 | 00000240 | - | differs | close2_lateblack_dsi_regs.txt:6381; close2_resume_dsi_regs.txt:6381 |
+
+## summary
+- identical 0x138000-0x139000: 1020 register(s) matching
+- identical 0x160000-0x164000: 4096 register(s) matching
+- identical 0x46000-0x47000: 1024 register(s) matching
+- identical 0x6b000-0x6c000: 1024 register(s) matching
+- identical 0xc7200-0xc7400: 128 register(s) matching
+- excluded-volatile rows: 2
+- state rows: 0
+- parse warnings: boot=0 resume=0

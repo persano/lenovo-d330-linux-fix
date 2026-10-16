@@ -1,0 +1,24 @@
+# DSI MMIO dump diff
+
+# parse summary
+records close1_lit_dsi_regs.txt=7296 warnings=0
+records close1_resume_dsi_regs.txt=7296 warnings=0
+
+| offset | boot | resume | interpretation | verdict | citation |
+|---|---|---|---|---|---|
+| 0x46000 | 00b0013b | 0080013b | - | differs | close1_lit_dsi_regs.txt:5124; close1_resume_dsi_regs.txt:5124 |
+| 0x138070 | 00000452 | 0000000d | monotonic counters, not config | excluded-volatile | close1_lit_dsi_regs.txt:6306; close1_resume_dsi_regs.txt:6306 |
+| 0x138074 | 000052f1 | 00000092 | monotonic counters, not config | excluded-volatile | close1_lit_dsi_regs.txt:6307; close1_resume_dsi_regs.txt:6307 |
+| 0x138108 GEN6_GT_GFX_RC6 | f796701e | 004d7abc | - | differs | close1_lit_dsi_regs.txt:6344; close1_resume_dsi_regs.txt:6344 |
+| 0x13819c | 00001fc1 | 00000220 | - | differs | close1_lit_dsi_regs.txt:6381; close1_resume_dsi_regs.txt:6381 |
+| 0x160020 | 00000646 | 00008646 | - | differs | close1_lit_dsi_regs.txt:1035; close1_resume_dsi_regs.txt:1035 |
+
+## summary
+- identical 0x138000-0x139000: 1020 register(s) matching
+- identical 0x160000-0x164000: 4095 register(s) matching
+- identical 0x46000-0x47000: 1023 register(s) matching
+- identical 0x6b000-0x6c000: 1024 register(s) matching
+- identical 0xc7200-0xc7400: 128 register(s) matching
+- excluded-volatile rows: 2
+- state rows: 0
+- parse warnings: boot=0 resume=0

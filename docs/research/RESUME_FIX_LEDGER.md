@@ -100,3 +100,13 @@ honest enumeration lands above it — no padding, no merging below
 distinctness). Cross-doc duplicates (CDCLK, force-init, panel power-cycle,
 early-return, glk_cold_boot, backlight) are merged into single rows carrying
 every evidence link; the forced-MIPI-register batch is one row.
+
+v9.0 note (2026-10-16, phase 49 close-out): row 29 is RE-CONFIRMED with
+eyes-on on the v9.0 kernel — the unbind/bind reload leaves a backlit BLACK
+panel (never an image; the user had never run it personally; sddm restart
+too); recovery = reboot only (re-runs the GOP). Phase 48's §5.1
+"working-lit" capture was therefore black-vs-black; the corrected
+mechanism story (X=Y boot/image vs X=Z held-forever-black; every kernel
+path including the re-probe lands at X=Z; forced X=Y insufficient) is in
+DSI_MMIO_DIFF §5.2 and NO_CLEAN_FIX_PROOF §7.1. No new row (same lever,
+stronger evidence).

@@ -229,3 +229,26 @@ MMIO (panel TCON side); no register write or enable-path sequence can fix
 it. Iterations stop at 3 of ≤5. Full closure: NO_CLEAN_FIX_PROOF.md §7;
 DSI_MMIO_DIFF.md §5.1; ledger row 32. The reload (unbind/bind) workaround
 remains the only recovery, now formalized as the honest mitigation.
+
+### v9.0 CORRECTION (phase 49, 2026-10-16): the reload NEVER restores the image
+
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: rebind -->
+
+The §5.1-style claim above ("panel SHOWED THE IMAGE", "the reload
+workaround remains the only recovery") is **WRONG** and is corrected by
+phase 49's eyes-on close-out (49-01-CYCLE1/2/3): the user had never run
+the reload themselves; eyes-on verification shows the unbind/bind leaves
+a **backlit black panel** (kwin dies on unbind, the pipe is never
+re-driven) — sddm restart too; **only a reboot restores the image** (it
+re-runs the GOP). v8.0 row 29's myth-bust re-confirmed on the v9.0
+kernel.
+
+The corrected mechanism (machine-evidenced, 2 independent cycles): the
+late-black state HOLDS X=Z while boot/image holds X=Y (the contrast
+discriminates — the §5 claim was right in direction); the rebind ALSO
+lands at X=Z (reload_lit == it3_resume — black vs black), which is why
+it is lit-black; forced X=Y values are insufficient (row 18). The image
+requires the GOP's firmware panel init, unreachable from every kernel
+path tested. Corrected records: DSI_MMIO_DIFF §5.2; NO_CLEAN_FIX_PROOF
+§7.1; ledger row 29 re-confirmed.

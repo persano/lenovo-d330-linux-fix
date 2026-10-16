@@ -130,6 +130,48 @@ register write or enable-path sequence can fix what no register state
 discriminates.** Iterations stop at 3 of ≤5; further register-level levers
 are disproven BY this evidence.
 
+### 7.1 CORRECTION (phase 49, 2026-10-16): §7's "working-lit" arm was never an image state — corrected closure
+
+<!-- planner-discipline-allow: rebind -->
+
+Phase 49's close-out corrected the evidence chain with eyes-on
+verification (49-01-CYCLE2/CYCLE3):
+
+- The reload (unbind/bind) NEVER restores the image — it leaves a
+  **backlit black** panel (user-verified twice on the v9.0 kernel; the
+  user had never run it personally; row 29's v8.0 myth-bust re-confirmed).
+  sddm/kwin restart after a black resume: also lit-black. **Recovery =
+  reboot only.**
+- Therefore §7's "working-lit state" (`reload_lit_dsi_regs.txt`) and
+  §5.1's identity compared BLACK vs BLACK; the "no host MMIO state
+  discriminates" conclusion is WITHDRAWN (DSI_MMIO_DIFF §5.2).
+- The corrected, machine-evidenced truth (2 independent cycles): the
+  **late-black state holds X=Z** (the non-boot operational set, ≥30 s,
+  timeout-marked 0x6b004) while boot/image holds X=Y — the §5 claim's
+  contrast discriminates, and **every kernel path tested lands at X=Z**:
+  the 3 DMI-gated resume variants (rows 30-32) AND the full PCI
+  re-probe. The re-probe's failure to re-reach X=Y is precisely why the
+  rebind shows lit-black.
+- v8.0 row 18 (forced X=Y values, still black) shows X=Y values alone
+  are insufficient.
+
+**Corrected final statement:** the image requires the GOP's firmware
+panel init — the only path that produces X=Y and the direct TCON
+programming (GOP_DSI_RE_FINDINGS). No kernel path (resume variants,
+full re-probe) re-reaches it; value forcing is insufficient. The fix is
+unreachable from the kernel with every lever tested across v8.0+v9.0
+(31+ ledger rows); recovery = reboot. What a real fix would require
+(v9.0-refined): (a) replicate the GOP's TCON-level init — needs the
+panel TCON datasheet or a hardware probe (logic analyzer on the panel
+flex during GOP boot vs kernel re-probe, to see what the GOP does that
+the kernel cannot); (b) OR find a kernel path to the GOP's exact
+post-init state — none exists in the tested space; (c) the panel
+controller remains unidentified (block-55 VBT table undecoded).
+
+The honest mitigation stands: **reboot after a black resume** (the
+panel powers back via the GOP). The unbind/bind script stays available
+but is documented as lit-black, not a recovery.
+
 What remains true for the user: the panel recovers **only** via the full
 i915 re-probe (unbind/bind, the daily workaround) or a reboot — the
 workaround is now formalized as the honest mitigation. Phase 49 delivery:

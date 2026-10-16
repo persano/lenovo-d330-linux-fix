@@ -1,0 +1,32 @@
+# DSI MMIO dump diff
+
+# parse summary
+records close2_lateblack_dsi_regs.txt=7296 warnings=0
+records close2_boot_dsi_regs.txt=7296 warnings=0
+
+| offset | boot | resume | interpretation | verdict | citation |
+|---|---|---|---|---|---|
+| 0x6b004 | 40280000 | 00000000 | interrupt status (write-1-to-clear), volatile | excluded-volatile | close2_lateblack_dsi_regs.txt:3; close2_boot_dsi_regs.txt:3 |
+| 0x6b010 | 0000b8ea | 003fffff | - | differs | close2_lateblack_dsi_regs.txt:6; close2_boot_dsi_regs.txt:6 |
+| 0x6b044 | 0000001e | 0000001d | - | differs | close2_lateblack_dsi_regs.txt:19; close2_boot_dsi_regs.txt:19 |
+| 0x6b080 | 0a051003 | 09051003 | - | differs | close2_lateblack_dsi_regs.txt:34; close2_boot_dsi_regs.txt:34 |
+| 0x6b088 | 0014000c | 0022000f | - | differs | close2_lateblack_dsi_regs.txt:36; close2_boot_dsi_regs.txt:36 |
+| 0x6b094 | 00000000 | 00000001 | interrupt-enable mask, config state; prior differing row 00000001→00000000 (DISPLAY_RESUME_CCS_MODIFIER.md:82), de-prioritized per ledger rows 3/18 (prior forcing result disproven) | excluded-volatile | close2_lateblack_dsi_regs.txt:39; close2_boot_dsi_regs.txt:39 |
+| 0x6b098 | 0a051003 | 09051003 | - | differs | close2_lateblack_dsi_regs.txt:40; close2_boot_dsi_regs.txt:40 |
+| 0x138070 | 0000026a | 000003fe | monotonic counters, not config | excluded-volatile | close2_lateblack_dsi_regs.txt:6306; close2_boot_dsi_regs.txt:6306 |
+| 0x138074 | 0000157f | 00007a9e | monotonic counters, not config | excluded-volatile | close2_lateblack_dsi_regs.txt:6307; close2_boot_dsi_regs.txt:6307 |
+| 0x138090 | 00000004 | 00000000 | - | differs | close2_lateblack_dsi_regs.txt:6314; close2_boot_dsi_regs.txt:6314 |
+| 0x138108 GEN6_GT_GFX_RC6 | 0322d868 | 205b21b4 | - | differs | close2_lateblack_dsi_regs.txt:6344; close2_boot_dsi_regs.txt:6344 |
+| 0x13816c GEN9_GT_PM_CONFIG | 0b1c0804 | 081c0804 | - | differs | close2_lateblack_dsi_regs.txt:6369; close2_boot_dsi_regs.txt:6369 |
+| 0x13819c | 000003a1 | 00000d6d | - | differs | close2_lateblack_dsi_regs.txt:6381; close2_boot_dsi_regs.txt:6381 |
+| 0x160018 | 00000001 | 00000115 | - | differs | close2_lateblack_dsi_regs.txt:1033; close2_boot_dsi_regs.txt:1033 |
+
+## summary
+- identical 0x138000-0x139000: 1018 register(s) matching
+- identical 0x160000-0x164000: 4095 register(s) matching
+- identical 0x46000-0x47000: 1024 register(s) matching
+- identical 0x6b000-0x6c000: 1017 register(s) matching
+- identical 0xc7200-0xc7400: 128 register(s) matching
+- excluded-volatile rows: 4
+- state rows: 0
+- parse warnings: boot=0 resume=0

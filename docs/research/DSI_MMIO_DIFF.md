@@ -6,6 +6,8 @@ and the broken S3-resume state (panel black) on the D330-10IGL (82H0), captured
 with one CI-built debugfs snapshot node through the in-kernel read path.
 
 <!-- planner-discipline-allow: 0x160018 -->
+<!-- planner-discipline-allow: 0x138000-0x139000 | 1024 | GT DISP PWRON / MIPIO_RST_CTRL / GT PM -->
+<!-- planner-discipline-allow: ULPS_STATE_MASK/DEVICE_READY cleared before the cold-boot probe, reload -->
 
 ## 1. Provenance
 
@@ -272,6 +274,46 @@ discipline. Full closure: `NO_CLEAN_FIX_PROOF.md` §7. Next instrument: §6
 plus the §7 pivot note below.
 
 <!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: rebind -->
+
+### 5.2 CORRECTION (phase 49, 2026-10-16): §5.1's "working" arm was never an image state
+
+Phase 49's close-out (eyes-on, user) revealed the premise error: **the
+reload (unbind/bind) NEVER restores the image** — it leaves a backlit
+black panel (kwin dies on unbind; the pipe is never re-driven; v8.0 row
+29's myth-bust re-confirmed on the v9.0 kernel). The user had never run
+it personally; v9.0's "reload restores the panel" premise was inherited
+prose, never eyes-on-verified until now. Therefore:
+
+- `reload_lit_dsi_regs.txt` (§5.1's "working state") is a **BLACK**
+  state (backlit, no image), and §5.1's identity (black == "working")
+  compared black vs black. §5.1's conclusion "no host MMIO state
+  discriminates" is WITHDRAWN.
+- The corrected evidence (phase 49 cycles 2-3, two independent
+  user-verified captures): the **late-black state (30 s post-wake,
+  verified black) HOLDS X=Z** — 0x6b010=0000b8ea, 0x6b044=0000001e,
+  0x6b080/0x6b098=0a051003, 0x6b088=0014000c, 0x6b004 timeout-marked
+  40280000 — while boot (image showing) holds X=Y. The X=Y vs X=Z
+  contrast DOES discriminate working from broken, exactly as the §5
+  claim proposed.
+- The rebind ALSO lands at X=Z (close1_lit ≈ close1_resume;
+  reload_lit == it3_resume): the full PCI re-probe fails to re-reach
+  the GOP state just like the resume path does — which is why it is
+  lit-black.
+- v8.0 row 18 (forced X=Y values, still black) shows X=Y values alone
+  are insufficient.
+
+**Corrected final statement:** the X=Y operational set is produced only
+by the GOP's firmware boot init; every kernel path tested (3 DMI-gated
+resume variants, ledger rows 30-32; the full PCI re-probe) reaches X=Z
+and stays dark; forcing X=Y values does not produce an image. The image
+requires the GOP's full panel init including its direct TCON programming
+(GOP_DSI_RE_FINDINGS) — below host MMIO reachability in the kernel's
+model. Recovery = reboot (re-runs the GOP). Mechanism: unreachable from
+the kernel with the tested levers; the fix would require replicating the
+GOP's TCON-level init (§6 + NO_CLEAN_FIX_PROOF §7.1 next steps). The
+full corrected evidence chain: 49-01-CYCLE2/CYCLE3 records,
+`dsi_regs_diff_close{2,3}_late_vs_boot.txt`.
 
 ### Prior failed overwrite history (ledger rows 3/18) — why this claim is not a value-restore
 
