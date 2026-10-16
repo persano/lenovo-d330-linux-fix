@@ -79,6 +79,8 @@ completed: 2026-10-16
 status: complete
 ---
 
+<!-- planner-discipline-allow: dmesg PMIC/controller lines -->
+
 # Phase 50 Plan 02: Userspace Tooling Summary
 
 **Echo-2 capture arms (boot2/resume2) with timeout-wrapped triggers, a `# DCS ID READ` parser + ID-read comparison block in the diff tool, and a one-run I2C sideband sweep script — all host-side 50-04/50-05 prerequisites now ship with 52 green selftest assertions.**
