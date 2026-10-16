@@ -1,0 +1,96 @@
+From: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+Subject: [PATCH] drm/i915/dsi: full panel power-off settle on resume for the Lenovo IdeaPad D330 panel
+
+The Lenovo IdeaPad D330-10IGL (82H0) panel stays black after S3 resume, while
+unbind/bind (full PCI re-probe) always lights it. Phase-48 iteration 1 proved
+the resume enable path can run the reload path's fresh-device branch
+step-for-step and still stay black (RESUME_FIX_LEDGER row 30), which leaves
+the panel-side power state as the remaining resume-vs-reload difference: the
+reload path tears the panel power down exactly like this driver's disable
+path (assert reset, wait the VBT panel off delay, rails off) and lets the
+power domain settle for the unbind/bind gap before the enable path powers it
+back up, while the resume path powers the panel straight back up on top of
+its retained state.
+
+DMI-gated to 82H0, at the very top of intel_dsi_pre_enable() (before
+intel_dsi_wait_panel_power_cycle() and the PLL work), and only inside the
+power-domain init/resume window (display->power.domains.init_wakeref is held
+from intel_power_domains_resume() until intel_power_domains_enable(), which
+brackets the system-resume display re-commit; plain modesets run long after
+that window, and on the D330 cold boot runs no encoder hooks at all because
+i915 fast-boots on the GOP handover), run the same teardown the reload path
+produces: MIPI_SEQ_ASSERT_RESET, the VBT panel off delay, MIPI_SEQ_POWER_OFF,
+then a reload-scale 1500 ms settle. The existing pre-enable flow then powers
+the panel back up: POWER_ON, panel_on_delay, DEASSERT_RESET, INIT_OTP,
+DISPLAY_ON.
+
+Sequencing only: VBT sequences the driver already runs elsewhere plus delays;
+no operational register values are written.
+
+Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+---
+ drivers/gpu/drm/i915/display/vlv_dsi.c | 48 ++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+--- a/drivers/gpu/drm/i915/display/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/display/vlv_dsi.c
+@@ -717,6 +717,24 @@
+  */
+ 
+ /*
++ * Lenovo IdeaPad D330-10IGL (DMI product name 82H0): Gemini Lake DSI panel
++ * machine. The gate is computed once because the DSI enable path is hot and
++ * dmi_match() would otherwise scan the DMI table on every encoder enable.
++ */
++static bool d330_82h0_panel(void)
++{
++	static bool dmi_checked;
++	static bool is_d330_82h0;
++
++	if (!dmi_checked) {
++		is_d330_82h0 = dmi_match(DMI_PRODUCT_NAME, "82H0");
++		dmi_checked = true;
++	}
++
++	return is_d330_82h0;
++}
++
++/*
+  * DSI port enable has to be done before pipe and plane enable, so we do it in
+  * the pre_enable hook instead of the enable hook.
+  */
+@@ -733,5 +751,35 @@
+ 	bool glk_cold_boot = false;
+ 
+ 	drm_dbg_kms(display->drm, "\n");
+ 
++	/*
++	 * Lenovo IdeaPad D330-10IGL (82H0): the reload path (unbind/bind,
++	 * always lights the panel) tears the panel power down with the same
++	 * sequences the driver's disable path runs (assert reset, wait the
++	 * VBT panel off delay, rails off) and lets the power settle for the
++	 * unbind/bind gap before the enable path powers it back up. Over S3
++	 * resume the enable path instead powers the panel straight back up
++	 * on top of its retained state, and the panel stays black (the
++	 * iteration-1 fresh-device branch alone was not enough,
++	 * RESUME_FIX_LEDGER row 30). Replicate the reload teardown here, at
++	 * the top of the enable path, in the resume window only:
++	 * init_wakeref is held from intel_power_domains_resume() until
++	 * intel_power_domains_enable(), which brackets the system-resume
++	 * display re-commit; plain modesets run long after that window, and
++	 * the D330 cold boot runs no encoder hooks at all (i915 fast-boots
++	 * on the GOP handover).
++	 *
++	 * Sequencing only: VBT sequences plus settle delays; no operational
++	 * register values are written.
++	 */
++	if (d330_82h0_panel() &&
++	    display->power.domains.init_wakeref) {
++		drm_info(display->drm,
++			 "[D330 82H0] resume: panel power-off settle before DSI init\n");
++		intel_dsi_vbt_exec_sequence(intel_dsi, MIPI_SEQ_ASSERT_RESET);
++		msleep(intel_dsi->panel_off_delay);
++		intel_dsi_vbt_exec_sequence(intel_dsi, MIPI_SEQ_POWER_OFF);
++		msleep(1500);
++	}
++
+ 	intel_dsi_wait_panel_power_cycle(intel_dsi);

@@ -111,6 +111,32 @@ jobs:
           git apply -p1 "$GITHUB_WORKSPACE/patches/d330_display_resume_fix.patch"
           grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
           grep -R 'intel_fb_is_ccs_modifier(modifier)' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          # patches/d330_dsi_dump.patch is strictly-additive phase-47 instrumentation
+          # (47-01): one new debugfs snapshot node + 2 wiring lines. It touches no
+          # DSI enable/disable path and writes no registers, so it cannot change
+          # what the boot-vs-resume arms measure.
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_dump.patch"
+          grep -R 'i915_dsi_regs' drivers/gpu/drm/i915/display/
+          grep -R 'bxt_dsi_pll_is_enabled' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
+          # patches/d330_dsi_panel_power_cycle.patch is the phase-48
+          # iteration-2 fix (48-01): DMI-gated to 82H0, runs the reload
+          # path's panel power teardown (assert reset, rails off, a
+          # reload-scale settle) at the very top of the DSI enable path,
+          # in the resume window only. Replaces the iteration-1
+          # d330_dsi_device_ready_fix.patch (disproven, RESUME_FIX_LEDGER
+          # row 30; the patch file stays in git history but is no longer
+          # applied by CI).
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_panel_power_cycle.patch"
+          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/vlv_dsi.c
+          # patches/d330_dsi_mipio_reset.patch is the phase-48 iteration-3
+          # fix (48-01): DMI-gated to 82H0, pulses the DSI-block MIPIO
+          # hardware reset (drop + re-assert of BXT_P_CR_GT_DISP_PWRON's
+          # MIPIO_RST_CTRL bit) at the very top of the DSI enable path, in
+          # the resume window only, mimicking the power-well-cycle reset
+          # the re-probe performs. Requires the iteration-2 patch applied
+          # first (reuses its DMI helper and follows its insertion).
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_mipio_reset.patch"
+          grep -R 'resume: MIPIO reset pulse' drivers/gpu/drm/i915/display/vlv_dsi.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |

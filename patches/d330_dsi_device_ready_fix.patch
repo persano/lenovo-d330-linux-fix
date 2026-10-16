@@ -1,0 +1,92 @@
+From: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+Subject: [PATCH] drm/i915/dsi: make the GLK resume enable path take the fresh-probe branch on Lenovo IdeaPad D330
+
+The Lenovo IdeaPad D330-10IGL (82H0) panel stays black after S3 resume, while
+unbind/bind (full PCI re-probe) always lights it. Machine evidence
+(docs/research/DSI_MMIO_DIFF.md, phase 47) shows the resume enable path and the
+working re-probe path differ in exactly one code-visible way: through S3 the
+GLK DSI device keeps DEVICE_READY set, so glk_dsi_enable_io() reports
+!cold_boot and glk_dsi_device_ready() takes the ULPS enter/exit branch on a
+device that was never taken out of ready; the re-probe path starts from
+DEVICE_READY=0 and takes the plain re-arm branch.
+
+DMI-gated to 82H0, clear the retained state (ULPS_STATE_MASK + DEVICE_READY,
+device off) in intel_dsi_pre_enable() right after the panel VBT power-on and
+before the glk_dsi_enable_io() cold-boot probe. The probe then reports fresh
+like the re-probe path (cold_boot=1, intel_dsi_prepare() before
+intel_dsi_device_ready()), and the existing !(DEVICE_READY) branch re-arms the
+device exactly as after a hardware reset.
+
+Sequencing only: the write touches the DEVICE_READY/ULPS on/off state bits, no
+operational register values (HS_TX_TIMEOUT, HIGH_LOW_SWITCH_COUNT, ...).
+
+Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+---
+ drivers/gpu/drm/i915/display/vlv_dsi.c | 50 ++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+--- a/drivers/gpu/drm/i915/display/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/display/vlv_dsi.c
+@@ -717,6 +717,24 @@
+  */
+ 
+ /*
++ * Lenovo IdeaPad D330-10IGL (DMI product name 82H0): Gemini Lake DSI panel
++ * machine. The gate is computed once because the DSI enable path is hot and
++ * dmi_match() would otherwise scan the DMI table on every encoder enable.
++ */
++static bool d330_82h0_panel(void)
++{
++	static bool dmi_checked;
++	static bool is_d330_82h0;
++
++	if (!dmi_checked) {
++		is_d330_82h0 = dmi_match(DMI_PRODUCT_NAME, "82H0");
++		dmi_checked = true;
++	}
++
++	return is_d330_82h0;
++}
++
++/*
+  * DSI port enable has to be done before pipe and plane enable, so we do it in
+  * the pre_enable hook instead of the enable hook.
+  */
+@@ -773,6 +791,38 @@
+ 	msleep(intel_dsi->panel_on_delay);
+ 	intel_dsi_vbt_exec_sequence(intel_dsi, MIPI_SEQ_DEASSERT_RESET);
+ 
++	/*
++	 * Lenovo IdeaPad D330-10IGL (82H0): over S3 resume the GLK DSI
++	 * device keeps DEVICE_READY set from the pre-suspend session, while
++	 * the working PCI re-probe path always starts from DEVICE_READY=0
++	 * (hardware reset). The retained state is what makes the resume
++	 * enable path diverge from the reload path: glk_dsi_device_ready()
++	 * then runs the ULPS enter/exit dance on a device that was never
++	 * taken out of ready, and the cold-boot probe below reports
++	 * !cold_boot so intel_dsi_prepare() runs after (not before)
++	 * intel_dsi_device_ready(). When retained state is observed, clear
++	 * it here, before the cold-boot probe, so the whole pre_enable runs
++	 * the same fresh-probe sequence the reload path sees: the probe
++	 * reports DEVICE_READY clear (cold_boot=1, prepare before
++	 * device_ready) and the plain !(DEVICE_READY) branch re-arms it,
++	 * exactly as after a hardware reset.
++	 *
++	 * Sequencing only: ULPS_STATE_MASK and DEVICE_READY are the DSI
++	 * device on/off state bits; no operational register values are
++	 * written.
++	 */
++	if (d330_82h0_panel()) {
++		for_each_dsi_port(port, intel_dsi->ports) {
++			if (intel_de_read(display, MIPI_DEVICE_READY(display, port)) & DEVICE_READY) {
++				drm_info(display->drm,
++					 "[D330 82H0] DSI DEVICE_READY retained, clearing to fresh\n");
++				intel_de_rmw(display, MIPI_DEVICE_READY(display, port),
++					     ULPS_STATE_MASK | DEVICE_READY, 0);
++				usleep_range(10, 15);
++			}
++		}
++	}
++
+ 	if (display->platform.geminilake) {
+ 		glk_cold_boot = glk_dsi_enable_io(encoder);
+ 

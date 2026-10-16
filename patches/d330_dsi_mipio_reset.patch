@@ -1,0 +1,68 @@
+From: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+Subject: [PATCH] drm/i915/dsi: pulse the DSI-block MIPIO reset on resume for the Lenovo IdeaPad D330 panel
+
+The Lenovo IdeaPad D330-10IGL (82H0) panel stays black after S3 resume, while
+unbind/bind (full PCI re-probe) always lights it. Phase-48 iteration 2
+(RESUME_FIX_LEDGER row 31) proved the panel-side power rails now behave like
+the reload path (the wake state became backlit-but-blank instead of dark),
+which leaves the DSI-block hardware reset as the remaining pre-TCON host
+difference: the reload's power-well cycle drops the DSI-block MIPIO reset
+control and brings the DSI block up from reset before any sequence runs,
+while the resume path never pulses that control (the code block that
+programs it is broxton-only in vlv_dsi.c and is skipped on this Gemini Lake
+machine).
+
+DMI-gated to 82H0, at the very top of intel_dsi_pre_enable() (before the
+iteration-2 block, before intel_dsi_wait_panel_power_cycle() and the PLL
+work), and only inside the power-domain init/resume window
+(display->power.domains.init_wakeref, the same resume gate the iteration-2
+patch established), drop the MIPIO_RST_CTRL bit of BXT_P_CR_GT_DISP_PWRON
+(the DSI block held in reset, the power-well-off state), dwell 10 ms,
+re-assert the bit (the block released, the state the enable path leaves it
+in), dwell 10 ms, then let the existing flow run.
+
+Control flow only: the MIPIO_RST_CTRL toggle is a reset-domain control
+write, not a value restore; the banned operational-offset list does not
+cover this PWRON control register.
+
+Requires the iteration-2 patch (patches/d330_dsi_panel_power_cycle.patch)
+applied first: this patch reuses its d330_82h0_panel() DMI helper, and its
+hunk context is the post-iteration-2 file.
+
+Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+---
+ drivers/gpu/drm/i915/display/vlv_dsi.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+--- a/drivers/gpu/drm/i915/display/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/display/vlv_dsi.c
+@@ -753,5 +753,30 @@
+ 	drm_dbg_kms(display->drm, "\n");
+ 
++	/*
++	 * Lenovo IdeaPad D330-10IGL (82H0): the reload path (unbind/bind)
++	 * goes through the display power-well cycle, which drops the
++	 * DSI-block MIPIO reset control and brings the DSI block up from
++	 * reset before any sequence runs. The resume path never pulses
++	 * that control (the code block that programs it is broxton-only,
++	 * skipped on this Gemini Lake machine), so the DSI block starts
++	 * the resume sequence from its retained state. Pulse it the way
++	 * the power-well cycle does: drop MIPIO_RST_CTRL (block held in
++	 * reset), dwell, re-assert it (block released, the state the
++	 * enable path leaves it in), then let the existing flow run.
++	 *
++	 * Control flow only: a reset-domain toggle; no operational
++	 * register values are written.
++	 */
++	if (d330_82h0_panel() &&
++	    display->power.domains.init_wakeref) {
++		drm_info(display->drm,
++			 "[D330 82H0] resume: MIPIO reset pulse before DSI init\n");
++		intel_de_rmw(display, BXT_P_CR_GT_DISP_PWRON, MIPIO_RST_CTRL, 0);
++		msleep(10);
++		intel_de_rmw(display, BXT_P_CR_GT_DISP_PWRON, 0, MIPIO_RST_CTRL);
++		msleep(10);
++	}
++
+ 	/*
+ 	 * Lenovo IdeaPad D330-10IGL (82H0): the reload path (unbind/bind,
+ 	 * always lights the panel) tears the panel power down with the same
