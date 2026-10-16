@@ -60,7 +60,7 @@ disproven lever.
 | FIX-02 | 48 | Complete (2026-10-15; 3 iterations, rollback-before-every-deploy, NO_CLEAN_FIX_PROOF v9.0 section) |
 | FIX-03 | 48 | Complete (2026-10-15; no upstream waits, CI polling inline) |
 | DONE-01 | 49 | Complete (2026-10-16, 49-01; unreachable branch, machine-proven — 3 fresh user-triggered confirmation cycles (49-01) + falsification chain (ledger rows 30-32) + DSI_MMIO_DIFF §5.2; SC1 alternative wording: mechanism proven unreachable with a documented reason and a concrete next instrument) |
-| DONE-02 | 49 | Complete-pending-final-sweep (2026-10-16, 49-02; 49-03 runs the final full sweep — guard chain green at close: ledger gate 4/4 (rows 30-32 final truth), evidence suite 7/7 + fixtures 8/8, re-kit verified, selftest 35/35) |
+| DONE-02 | 49 | Complete (2026-10-16, 49-03; final full sweep recorded green — ledger gate 4/4 exit 0 (rows 30-32 final truth, "Lever rows: 32" unchanged), evidence suite 7/7 exit 0, fixtures 8/8 exit 0, re-kit verify exit 0 (close1-3 dumps + diffs all OK), selftest 35/35 exit 0; device end-state verified: uname 7.0.14-d330-fix, dump node present, both rollback deb shas match; 49-SHIP-CHECKLIST.md armed) |
 
 ## Success criteria (milestone)
 
