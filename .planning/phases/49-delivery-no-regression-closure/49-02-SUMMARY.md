@@ -26,12 +26,12 @@ decisions:
 metrics:
   duration: ~10 min
   tasks: 2
-  commits: 3
+  commits: 5
 deferred_commit: true
 actuals:
   tokens: ~3900
   tasks: 2
-  commits: 3
+  commits: 5
 ---
 
 # Phase 49 Plan 2: Close-out docs — traceability, milestone close-out, optional upstream addendum Summary
@@ -133,11 +133,13 @@ committed by /gsd-ship):
   blocks nothing) — files: docs/research/UPSTREAM_HANDOFF.md
 
 All other changes this plan produced are planning docs, committed directly via
-the gsd-tools commit verb (allowed for planning docs):
+the gsd-tools commit verb (allowed for planning docs) — 5 docs commits total:
 
 - docs(49-02): marker-exempt 49-01-SUMMARY banned-alias prose (gate 4/4 restored) — 732beac — 49-01-SUMMARY.md
 - docs(49-02): DONE-01/DONE-02 traceability on the honest branch + v9.0 close-out doc — 86d6d24 — REQUIREMENTS.md, v9.0-close-out.md
-- docs(49-02): plan summary — this file (committed after writing)
+- docs(49-02): close-out plan summary — b8ed651 — 49-02-SUMMARY.md
+- docs(49-02): marker-exempt 49-02-SUMMARY deviation prose (gate 4/4) — 5c4562b — 49-02-SUMMARY.md
+- docs(49-02): summary commit ledger accuracy (hashes above) — this commit itself (the 5th)
 
 Note: `.planning/config.json` shows a working-tree modification
 (`use_worktrees: false`) — orchestrator bookkeeping, pre-existing to this plan's
