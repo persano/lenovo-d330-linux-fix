@@ -18,20 +18,22 @@
 - **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)**: Intel VA-API hardware decode environment and browser prefs, fanless thermal RAPL limits (PL1 5.0W / PL2 8.0W) with thermald curve, earlyoom low-RAM watchdog, tablet OSK auto-summon & long-press right-click, PipeWire RNNoise neural microphone filter-chain, RTL8821CE single-antenna Wi-Fi/BT coexistence & s2idle resume hook, eMMC fast boot tuning (~9s boot), and GTK3 desktop system tray hardware applet (`tools/d330-tray.py`).
 - **Milestone 7: Pre-Deployment Audit Remediation (v7.0)**: Remediated all 4 Critical, 17 Moderate and 11 Minor findings of the external pre-deployment audit (`BLOCKED BY CRITICAL DEFECTS`): data-loss/boot safety guards (explicit `--device`, pre-write guards, safe fstab), physically-completable hibernate (disk swapfile + resume cmdline), the real PPS/display-resume module (honest DMI banner, real `--kernel-src` clamp), manifest-driven installer/uninstaller symmetry, desktop-session wiring (suffix-free tool names, systemd **user** unit for the tablet daemon), real (or removed) PWM/sensor tools, activated PipeWire DSP filter-chains, corrected udev/hwdb/wireless matches and power-stack ownership, a trustworthy 36-script test harness, and documentation/packaging parity (exec bits, FCC hook, fail-loud packagers, `test_doc_parity.sh`). Plus one cross-phase packaging integration gap (packagers shipped `.py`/`.sh` tool names the units don't execute) found by the milestone audit and fixed.
 
-## Current Milestone: v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen
+- **Milestone 8: Reverse-Engineer & Fix the D330 Resume Black Screen (v8.0, shipped 2026-10-13)**: GOP driver + two-VBT handoff decoded; resume-vs-reload differential (kernel display state byte-identical working-vs-broken — failure below the kernel model); 29-row binding disproven-lever ledger with machine gate; rebind "recovery" myth-busted (only a reboot restores the panel); 3 deployed fix candidates falsified; honest closure (NO_CLEAN_FIX_PROOF.md). Bug NOT fixed.
+- **Milestone 9: Actually Fix the D330 Resume Black Screen (v9.0, shipped 2026-10-16)**: DSI MMIO truth (X=Y working vs X=Z held-broken contrast, `dsi_mmio_diff.sh` + evidence guards); 3 DMI-gated candidates (fresh-state, panel power cycle, MIPIO reset) CI-built + deployed + falsified with machine evidence (ledger rows 30-32); reload-workaround premise corrected (never restored an image — recovery = reboot only); 65-artifact re-kit + upstream handoff. Fix proven unreachable from every kernel path tested.
 
-**Goal:** Kill the open D330 resume-black bug, the panel powers up after resume, every host register is byte-identical to a working state, the full DSI sequence runs, yet it stays black and only a full i915 PCI unbind/bind reload recovers. Crack it with a research + deep-RE push (Ghidra + REA driven by GLM 5.3 Flash) on real hardware.
+## Current Milestone: v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt
+
+**Goal:** Identify the D330's panel TCON and the exact init the GOP performs at boot, then either replicate it in the kernel at resume (keep-panel-powered ladder) or prove it needs hardware instrumentation — with a hardware-probe phase spec'd (buy-gate included) and a black-resume safety net shipped regardless.
 
 **Target features:**
-- One "tried / disproven" ledger consolidating prior work so nothing is re-tread (PPS/TCON, D-PHY retune, register forcing, keep-panel-powered, suspend depth, PMIC/I2C, `glk_cold_boot`, DMC probe-init, bare PCI reset).
-- Internet/forum/bug-tracker research: GLK DSI resume reports, i915 GitLab/Bugzilla, ChromeOS, distro forums, other Gemini Lake tablets.
-- Windows-behavior analysis: RE `igdkmd64.sys` + `IntelGopDriver` + VBT/ACPI with REA+Ghidra to find the resume-path difference (binary-only for now; real Windows install later if needed).
-- Deep RE of the resume path: `__intel_display_driver_resume` commit vs the reload's full probe/`intel_modeset_setup_hw_state`.
-- Deliver a fix (driver patch, module, or script) on the current test kernel (Ubuntu 7.0.0-38-generic).
-- Seamless automatic recovery (invisible reload/compositor restart) is an acceptable bar if a clean resume fix proves impossible.
+- DCS ID-read instrument (extend `i915_dsi_regs` with echo-2 DCS reads) → TCON identification software-only; block-55 closed as compression-params (negative result); §6 0x6b004 label correction.
+- Keep-panel-powered fix ladder E1→E2 (+E3 discriminator if falsified): skip panel-side teardown at suspend, warm-resume enable — DMI-gated 82H0, one candidate per CI iteration, X=Y/X=Z instrument chain.
+- d330-blackguard self-healing: hotkey → beeps → 10 s countdown → reboot; stand down the legacy display-resume hook; tests + rtcwake validation.
+- Hardware logic-analyzer probe: Kingst LA5016 buy-gate (KingstVIS MIPI-DSI LP demo validation first), teardown + FPC pin-ID, capture A (boot GOP LP DCS) vs B (kernel re-probe) + PMIC I2C bus 6 rails.
 
-## Project Status: Milestone 7 (v7.0) complete — Phases 0-42 shipped
-Hardware parity and usability work through v6.0 shipped; Milestone 7 (Phases 32-42) remediated the entire external pre-deployment audit plus one cross-phase packaging gap found by the milestone audit. All 11 phases verified. Machine-checkable success criteria are green in the dev environment; hardware-in-the-loop, daemon, and real package-build criteria are covered by documented per-phase verification overrides to re-run on a D330 unit at deployment sign-off.
+**Research:** `.planning/research/v10.0-SUMMARY.md` + 4 full reports (tcon-hunt, keep-panel-powered, hardware-instrument, self-healing).
+
+## Project Status: Milestone 9 (v9.0) complete — honest closure (fix unreachable from kernel; recovery = reboot only); v10.0 hunt started (Phases 50-53)
 
 ## Context
 - Repo is a shell + Python + packaging + DKMS-patch project; the live installer (`sudo ./scripts/install_dkms.sh`) is the primary deployment path and is consistent end-to-end. The `.deb`/`.rpm`/PKGBUILD packagers and the CI `.deb` build mirror the installer's suffix-free `/usr/local/bin` tool names so shipped+enabled systemd units execute correctly.
