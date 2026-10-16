@@ -17,7 +17,7 @@ affects: [50-04, 50-05, 53]
 actuals:
   tokens: 6500
   tasks: 2
-  commits: 3
+  commits: 5
 
 tech-stack:
   added: []
@@ -91,6 +91,13 @@ hand-off table cannot misdirect Phase 53's wire-level probe.
 
 None other — plan executed as written; the 0x6b010 label correction was the plan's tree-verified conditional branch, taken.
 
+**2. [Rule 1 - Bug] Ledger gate caught 50-03-SUMMARY.md's own quoted aliases after its first commit**
+- **Found during:** post-commit gate re-run (68729f6)
+- **Issue:** three summary lines matched row-2/row-18/row-12 aliases (the decode quote, the vlv_dsi_regs.h citation, the deviation prose)
+- **Fix:** three narrow per-string markers quoting the gate-reported substrings (`HS_TX_TIMEOUT | LOW_CONTENTION`, `MIPI_HS_TX_TIMEOUT 0x6b010`, `` `PMIC` alias ``)
+- **Files modified:** 50-03-SUMMARY.md
+- **Commit:** `95b1002`
+
 ## Gate results (after final commit)
 
 - `bash scripts/dsi_mmio_diff.sh --selftest` → passed=52 failed=0
@@ -104,6 +111,8 @@ Each task was committed atomically:
 1. **Baseline gate repair (50-02-SUMMARY marker)** - `3306b49` (fix)
 2. **Task 1: §6 0x6b004 bit-accurate decode** - `535848f` (docs)
 3. **Task 2: 0x6b010/0x6b080 anomaly pins** - `973a5bd` (docs)
+4. **50-03-SUMMARY.md** - `68729f6` (docs)
+5. **Summary self-marker repair (gate caught the summary's own alias quotes)** - `95b1002` (fix)
 
 ## Requirements
 
