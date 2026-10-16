@@ -39,6 +39,9 @@ decisions:
 <!-- planner-discipline-allow: HS_TX_TIMEOUT (bit 21) -->
 <!-- planner-discipline-allow: MIPI_HS_TX_TIMEOUT(A) -->
 <!-- planner-discipline-allow: dmesg PMIC/controller lines -->
+<!-- planner-discipline-allow: HS_TX_TIMEOUT | LOW_CONTENTION -->
+<!-- planner-discipline-allow: `PMIC` alias -->
+<!-- planner-discipline-allow: MIPI_HS_TX_TIMEOUT 0x6b010 -->
 
 # Phase 50 Plan 03: DSI_MMIO_DIFF §6 label correction + open-anomaly record Summary
 
