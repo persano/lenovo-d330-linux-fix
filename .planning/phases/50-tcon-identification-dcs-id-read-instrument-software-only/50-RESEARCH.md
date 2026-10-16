@@ -445,19 +445,19 @@ Dynamic bus range is honored (bus list derived from `i2cdetect -l`, not `seq 0 9
 
 **If any claim above becomes load-bearing at execution: re-confirm before use.**
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Does the DSI host accept LP reads while the HS video stream is running (boot X=Y)?**
+1. **RESOLVED: Does the DSI host accept LP reads while the HS video stream is running (boot X=Y)?**
    - What we know: BTA enabled (VBT block 52); RX path implemented; reads are issued on the LP GEN channel while video runs on HS.
    - What's unclear: some hosts serialize LP access against active video; behavior on GLK untested.
    - Recommendation: proceed — worst case is timeout annotations on both arms (informative, not blocking). The bit-29 annotation makes the outcome interpretable either way.
 
-2. **How does the instrument find the `intel_dsi` encoder pointer from `struct intel_display *` in the debugfs file?**
+2. **RESOLVED: How does the instrument find the `intel_dsi` encoder pointer from `struct intel_display *` in the debugfs file?**
    - What we know: the node stores `display` (from `filp->private_data`); `intel_dsi` is an encoder; `dsi_hosts[PORT_A]->device` is the read target.
    - What's unclear: the exact traversal (connector→encoder or platform device list) in the 7.0 tree — the 47 patch only used `display`.
    - Recommendation: at implementation, walk `display->mode_config` connectors for the DSI connector (`intel_connector` with `mipi` panel), or iterate encoders for `INTEL_OUTPUT_DSI`; fall back to a `drm_WARN` + SKIP annotation if none found. Small implementation-time check, not a research blocker.
 
-3. **Will `kstrtouint_from_user` accept the literal `echo 2` payload ("2\n")?**
+3. **RESOLVED: Will `kstrtouint_from_user` accept the literal `echo 2` payload ("2\n")?**
    - Known: kernel string-to-uint helpers accept trailing newline; `echo` appends one. Low risk.
    - Recommendation: covered by the `--selftest`-style host-side format fixtures; verify in CI build + first boot-arm run.
 
