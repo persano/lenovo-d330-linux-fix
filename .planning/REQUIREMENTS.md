@@ -59,8 +59,8 @@ disproven lever.
 | FIX-01 | 48 | Falsified (2026-10-15, 48-VERIFICATION.md; mechanism below host MMIO - DSI_MMIO_DIFF §5.1; honest closure NO_CLEAN_FIX_PROOF §7) |
 | FIX-02 | 48 | Complete (2026-10-15; 3 iterations, rollback-before-every-deploy, NO_CLEAN_FIX_PROOF v9.0 section) |
 | FIX-03 | 48 | Complete (2026-10-15; no upstream waits, CI polling inline) |
-| DONE-01 | 49 | Pending |
-| DONE-02 | 49 | Pending |
+| DONE-01 | 49 | Complete (2026-10-16, 49-01; unreachable branch, machine-proven — 3 fresh user-triggered confirmation cycles (49-01) + falsification chain (ledger rows 30-32) + DSI_MMIO_DIFF §5.2; SC1 alternative wording: mechanism proven unreachable with a documented reason and a concrete next instrument) |
+| DONE-02 | 49 | Complete-pending-final-sweep (2026-10-16, 49-02; 49-03 runs the final full sweep — guard chain green at close: ledger gate 4/4 (rows 30-32 final truth), evidence suite 7/7 + fixtures 8/8, re-kit verified, selftest 35/35) |
 
 ## Success criteria (milestone)
 
