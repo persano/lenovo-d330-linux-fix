@@ -16,6 +16,26 @@
 #                    classifies parse-warning, never skipped-pll-off)
 #   overlay          `# NAMED OVERLAY` section, rows `NAME 0x…=… <decode>`
 #                    (leading NAME never matches the record regex)
+#   DCS section      `# DCS ID READ` header (phase-50 echo-2 dumps only,
+#                    strictly after the overlay), then either five read rows
+#                    or an explicit skip annotation:
+#                      DCS <tag> ret=<n> avail=<0|1> data=<3 hex bytes>
+#                          one row per ID read; tags 0x04 / 0xDA / 0xDB /
+#                          0xDC / GEN00; the leading DCS keeps rows out of
+#                          the ^0x record regex like NAME; avail (bit 29
+#                          GEN_READ_DATA_AVAIL post-check) discriminates
+#                          answered (1) vs timeout (0) - ret alone NEVER
+#                          does (the host RX path returns >= 4 on timeout)
+#                      DCS SKIP <reason>
+#                          the node skipped all reads (PLL off, no DSI
+#                          device); carries section state for both arms
+#                    Pinned decision: a dump with NO `# DCS ID READ`
+#                    section on either arm renders NO ID-read comparison
+#                    block, only an explicit "section absent on both arms"
+#                    summary line (echo-1 captures stay quiet). A section
+#                    present on ONE arm renders the block with
+#                    `missing-section` rows for the other arm - never
+#                    silently vanish.
 #
 # Output: one markdown table with columns
 #   offset | boot | resume | interpretation | verdict | citation
@@ -128,20 +148,42 @@ parse_arm() {
             valre = "^0x[0-9a-f]+=[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$"
         }
         {
-            if ($0 == skiptxt)  { print "S\t" arm "\t" NR "\tDSI"; insec = 0; inov = 0; next }
-            if ($0 == pskiptxt) { print "S\t" arm "\t" NR "\tPHY"; insec = 0; inov = 0; next }
+            if ($0 == skiptxt)  { print "S\t" arm "\t" NR "\tDSI"; insec = 0; inov = 0; indcs = 0; next }
+            if ($0 == pskiptxt) { print "S\t" arm "\t" NR "\tPHY"; insec = 0; inov = 0; indcs = 0; next }
             if ($0 ~ /^# RANGE 0x[0-9a-f]+-0x[0-9a-f]+ /) {
                 split($3, a, "-")
                 lo = a[1]; hi = a[2]
                 sub(/^0x/, "", lo); sub(/^0x/, "", hi)
                 lo = tolower(lo); hi = tolower(hi)
-                cur_lo = lo; cur_hi = hi; insec = 1; inov = 0
+                cur_lo = lo; cur_hi = hi; insec = 1; inov = 0; indcs = 0
                 print "H\t" arm "\t" lo "\t" hi "\t" NR
                 next
             }
-            if ($0 ~ /^# NAMED OVERLAY/) { inov = 1; insec = 0; next }
+            if ($0 ~ /^# NAMED OVERLAY/) { inov = 1; insec = 0; indcs = 0; next }
+            if ($0 ~ /^# DCS ID READ/) { indcs = 1; insec = 0; inov = 0; print "DH\t" arm "\t" NR; next }
             if ($0 ~ /^#/) { next }
             if ($0 ~ /^[ \t]*$/) { next }
+            if (indcs) {
+                # DCS-section state, NEVER R records or W warnings unless
+                # the line drifts off the pinned grammar (loud warning).
+                if ($0 ~ /^DCS SKIP /) {
+                    reason = $0; sub(/^DCS SKIP /, "", reason)
+                    print "DK\t" arm "\t" NR "\t" reason
+                    next
+                }
+                if ($0 ~ /^DCS [^ ]+ ret=-?[0-9]+ avail=[01] data=/) {
+                    tag = $2
+                    retv = $3; sub(/^ret=/, "", retv)
+                    av = $4; sub(/^avail=/, "", av)
+                    data = substr($0, index($0, "data=") + 5)
+                    print "D\t" arm "\t" tag "\t" retv "\t" av "\t" data "\t" NR
+                    next
+                }
+                snip = $0
+                if (length(snip) > 60) snip = substr(snip, 1, 60)
+                print "W\t" arm "\t" NR "\t" snip
+                next
+            }
             if (inov) { next }
             if (insec) {
                 if ($0 ~ valre) {
@@ -182,6 +224,33 @@ run_diff() {
     parse_arm "$boot"   boot   > "$tmp/boot.rep"
     parse_arm "$resume" resume > "$tmp/resume.rep"
     cat "$tmp/boot.rep" "$tmp/resume.rep" > "$tmp/all.rep"
+
+    # --- DCS ID READ comparison block (phase-50 echo-2 sections) ---
+    # Joins the two arms on the five read ids with the pinned vocabulary:
+    # answered (avail bit set) / timeout (bit clear) / DCS SKIP /
+    # missing-section / missing-read-row (section present but the tag's row
+    # is absent - format drift, never silently swallowed). Absent on both
+    # arms -> no comparison block, one explicit summary note (echo-1 pairs).
+    awk -F'\t' -v OFS='\t' '
+        $1 == "DH" { hdr[$2] = 1; next }
+        $1 == "DK" { skip[$2] = 1; next }
+        $1 == "D"  { seen[$2 SUBSEP $3] = 1; av[$2 SUBSEP $3] = $5; next }
+        END {
+            if (!hdr["boot"] && !hdr["resume"]) { print "NONE"; exit }
+            order = "0x04 0xDA 0xDB 0xDC GEN00"
+            n = split(order, ids, " ")
+            for (i = 1; i <= n; i++) {
+                id = ids[i]
+                printf "R\t%s\t%s\t%s\n", id, dstate("boot", id), dstate("resume", id)
+            }
+        }
+        function dstate(arm, id) {
+            if (skip[arm])  return "DCS SKIP"
+            if (!hdr[arm])  return "missing-section"
+            if (!(arm SUBSEP id in seen)) return "missing-read-row"
+            return (av[arm SUBSEP id] == "1") ? "answered" : "timeout"
+        }
+    ' "$tmp/all.rep" > "$tmp/dcs.tsv"
 
     # --- per-(arm,range) state classification (hardened) ---
     awk -F'\t' -v dsi_lo="$DSI_LO" -v dsi_hi="$DSI_HI" \
@@ -367,7 +436,7 @@ run_diff() {
         cat "$tmp/meta.tsv"
     } | awk -F'\t' -v bootname="$bootname" -v resumename="$resumename" \
             -v recb="$rboot" -v recr="$rresume" -v warnb="$wboot" -v warnr="$wresume" \
-            -v excl="$excl" -v scount="$scount" -v namesf="$names" '
+            -v excl="$excl" -v scount="$scount" -v namesf="$names" -v dcsf="$tmp/dcs.tsv" '
         BEGIN {
             if (namesf != "") {
                 while ((getline nline < namesf) > 0) {
@@ -408,12 +477,36 @@ run_diff() {
         }
         END {
             print ""
+            # ID-read comparison block (phase-50): present iff at least one
+            # arm carries the section; absent-on-both renders only the
+            # explicit summary note (pinned, header grammar comment).
+            dcs_state = ""
+            while ((getline dl < dcsf) > 0) {
+                if (dl == "NONE") { dcs_state = "absent"; continue }
+                split(dl, da, "\t")
+                dcs_rows[++dcs_n] = da[2] "\t" da[3] "\t" da[4]
+            }
+            if (dcs_state != "absent") {
+                print "## DCS ID READ comparison"
+                print ""
+                print "| read | " bootname " | " resumename " |"
+                print "|---|---|---|"
+                for (i = 1; i <= dcs_n; i++) {
+                    split(dcs_rows[i], dc, "\t")
+                    print "| " dc[1] " | " dc[2] " | " dc[3] " |"
+                }
+                print ""
+            }
             print "## summary"
             for (i = 1; i <= ni; i++)
                 print "- identical " il[i] ": " ic[i] " register(s) matching"
             print "- excluded-volatile rows: " excl
             print "- state rows: " scount
             print "- parse warnings: boot=" warnb " resume=" warnr
+            if (dcs_state == "absent")
+                print "- DCS ID READ: section absent on both arms (no comparison block)"
+            else
+                print "- DCS ID READ: comparison block emitted (" dcs_n " read ids)"
         }
     ' > "$out"
 
@@ -654,6 +747,111 @@ selftest() {
         'identical 0x46000-0x47000: 1 register'
     expect_count "I: zero per-register rows for the gated ranges" "$d/i.md" \
         '(^\| 0x6b000 [0-9a-f]|^\| 0x160018 )' 0
+
+    # --- fixture J (50-02): DCS section on both arms, mixed answered/timeout
+    # --- -> comparison block with the pinned per-read states; DCS rows never
+    # --- register records or parse warnings ---
+    local dcs_boot="$d/boot2_dsi_regs.txt" dcs_resume="$d/resume2_dsi_regs.txt"
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+        echo "# DCS ID READ"
+        echo "DCS 0x04 ret=4 avail=1 data=91 0c 00"
+        echo "DCS 0xDA ret=4 avail=1 data=30 00 00"
+        echo "DCS 0xDB ret=4 avail=0 data=00 00 00"
+        echo "DCS 0xDC ret=4 avail=0 data=00 00 00"
+        echo "DCS GEN00 ret=4 avail=0 data=00 00 00"
+    } > "$dcs_boot"
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+        echo "# DCS ID READ"
+        echo "DCS 0x04 ret=4 avail=0 data=00 00 00"
+        echo "DCS 0xDA ret=4 avail=0 data=00 00 00"
+        echo "DCS 0xDB ret=4 avail=0 data=00 00 00"
+        echo "DCS 0xDC ret=4 avail=0 data=00 00 00"
+        echo "DCS GEN00 ret=4 avail=0 data=00 00 00"
+    } > "$dcs_resume"
+    run_diff "$dcs_boot" "$dcs_resume" "$d/j.md"
+    expect_has "J: comparison block header" "$d/j.md" '## DCS ID READ comparison'
+    expect_has "J: boot 0x04 answered, resume 0x04 timeout" "$d/j.md" \
+        '^\| 0x04 \| answered \| timeout \|'
+    expect_has "J: boot 0xDA answered, resume 0xDA timeout" "$d/j.md" \
+        '^\| 0xDA \| answered \| timeout \|'
+    expect_has "J: 0xDB timeout on both arms" "$d/j.md" \
+        '^\| 0xDB \| timeout \| timeout \|'
+    expect_has "J: GEN00 timeout on both arms" "$d/j.md" \
+        '^\| GEN00 \| timeout \| timeout \|'
+    expect_count "J: exactly five comparison rows" "$d/j.md" \
+        '^\| (0x04|0xDA|0xDB|0xDC|GEN00) \|' 5
+    expect_count "J: no DCS row leaks into the register table" "$d/j.md" \
+        '^\| 0x04 ret=' 0
+    expect_has "J: zero parse warnings (DCS rows are section state)" "$d/j.md" \
+        'parse warnings: boot=0 resume=0'
+    expect_count "J: register table untouched by DCS section" "$d/j.md" \
+        '^\| 0x6b000 [0-9a-f]' 0
+
+    # --- fixture K (50-02): DCS section on ONE arm only -> missing-section
+    # --- rows for the other arm, block still emitted (never silently vanish) ---
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+        echo "# DCS ID READ"
+        echo "DCS 0x04 ret=4 avail=1 data=91 0c 00"
+        echo "DCS 0xDA ret=4 avail=1 data=30 00 00"
+        echo "DCS 0xDB ret=4 avail=1 data=76 00 00"
+        echo "DCS 0xDC ret=4 avail=1 data=00 00 00"
+        echo "DCS GEN00 ret=4 avail=0 data=00 00 00"
+    } > "$dcs_boot"
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+    } > "$dcs_resume"
+    run_diff "$dcs_boot" "$dcs_resume" "$d/k.md"
+    expect_has "K: comparison block still emitted" "$d/k.md" \
+        '## DCS ID READ comparison'
+    expect_has "K: answered vs missing-section for 0x04" "$d/k.md" \
+        '^\| 0x04 \| answered \| missing-section \|'
+    expect_count "K: all five reads render missing-section on resume" "$d/k.md" \
+        '^\| (0x04|0xDA|0xDB|0xDC|GEN00) \| [a-z-]+ \| missing-section \|' 5
+
+    # --- fixture L (50-02): DCS SKIP on one arm -> SKIP state on that arm ---
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+        echo "# DCS ID READ"
+        echo "DCS 0x04 ret=4 avail=1 data=91 0c 00"
+        echo "DCS 0xDA ret=4 avail=1 data=30 00 00"
+        echo "DCS 0xDB ret=4 avail=1 data=76 00 00"
+        echo "DCS 0xDC ret=4 avail=1 data=00 00 00"
+        echo "DCS GEN00 ret=4 avail=0 data=00 00 00"
+    } > "$dcs_boot"
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+        echo "# DCS ID READ"
+        echo "DCS SKIP pll-off"
+    } > "$dcs_resume"
+    run_diff "$dcs_boot" "$dcs_resume" "$d/l.md"
+    expect_has "L: comparison block emitted with SKIP state" "$d/l.md" \
+        '## DCS ID READ comparison'
+    expect_count "L: DCS SKIP on every read row for the resume arm" "$d/l.md" \
+        '^\| (0x04|0xDA|0xDB|0xDC|GEN00) \| [a-z-]+ \| DCS SKIP \|' 5
+    expect_count "L: zero parse warnings for the SKIP section" "$d/l.md" \
+        'parse warnings: boot=0 resume=0' 1
+
+    # --- fixture M (50-02): neither arm has the section (echo-1 pair) ->
+    # --- pinned decision: no comparison block, explicit absent note only ---
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b000=00000001"
+    } > "$dcs_boot"
+    cp "$dcs_boot" "$dcs_resume"
+    run_diff "$dcs_boot" "$dcs_resume" "$d/m.md"
+    expect_count "M: no comparison block for echo-1 pairs" "$d/m.md" \
+        '## DCS ID READ comparison' 0
+    expect_has "M: explicit absent note pinned" "$d/m.md" \
+        'DCS ID READ: section absent on both arms'
 
     rm -rf "$d"
     trap - EXIT
