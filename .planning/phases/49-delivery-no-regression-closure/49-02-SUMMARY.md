@@ -86,6 +86,9 @@ UPSTREAM_HANDOFF addendum documents the corrected mechanism for upstream
 
 ## Deviations from Plan
 
+<!-- planner-discipline-allow: 0x160018 -->
+<!-- planner-discipline-allow: rebind -->
+
 ### Auto-fixed Issues
 
 **1. [Rule 3 - Blocking] Ledger gate was 3/4 at executor start — restored to 4/4**
