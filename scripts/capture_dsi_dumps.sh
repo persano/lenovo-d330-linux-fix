@@ -9,6 +9,10 @@
 #   echo 1  -> node walks the locked display MMIO ranges ONCE into a frozen
 #              kernel-side buffer (values frozen at trigger time; snapshot
 #              semantics, so a slow cat can never leak past the 18 s window)
+#   echo 2  -> unchanged MMIO walk PLUS the phase-50 DCS ID-read section
+#              (# DCS ID READ, five LP-mode ID reads, 50-01 node); the
+#              trigger write here is wrapped in `timeout 15` so a wedged
+#              DSI read can never strand the session (locked decision)
 #   cat     -> emits that frozen buffer
 #
 # Zero register writes, no mode changes: the helper only triggers the node's
@@ -16,13 +20,15 @@
 # snapshot buffer contents; a re-capture replaces the arm's output file).
 #
 # Usage:
-#   capture_dsi_dumps.sh <boot|resume> [outdir]
+#   capture_dsi_dumps.sh <boot|resume|boot2|resume2> [outdir]
 #
 #     <arm>      boot   fresh-boot reference (GOP-handover state, panel shows
 #                       an image; taken BEFORE any suspend and with no
 #                       intervening user modeset per assumption A5)
 #                resume S3-resume failure state (panel confirmed BLACK by the
 #                       user's eyes; trigger must land within 18 s of wake)
+#                boot2  echo-2 capture at the boot arm (MMIO walk + DCS reads)
+#                resume2 echo-2 capture at the resume arm (same, timeout-wrapped)
 #     [outdir]   directory for <arm>_dsi_regs.txt
 #                (default: invoking user's home, i.e. $SUDO_USER, + /d330_dsi_capture)
 #
@@ -35,6 +41,23 @@
 #                                      section's RANGE header when the
 #                                      BSpec machine-hang gate trips
 #   # NAMED OVERLAY                    rows start with NAME, never match ^0x
+#   # DCS ID READ                      phase-50 echo-2 section header, emitted
+#                                      strictly AFTER the NAMED OVERLAY;
+#                                      echo-1 arms (boot/resume) never emit it,
+#                                      so all 47/49 captures stay valid
+#   DCS <tag> ret=<n> avail=<0|1> data=<3 hex bytes>
+#                                      one row per ID read (tags 0x04 / 0xDA /
+#                                      0xDB / 0xDC / GEN00); the leading DCS
+#                                      keeps rows out of the ^0x record regex
+#                                      like NAME does; ret is the raw transfer
+#                                      return value (ALWAYS >= 4 on this host,
+#                                      never trust it alone), avail is the
+#                                      GEN_READ_DATA_AVAIL post-check (bit 29
+#                                      of MIPI_INTR_STAT(A)) that discriminates
+#                                      answered-vs-dead
+#   DCS SKIP <reason>                  emitted instead of any read row when the
+#                                      node skips the reads (PLL off, no DSI
+#                                      device); accepted but loudly warned
 # Expected per-section word counts: 1024 / 4096 / 1024 / 128 / 1024
 # (= 7296 record lines when the DSI block is read; 6272 with the deployed
 #  30f077c PLL-off skip of the DSI block alone; 2176 once the post-review
@@ -48,6 +71,12 @@
 #   - missing DSI section, no skip    -> exit 1 (corrupted section header)
 #   - per-section count mismatch      -> loud warning, capture still delivered
 #   - < 5000 record lines WITH the PLL-off skip marker -> loud warning only
+#   - echo-2 arms only: the trigger write is wrapped in `timeout 15`
+#     (failure/timeout -> exit 1 with the captured stderr; the session can
+#     never wedge on a hanging DSI read) and the dump MUST carry the
+#     `# DCS ID READ` section with five DCS rows (or an explicit DCS SKIP
+#     annotation, accepted as a loud warning) -> a missing section or a
+#     short section exits non-zero like a truncated dump
 #
 # v9.0 binding rules honored by construction: the helper never triggers
 # suspend/resume and never needs eyes; the user runs every session step and
@@ -80,12 +109,16 @@ log_err()  { echo "[ERROR] $*" >&2; }
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") <boot|resume> [outdir]
+Usage: $(basename "$0") <boot|resume|boot2|resume2> [outdir]
 
 Trigger the CI-built D330 DSI MMIO snapshot node and capture one arm's dump.
 
-  arm       'boot'   fresh-boot reference (panel shows the desktop image)
-            'resume' S3-resume failure state (panel BLACK, within 18 s of wake)
+  arm       'boot'    fresh-boot reference (panel shows the desktop image)
+            'resume'  S3-resume failure state (panel BLACK, within 18 s of wake)
+            'boot2'   echo-2 capture at the boot arm (MMIO walk + DCS ID reads)
+            'resume2' echo-2 capture at the resume arm (same; the trigger is
+                      wrapped in 'timeout 15' so a wedged read cannot strand
+                      the session)
   outdir    output directory (default: \$SUDO_USER's home + /d330_dsi_capture)
 
 Run as root (sudo). The node performs a read-only register walk; re-running
@@ -96,8 +129,12 @@ EOF
 [ $# -ge 1 ] && [ $# -le 2 ] || { usage; exit 2; }
 ARM="$1"
 case "$ARM" in
-    boot|resume) ;;
-    *) log_err "arm must be 'boot' or 'resume' (got '$ARM')"; usage; exit 2 ;;
+    boot|resume|boot2|resume2) ;;
+    *) log_err "arm must be 'boot', 'resume', 'boot2' or 'resume2' (got '$ARM')"; usage; exit 2 ;;
+esac
+case "$ARM" in
+    boot2|resume2) ECHO=2 ;;
+    *)             ECHO=1 ;;
 esac
 
 [ "$(id -u)" -eq 0 ] || {
@@ -154,7 +191,17 @@ T0="$(date +%s)"
 
 BEFORE=$(dmesg 2>/dev/null | grep -c 'D330DSIREG' || true)
 ERRFILE="$(mktemp)"
-if ! echo 1 > "$NODE" 2>"$ERRFILE"; then
+if [ "$ECHO" -eq 2 ]; then
+    # Echo-2 arms: timeout-wrapped trigger (locked decision, T-50-04) - a
+    # hanging DSI ID read is bounded in userspace and can never wedge the
+    # session; the kernel side is bounded too (50-01) - belt and braces.
+    if ! timeout 15 sh -c "echo 2 > '$NODE'" 2>"$ERRFILE"; then
+        log_err "echo-2 trigger failed or timed out after 15 s: $(cat "$ERRFILE")"
+        log_err "(EBUSY would mean another trigger is in flight; a timeout means the DSI read path wedged - do NOT retry blindly, capture the dmesg first)"
+        rm -f "$ERRFILE"
+        exit 1
+    fi
+elif ! echo 1 > "$NODE" 2>"$ERRFILE"; then
     log_err "trigger failed: $(cat "$ERRFILE")"
     log_err "(EBUSY would mean another trigger is in flight; retry in a moment)"
     rm -f "$ERRFILE"
@@ -256,6 +303,29 @@ fi
 if [ -n "$MISSING_DSI" ] && [ "$SKIPCOUNT" -eq 0 ]; then
     log_err "DSI section (0x$DSI_LO) missing WITHOUT the PLL-off skip marker - corrupted section header, dump invalid"
     rc=1
+fi
+
+# ---- (g2) echo-2 DCS ID READ section validation --------------------------------
+# The 50-01 node guarantees, in an echo-2 dump: the '# DCS ID READ' header
+# and either five DCS-prefixed read rows or an explicit 'DCS SKIP <reason>'
+# annotation. A missing/short section is format drift - fail loudly, like a
+# truncated dump, BEFORE any kit registration. Echo-1 arms never emit the
+# section and are not checked here.
+if [ "$ECHO" -eq 2 ]; then
+    DCS_HEADER=$(grep -c '^# DCS ID READ$' "$OUT" || true)
+    DCS_SKIPROWS=$(grep -c '^DCS SKIP ' "$OUT" || true)
+    DCS_ROWS=$(grep -cE '^DCS (0x04|0xDA|0xDB|0xDC|GEN00) ret=' "$OUT" || true)
+    if [ "$DCS_HEADER" -eq 0 ]; then
+        log_err "'# DCS ID READ' section MISSING from an echo-2 dump - format drift vs the 50-01 node (dump invalid, caught BEFORE registration)"
+        rc=1
+    elif [ "$DCS_SKIPROWS" -gt 0 ]; then
+        log_warn "DCS SKIP annotation present ($DCS_SKIPROWS row(s)) - the node skipped the ID reads; accepted, but register WHY in the session log before trusting the arm"
+    elif [ "$DCS_ROWS" -ne 5 ]; then
+        log_err "DCS ID READ section present but $DCS_ROWS read rows, expected 5 (tags 0x04/0xDA/0xDB/0xDC/GEN00) - short section, dump invalid"
+        rc=1
+    else
+        log_ok "DCS ID READ section validated: header + 5 read rows"
+    fi
 fi
 
 if [ "$rc" -eq 0 ]; then
