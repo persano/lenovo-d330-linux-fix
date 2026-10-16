@@ -80,3 +80,45 @@ machine/symptom/evidence sections, `dmesg` from a failing resume,
 `/sys/kernel/debug/dri/*/i915_display_info` boot + post-resume pair, and the ftrace
 resume trace. Attach the kit's `broken_displayinfo.txt`/`boot_displayinfo.txt`/diff.
 Remove any personal info before submitting.
+
+## v9.0 addendum (2026-10-16): the fix is unreachable from the kernel — corrected closure
+
+**OPTIONAL documentation — filed at the user's convenience; blocks nothing
+(FIX-03 heritage). Nothing upstream waits on this filing.**
+
+Phase-48's DSI register comparison (§5.1) found the entire DSI block
+bit-identical (1024/1024 registers; whole-file delta = 5 GT
+monotonic-counter/residency rows) between the post-reload state and the
+broken resume state. Correction (phase 49): the post-reload arm was never
+an image state — the reload (unbind/bind) leaves a backlit black panel
+(user-verified; the inherited premise was never eyes-on-checked), so
+§5.1's "no host MMIO state discriminates working from broken" compared
+black vs black and is WITHDRAWN (§5.2). The corrected, machine-evidenced
+contrast (2 independent user-triggered cycles; late-black arms verified
+black at 30 s): the broken state HOLDS the non-boot operational register
+set X=Z (0x6b010=0000b8ea, 0x6b044=0000001e, 0x6b080/0x6b098=0a051003,
+0x6b088=0014000c, timeout-marked 0x6b004) while the boot/image state
+holds X=Y — the host-visible contrast DOES discriminate. Every kernel
+path tested lands at X=Z: the three DMI-gated (82H0) v9.0 resume variants
+(ledger rows 30-32) and the full PCI re-probe (which likewise leaves the
+panel backlit black). Forcing X=Y values alone is insufficient (ledger
+row 18). Only the GOP's firmware boot init produces X=Y plus the direct
+TCON programming the kernel cannot see or replay (GOP_DSI_RE_FINDINGS;
+the DPHY 0x162000+ area reads all-ones on every arm). Re-confirmed across
+3 fresh user-triggered close-out cycles on the shipped it3 kernel
+(verdicts verbatim: "Black but lit" each cycle). Recovery = reboot only —
+no kernel path, module reload, or compositor restart restores the image.
+
+Pointers (corrected records): docs/research/DSI_MMIO_DIFF.md §5.2 (the
+corrected contrast; §5.1 withdrawn) · docs/research/NO_CLEAN_FIX_PROOF.md
+§7.1 (corrected closure) and §7 (original) ·
+docs/research/RESUME_FIX_LEDGER.md rows 30-32 (the v9.0 iteration
+disproofs), row 29 (manual-recovery-only rule), row 18 (value forcing
+insufficient).
+
+Next instrument (DSI_MMIO_DIFF §6; NO_CLEAN_FIX_PROOF §7.1): panel-side
+probe — a logic analyzer on the panel flex (DSI lanes + reset + power
+rails) during GOP boot vs kernel re-probe, to see what the GOP does that
+the kernel cannot; alternatives: GOP re-execution replay, or the TCON
+datasheet once the panel controller is identified (block-55 VBT table
+still undecoded).

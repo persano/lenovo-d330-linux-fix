@@ -1,0 +1,71 @@
+# DSI MMIO dump diff
+
+# parse summary
+records boot_dsi_regs.txt=7296 warnings=0
+records broken_dsi_regs.txt=7296 warnings=0
+
+| offset | boot | resume | interpretation | verdict | citation |
+|---|---|---|---|---|---|
+| 0x6b004 | 00080000 | 40280000 | interrupt status (write-1-to-clear), volatile | excluded-volatile | boot_dsi_regs.txt:3; broken_dsi_regs.txt:3 |
+| 0x6b010 | 003fffff | 0000b8ea | - | differs | boot_dsi_regs.txt:6; broken_dsi_regs.txt:6 |
+| 0x6b044 | 0000001d | 0000001e | - | differs | boot_dsi_regs.txt:19; broken_dsi_regs.txt:19 |
+| 0x6b080 | 09051003 | 0a051003 | - | differs | boot_dsi_regs.txt:34; broken_dsi_regs.txt:34 |
+| 0x6b088 | 0022000f | 0014000c | - | differs | boot_dsi_regs.txt:36; broken_dsi_regs.txt:36 |
+| 0x6b094 | 00000001 | 00000000 | interrupt-enable mask, config state; prior differing row 00000001→00000000 (DISPLAY_RESUME_CCS_MODIFIER.md:82), de-prioritized per ledger rows 3/18 (prior forcing result disproven) | excluded-volatile | boot_dsi_regs.txt:39; broken_dsi_regs.txt:39 |
+| 0x6b098 | 09051003 | 0a051003 | - | differs | boot_dsi_regs.txt:40; broken_dsi_regs.txt:40 |
+| 0x138070 | 00000679 | 00000003 | monotonic counters, not config | excluded-volatile | boot_dsi_regs.txt:6306; broken_dsi_regs.txt:6306 |
+| 0x138074 | 00008d58 | 00000075 | monotonic counters, not config | excluded-volatile | boot_dsi_regs.txt:6307; broken_dsi_regs.txt:6307 |
+| 0x138108 GEN6_GT_GFX_RC6 | e4f714ee | 002c3e00 | - | differs | boot_dsi_regs.txt:6344; broken_dsi_regs.txt:6344 |
+| 0x13816c GEN9_GT_PM_CONFIG | 081c0804 | 0b1c0804 | - | differs | boot_dsi_regs.txt:6369; broken_dsi_regs.txt:6369 |
+| 0x13819c | 00001a25 | 0000025d | - | differs | boot_dsi_regs.txt:6381; broken_dsi_regs.txt:6381 |
+| 0x160018 | 00000115 | 00000001 | - | differs | boot_dsi_regs.txt:1033; broken_dsi_regs.txt:1033 |
+| 0x160084 | 000003fc | 00000000 | - | differs | boot_dsi_regs.txt:1060; broken_dsi_regs.txt:1060 |
+
+## summary
+- identical 0x138000-0x139000: 1019 register(s) matching
+- identical 0x160000-0x164000: 4094 register(s) matching
+- identical 0x46000-0x47000: 1024 register(s) matching
+- identical 0x6b000-0x6c000: 1017 register(s) matching
+- identical 0xc7200-0xc7400: 128 register(s) matching
+- excluded-volatile rows: 4
+- state rows: 0
+- parse warnings: boot=0 resume=0
+<!-- 47-04 Task 1 annex: appended to scripts/dsi_mmio_diff.sh output (same file, one canonical artifact).
+     Classification source: docs/research/DISPLAY_RESUME_CCS_MODIFIER.md:69-99 (prior 21-row cold-vs-resume table).
+     Name source: grep of santiago-D330:~/d330-kernel/linux-7.0.0 (linux 7.0.0 tree, this session).
+     Session-1 contrast pair: boot_dsi_regs_session1.txt / resume_dsi_regs_session1.txt (working resume;
+     panel image afterward, at-wake verdict missed by the user - recorded as such, 47-03-SUMMARY.md). -->
+
+## reconciliation (47-04: classification of every differing offset against the prior 21-row table)
+
+| offset | class | basis |
+|---|---|---|
+| 0x6b004 | reconfirm-prior | prior row INTR_STAT (cold 00000000 / resume 40200000); here bits 30+22 (LP_RX_TIMEOUT) set on the broken arm only; bit19 (00080000) set on all four arms; write-1-to-clear status, excluded-volatile |
+| 0x6b010 | reconfirm-prior | values match prior row exactly (003fffff → 0000b8ea) |
+| 0x6b044 | reconfirm-prior | values match prior row exactly (0000001d → 0000001e) |
+| 0x6b080 | reconfirm-prior | values match prior row exactly (09051003 → 0a051003, bit24 set on broken arm) |
+| 0x6b088 | reconfirm-prior | values match prior row exactly (0022000f → 0014000c) |
+| 0x6b094 | reconfirm-prior | values match prior row exactly (00000001 → 00000000); interrupt-enable mask, config state, excluded-volatile |
+| 0x6b098 | reconfirm-prior | prior table groups it with 0x6b080 (same 09051003 → 0a051003 values) |
+| 0x138070 | reconfirm-prior | prior counters row (0x138070/0x138074 "display power / DC"); monotonic counters, excluded-volatile |
+| 0x138074 | reconfirm-prior | prior counters row; monotonic counters, excluded-volatile |
+| 0x138108 | new-vs-table; tree-named volatile counter | GEN6_GT_GFX_RC6 (RC6 residency, gt/intel_gt_regs.h:1544); differs across every pair (s1 boot 126ed39d → s1 resume 1bfab7ee; s2 boot e4f714ee → broken 002c3e00) → resume-volatile, not a bug signature |
+| 0x13816c | new; bug-associated | GEN9_GT_PM_CONFIG (gt/uc/intel_guc_reg.h:77); bits 24/25 set ONLY on the broken arm (s1 pair identical 081c0804; s2 broken 0b1c0804); bit semantics beyond bit0 not defined in the tree |
+| 0x13819c | new-vs-table; resume-volatile | unnamed in tree; differs across every pair (s1 00003f95 → 000045e7; s2 00001a25 → 0000025d) → not a bug signature |
+| 0x160018 | reconfirm-prior | values match prior row exactly (00000115 → 00000001); unnamed in the 7.0.0 tree, cited by address |
+| 0x160084 | new; not a reliable bug signature | unnamed in tree; broken arm clears it (000003fc → 00000000) BUT the session-1 boot arm also read 00000000 with the panel lit (boot-to-boot variance) |
+
+## prior-table rows absent from this diff
+
+| prior row | class | note |
+|---|---|---|
+| 0x46000 (prior cold 00300278 / resume 00b0013b) | not-reproduced | in-scope: 1024/1024 identical in this pair; ALL FOUR dump arms read 0080013b (a third value) — the prior clock-control difference did not appear on the dump-kernel pair |
+| 0x70040-0x7004c, 0x7019c, 0x701ac | out-of-scope | pipe/plane surface block is outside the locked 5-range scope of the dump node |
+| 0x45264/0x4528c/0x45300/0x45308 | out-of-scope | RC6/watermark counters below 0x46000, outside the locked scope |
+
+## diff-integrity notes (machine-computed, this artifact)
+
+- PHY range 0x160000-0x164000: 2960/4096 words read 0xffffffff on ALL FOUR arms; the all-ones positions are byte-identical across arms (sub-areas: 0x160000-0x160200 = 16/128, 0x160200-0x162000 = 896/1920, 0x162000-0x163000 = 1024/1024, 0x163000-0x164000 = 1024/1024) — the DPHY port/calibration area (0x162000-0x164000) is unreadable on both arms even through the in-kernel read path, and its all-ones state is a constant, not a diff.
+- DSI block 0x6b000-0x6c000 readable on both arms (no DSI-PLL gate trip); 1017/1024 identical.
+- Determinism: three consecutive script runs byte-identical.
+- Parse: 7296 records per arm, 0 warnings, 0 state rows.
