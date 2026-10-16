@@ -114,10 +114,19 @@ jobs:
           # patches/d330_dsi_dump.patch is strictly-additive phase-47 instrumentation
           # (47-01): one new debugfs snapshot node + 2 wiring lines. It touches no
           # DSI enable/disable path and writes no registers, so it cannot change
-          # what the boot-vs-resume arms measure.
+          # what the boot-vs-resume arms measure. Phase 50 (50-01) extends the same
+          # node in place: the write side gains a value trigger (echo 2 = the
+          # unchanged MMIO walk + five LP-mode DCS/generic ID reads appended as an
+          # annotated "# DCS ID READ" section strictly after the named overlay).
+          # Also read-only by contract — read transactions only, zero register
+          # writes — so echo 1 output stays byte-compatible with every 47/49
+          # capture, and the two new grep anchors below prove the echo-2 code
+          # landed in the CI tree.
           git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_dump.patch"
           grep -R 'i915_dsi_regs' drivers/gpu/drm/i915/display/
           grep -R 'bxt_dsi_pll_is_enabled' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
+          grep -R 'DCS ID READ' drivers/gpu/drm/i915/display/
+          grep -R 'mipi_dsi_dcs_read' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
           # patches/d330_dsi_panel_power_cycle.patch is the phase-48
           # iteration-2 fix (48-01): DMI-gated to 82H0, runs the reload
           # path's panel power teardown (assert reset, rails off, a
