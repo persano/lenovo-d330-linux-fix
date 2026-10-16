@@ -40,6 +40,9 @@ Consequence: phase 48's §5.1 "falsification" compared two BLACK states
 
 ## The Corrected Closure (machine-evidenced, 2 independent cycles)
 
+<!-- planner-discipline-allow: 0x160018 -->
+<!-- planner-discipline-allow: rebind -->
+
 1. **X=Y (boot, image showing) vs X=Z (broken) discriminates.** Late-black
    (30 s, verified black both cycles) HOLDS X=Z: 0x6b010=0000b8ea,
    0x6b044=0000001e, 0x6b080/0x6b098=0a051003, 0x6b088=0014000c,
