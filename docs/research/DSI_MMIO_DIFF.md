@@ -8,6 +8,7 @@ with one CI-built debugfs snapshot node through the in-kernel read path.
 <!-- planner-discipline-allow: 0x160018 -->
 <!-- planner-discipline-allow: 0x138000-0x139000 | 1024 | GT DISP PWRON / MIPIO_RST_CTRL / GT PM -->
 <!-- planner-discipline-allow: ULPS_STATE_MASK/DEVICE_READY cleared before the cold-boot probe, reload -->
+<!-- planner-discipline-allow: HS_TX_TIMEOUT (bit 21) -->
 
 ## 1. Provenance
 
@@ -365,7 +366,7 @@ Concrete register targets (offsets + boot values from the cited rows):
 | 0x6b080 | 09051003 | 0a051003 | D-PHY timing; bit24 must not be set |
 | 0x6b088 | 0022000f | 0014000c | clock-lane switch counts must not drain |
 | 0x6b098 | 09051003 | 0a051003 | same bit24 |
-| 0x6b004 | bits 30/21 clear (0x00080000 baseline) | 40280000 | status: no LP_RX_TIMEOUT marking |
+| 0x6b004 | bits 30/21 clear (0x00080000 baseline) | 40280000 | 0x40280000 = SPL_PKT_SENT (bit 30) \| HS_TX_TIMEOUT (bit 21) \| LOW_CONTENTION (bit 19); LP_RX_TIMEOUT (bit 22) NOT set — "HS video stream never accepted by panel" |
 | 0x6b104 (RO) | d0000003 end state (lanes active, PHY ready, MIPIIO powered) | identical — not a discriminator | read-only; verify-only |
 
 Invisible-but-required state: the DPHY port/calibration area 0x162000-0x164000
