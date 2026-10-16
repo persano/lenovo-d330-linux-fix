@@ -9,6 +9,7 @@ with one CI-built debugfs snapshot node through the in-kernel read path.
 <!-- planner-discipline-allow: 0x138000-0x139000 | 1024 | GT DISP PWRON / MIPIO_RST_CTRL / GT PM -->
 <!-- planner-discipline-allow: ULPS_STATE_MASK/DEVICE_READY cleared before the cold-boot probe, reload -->
 <!-- planner-discipline-allow: HS_TX_TIMEOUT (bit 21) -->
+<!-- planner-discipline-allow: MIPI_HS_TX_TIMEOUT(A) -->
 
 ## 1. Provenance
 
@@ -361,9 +362,9 @@ Concrete register targets (offsets + boot values from the cited rows):
 | target | boot value (the state to reach) | broken-state value | role |
 |---|---|---|---|
 | 0x160018 | 00000115 | 00000001 | PHY-area control; the claim's anchor (bits 8/4/2) |
-| 0x6b010 | 003fffff | 0000b8ea | LP RX timeout must be left at the boot value, not a fired real time |
+| 0x6b010 | 003fffff | 0000b8ea | MIPI_HS_TX_TIMEOUT(A): OPEN anomaly — 0xb8ea matches neither the kernel-computed value (~0xEF8AA) nor the GOP/VBT 0x3fffff; a write/read-back probe would settle it, but that is a register WRITE, which violates this read-only instrument's contract — own gated change if ever needed |
 | 0x6b044 | 0000001d | 0000001e | switch count |
-| 0x6b080 | 09051003 | 0a051003 | D-PHY timing; bit24 must not be set |
+| 0x6b080 | 09051003 | 0a051003 | D-PHY timing; bit24 must not be set — OPEN anomaly: 0a051003 matches neither the VBT nor the kernel values; flagged open, no action this phase (read-only instrument) |
 | 0x6b088 | 0022000f | 0014000c | clock-lane switch counts must not drain |
 | 0x6b098 | 09051003 | 0a051003 | same bit24 |
 | 0x6b004 | bits 30/21 clear (0x00080000 baseline) | 40280000 | 0x40280000 = SPL_PKT_SENT (bit 30) \| HS_TX_TIMEOUT (bit 21) \| LOW_CONTENTION (bit 19); LP_RX_TIMEOUT (bit 22) NOT set — "HS video stream never accepted by panel" |
