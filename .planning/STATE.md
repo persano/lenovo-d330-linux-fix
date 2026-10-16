@@ -1,45 +1,40 @@
 ---
 gsd_state_version: 1.0
-milestone: v9.0
-milestone_name: Actually Fix the D330 Resume Black Screen
-status: Awaiting next milestone
-stopped_at: Phase 49 complete (milestone v9.0 ready for lifecycle)
-last_updated: "2026-10-16T04:37:01.901Z"
+milestone: v10.0
+milestone_name: Crack the Panel - TCON Identification and the GOP-Init Hunt
+status: roadmap_created
+last_updated: "2026-10-16T15:44:31.654Z"
 last_activity: 2026-10-16
-last_activity_desc: Milestone v9.0 completed and archived
-state_head: 2e331f9fe8b48102e997ee72a5475594f222fd86
 progress:
-  total_phases: 3
+  total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
   percent: 0
-current_phase: 49
 ---
 
 # STATE: Project Execution State
 
-- **Active Milestone**: Milestone 9 (v9.0) — Actually Fix the D330 Resume Black Screen
-- **Active Phase**: — (roadmap created; Phases 43-46 defined, awaiting `/gsd-plan-phase 43`)
-- **Status**: Roadmap created. 4 phases (43-46), 19/19 v1 requirements mapped, 0 planned. Start with Phase 43 (Guardrails, Ledger & Safe Recovery Baseline).
+- **Active Milestone**: Milestone 10 (v10.0) — Crack the Panel: TCON Identification and the GOP-Init Hunt
+- **Active Phase**: — (roadmap created; Phases 50-53 defined, awaiting `/gsd-plan-phase 50`)
+- **Status**: Roadmap created. 4 phases (50-53), 17 requirements mapped (TCON/KEEP/BLK/HW), 0 planned. Start with Phase 50 (DCS ID-Read Instrument / TCON Identification).
 - **Blockers**:
   * [PENDING DEPLOY — inherited from v7.0] 12 documented VERIFICATION overrides (11 `uat_gaps` + 1 `deferred_items` resolved in place) for hardware-in-the-loop, daemon, package-build and live-session criteria (Phases 32-42). Machine-checked equivalents are green; re-run each at deployment sign-off with `/gsd-verify-work <N>`. Detail in `.planning/milestones/v7.0-ROADMAP.md` and `.planning/v7.0-MILESTONE-AUDIT.md`.
-  * [PENDING — v8.0 Phase 43] Golden `i915.ko` backup, live USB and VBT/GOP dump are NOT yet staged; the packaged seamless recovery is not yet shipped by the packagers. These are Phase 43 deliverables and must land before any kernel experiment.
-- **Next Immediate Action**: `/gsd-plan-phase 43`
+- **Next Immediate Action**: `/gsd-plan-phase 50`
 
 ## Project Reference
 
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** Phase 49 — Delivery, No-Regression & Closure
+**Current focus:** Phase 50 — DCS ID-Read Instrument / TCON Identification (software-only)
 
 ## Current Position
 
-Phase: Milestone v9.0 complete
+Phase: Not started (roadmap created; phase 50 next)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-10-16 — Milestone v9.0 completed and archived
+Status: Roadmap created
+Last activity: 2026-10-16 — Milestone v10.0 started; v9.0 shipped (honest closure: fix unreachable from kernel, recovery = reboot)
 
 ## Performance Metrics
 

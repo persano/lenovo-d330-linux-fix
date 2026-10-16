@@ -1,28 +1,22 @@
 # Milestones
 
-## v9.0 v9.0 (Shipped: 2026-10-16)
+## v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt (In Progress)
 
-**Phases completed:** 0 phases, 0 plans, 0 tasks
+**Phases:** 50-53 (DCS ID-read instrument + TCON identification; keep-panel-powered fix ladder E1-E3; blackguard self-healing; hardware logic-analyzer probe). Continues the hunt after v9.0's honest closure. Self-sufficient: no upstream dependency.
 
-**Key accomplishments:**
-
-- (none recorded)
-
----
-
-## v9.0 v9.0 (Shipped: 2026-10-16)
+## v9.0 Actually Fix the D330 Resume Black Screen (Shipped: 2026-10-16 — honest closure; BUG NOT FIXED, continues in v10.0)
 
 **Phases completed:** 3 phases, 10 plans, 4 tasks
 
 **Key accomplishments:**
 
 - Dump-pair diff tooling (`dsi_mmio_diff.sh`) that joins boot/resume captures into file:line-cited markdown rows with per-range exclusion and all-ones/PLL-off state classification, plus the 7-case static evidence guard (`test_dsi_mmio_evidence.sh`) proven green via fixtures and red-until-evidence in plain mode.
+- DSI MMIO truth established: working boot holds operational set X=Y; every broken state (wake, late-black ×2 cycles, rebind) holds X=Z indefinitely — the contrast discriminates.
+- 3 DMI-gated fix candidates (fresh-device-state, panel power cycle, MIPIO reset) CI-built, deployed behind sha-verified rollback, each falsified with machine evidence (ledger rows 30-32).
+- Premise correction: the unbind/bind reload workaround NEVER restores an image (leaves lit-black); recovery = reboot only; the v9.0-premise "falsification" was black-vs-black and was formally withdrawn (§5.2).
+- 65-artifact re-kit (9 cycles, 9 capture arms) shipped + upstream handoff addendum; fix proven unreachable from every kernel path tested.
 
 ---
-
-## v9.0 Actually Fix the D330 Resume Black Screen (In Progress)
-
-**Phases:** 47-49 (DSI MMIO truth; clean DMI-gated fix; delivery + closure). Carries the unmet v8.0 promise: make the D330 resume show an image. Self-sufficient: no upstream dependency.
 
 ## v8.0 v8.0 (Closed: 2026-10-13 - RE + honest closure; BUG NOT FIXED, continues in v9.0)
 
