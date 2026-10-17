@@ -23,7 +23,7 @@
 # snapshot buffer contents; a re-capture replaces the arm's output file).
 #
 # Usage:
-#   capture_dsi_dumps.sh <boot|resume|boot2|resume2> [outdir]
+#   capture_dsi_dumps.sh <boot|resume|boot2|resume2|resumefast|resumelate> [outdir]
 #
 #     <arm>      boot   fresh-boot reference (GOP-handover state, panel shows
 #                       an image; taken BEFORE any suspend and with no
@@ -32,6 +32,17 @@
 #                       user's eyes; trigger must land within 18 s of wake)
 #                boot2  echo-2 capture at the boot arm (MMIO walk + DCS reads)
 #                resume2 echo-2 capture at the resume arm (same, timeout-wrapped)
+#                resumefast  phase-51 rung dump #1: ~0-1 s post-wake, BEFORE
+#                       KWin's post-resume commit (expects DC9 reset defaults
+#                       on a keep-hot suspend; echo-1 MMIO walk)
+#                resumelate phase-51 rung dump #2: ~4 s post-wake, AFTER
+#                       KWin's commit re-enables the panel - the X=Y/X=Z
+#                       discriminator dump (echo-1 MMIO walk)
+#                       Both rung arms are triggered manually by the runbook
+#                       (RESUME_CAPTURE_PROTOCOL.md rung-session block) inside
+#                       ONE >=18 s wake window; they differ only in WHEN the
+#                       operator invokes them, so the script stays synchronous
+#                       and timeout-wrapped exactly like the other arms.
 #     [outdir]   directory for <arm>_dsi_regs.txt
 #                (default: invoking user's home, i.e. $SUDO_USER, + /d330_dsi_capture)
 #
@@ -46,7 +57,8 @@
 #   # NAMED OVERLAY                    rows start with NAME, never match ^0x
 #   # DCS ID READ                      phase-50 echo-2 section header, emitted
 #                                      strictly AFTER the NAMED OVERLAY;
-#                                      echo-1 arms (boot/resume) never emit it,
+#                                      echo-1 arms (boot/resume/resumefast/
+#                                      resumelate) never emit it,
 #                                      so all 47/49 captures stay valid
 #   DCS <tag> ret=<n> avail=<0|1> data=<3 hex bytes>
 #                                      one row per ID read (tags 0x04 / 0xDA /
@@ -114,7 +126,7 @@ log_err()  { echo "[ERROR] $*" >&2; }
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") <boot|resume|boot2|resume2> [outdir]
+Usage: $(basename "$0") <boot|resume|boot2|resume2|resumefast|resumelate> [outdir]
 
 Trigger the CI-built D330 DSI MMIO snapshot node and capture one arm's dump.
 
@@ -125,6 +137,12 @@ Trigger the CI-built D330 DSI MMIO snapshot node and capture one arm's dump.
                       wrapped in 'timeout -k 5 15', which bounds
                       interruptible hangs - a D-state kernel sleep stays
                       unbounded from userspace)
+            'resumefast'  rung dump #1: ~0-1 s post-wake, pre-KWin-commit
+                      (echo-1; invoked manually inside the >=18 s wake window)
+            'resumelate'  rung dump #2: ~4 s post-wake, post-KWin-commit -
+                      the X=Y/X=Z discriminator (echo-1; same wake window;
+                      the trigger is synchronous, so back-to-back invocation
+                      is safe; EBUSY means another trigger is in flight)
   outdir    output directory (default: \$SUDO_USER's home + /d330_dsi_capture)
 
 Run as root (sudo). The node performs a read-only register walk; re-running
@@ -135,8 +153,8 @@ EOF
 [ $# -ge 1 ] && [ $# -le 2 ] || { usage; exit 2; }
 ARM="$1"
 case "$ARM" in
-    boot|resume|boot2|resume2) ;;
-    *) log_err "arm must be 'boot', 'resume', 'boot2' or 'resume2' (got '$ARM')"; usage; exit 2 ;;
+    boot|resume|boot2|resume2|resumefast|resumelate) ;;
+    *) log_err "arm must be 'boot', 'resume', 'boot2', 'resume2', 'resumefast' or 'resumelate' (got '$ARM')"; usage; exit 2 ;;
 esac
 case "$ARM" in
     boot2|resume2) ECHO=2 ;;
