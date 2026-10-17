@@ -343,7 +343,15 @@ if E1 works.
      quantified once; on failure ledger rows appended + honest-closure doc updated — never
      a fake fix
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] `51-01-PLAN.md` — E1 keep-hot kernel patch (self-contained DMI helper, suspend-discriminator flags, gated skip sites + markers) + CI apply-stack cleanup + build
+- [ ] `51-02-PLAN.md` — Rung-session capture tooling (~0-1 s / ~4 s resume arms, X=Y operational-set check + fixtures, runbook block)
+- [ ] `51-03-PLAN.md` — E1 device session (deploy behind verified rollback, one user-authorized suspend, two dumps + marker evidence, fail-fast verdict)
+- [ ] `51-04-PLAN.md` — E2 warm-resume enable: flag-B pre_enable skips, dedicated CI candidate, one device session (conditional — runs when the rails are alive)
+- [ ] `51-05-PLAN.md` — Lazy E3 rail-survival discriminator (zero-expectation pre-INIT_OTP DCS read + GPIO 144/160 rail evidence; built only on E1 falsification; routes to E2 or the Phase 53 buy-gate)
+- [ ] `51-06-PLAN.md` — Honest-verdict closure: ledger integrity + NO_CLEAN_FIX_PROOF.md v10.0 section on full-ladder falsification, success record otherwise (KEEP-05)
 
 ### Phase 52: Black-Resume Self-Healing (d330-blackguard)
 
