@@ -42,6 +42,7 @@ Distinguishing 1 vs 2 requires driving LP/HS from outside the kernel — Phase 5
 - **No panel-TCON sideband on any bus:** during the echo-2 instrument run (boot arm) there were **zero i2c-core transfers**; during wake-to-capture (resume arm) the only traffic was the Goodix touchscreen (i2c-1 @0x14) and one i2c-3 write. Nothing addresses a display controller.
 - GPIO: `line 23: unnamed output consumer=reset` — a candidate panel reset line, consistent with no software-visible sideband.
 - `i2c_dw_handle_tx_abort: lost arbitration` storm on i2c_designware.4 during the sweep — recorded, not investigated (out of phase scope).
+- **Pre-kernel GOP blind spot:** every I2C claim above is scoped to the kernel-era time windows the tracepoints covered; any bus the GOP touched during firmware init (before the kernel armed its tracepoints) is invisible here — closing that gap needs Phase 53's wire-level capture.
 
 ## Artifacts
 
