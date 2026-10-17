@@ -181,7 +181,7 @@ user-gated.
 
 **Phases:**
 
-- [ ] **Phase 50: TCON Identification — DCS ID-Read Instrument (Software-Only)** - Extend `i915_dsi_regs` with an `echo 2` DCS read mode, capture boot (X=Y) vs black-resume (X=Z) ID reads, rule the I2C sideband in/out, correct the DSI_MMIO_DIFF §6 label (TCON-01, TCON-02, TCON-03, TCON-04)
+- [x] **Phase 50: TCON Identification — DCS ID-Read Instrument (Software-Only)** - Extend `i915_dsi_regs` with an `echo 2` DCS read mode, capture boot (X=Y) vs black-resume (X=Z) ID reads, rule the I2C sideband in/out, correct the DSI_MMIO_DIFF §6 label (TCON-01, TCON-02, TCON-03, TCON-04) (completed 2026-10-17)
 - [ ] **Phase 51: Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified)** - Hold the panel rails/TCON alive through S3 so resume never needs the unreachable re-init — the actual fix attempt, DMI-gated `82H0`, one candidate per CI iteration (KEEP-01, KEEP-02, KEEP-03, KEEP-04, KEEP-05)
 - [ ] **Phase 52: Black-Resume Self-Healing (d330-blackguard)** - Hotkey → beeps → countdown → reboot safety net + stand down the legacy display-resume hook + tests + one rtcwake on-device validation (BLK-01, BLK-02, BLK-03, BLK-04)
 - [ ] **Phase 53: Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B)** - KingstVIS MIPI-DSI LP demo-mode buy-gate, FPC teardown + empirical pin ID, capture A (boot GOP LP DCS) vs B (kernel re-probe) + PMIC I2C bus 6 rails (HW-01, HW-02, HW-03, HW-04)
@@ -256,7 +256,7 @@ device session for the black-resume arm).
   4. DSI_MMIO_DIFF §6's 0x6b004 row carries the bit-accurate decode (SPL_PKT_SENT |
      HS_TX_TIMEOUT | LOW_CONTENTION; bit 22 not set) and the ledger gate stays green
 
-**Plans**: 5/5 plans executed
+**Plans**: 5/5 plans complete
 - [x] 50-01-PLAN.md
 - [x] 50-02-PLAN.md
 - [x] 50-03-PLAN.md
@@ -495,7 +495,7 @@ capture sessions, user-authorized); the purchase itself is user-gated.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 5/5 | In Progress | - |
+| 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 5/5 | Complete    | 2026-10-17 |
 | 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 0/0 | Not started | - |
 | 52. Black-Resume Self-Healing (d330-blackguard) | 0/0 | Not started | - |
 | 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/0 | Not started | - |

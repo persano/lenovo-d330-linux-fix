@@ -148,10 +148,10 @@ disproven lever; a falsified candidate with machine evidence is an acceptable ou
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| TCON-01 | 50 | Pending |
-| TCON-02 | 50 | Pending |
-| TCON-03 | 50 | Pending |
-| TCON-04 | 50 | Pending |
+| TCON-01 | 50 | Complete |
+| TCON-02 | 50 | Complete |
+| TCON-03 | 50 | Complete |
+| TCON-04 | 50 | Complete |
 | KEEP-01 | 51 | Pending |
 | KEEP-02 | 51 | Pending |
 | KEEP-03 | 51 | Pending |
