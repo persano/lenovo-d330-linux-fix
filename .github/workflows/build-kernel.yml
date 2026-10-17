@@ -148,6 +148,20 @@ jobs:
           grep -R 'panel_keep_hot' drivers/gpu/drm/i915/display/
           grep -R 'skip DISPLAY_OFF/ASSERT_RESET/POWER_OFF' drivers/gpu/drm/i915/display/vlv_dsi.c
 
+          # patches/d330_dsi_e3_rail_probe.patch is the phase-51 E3 rung
+          # (lazy rail-survival discriminator, plan 51-05), built ONLY because
+          # 51-03 left the rails question open (E1 skip markers fired yet the
+          # panel stayed X=Z). It rides the pinned E1 baseline above: one
+          # one-shot LP DCS ID read set over the re-trained link, DMI-gated to
+          # 82H0, read-only instrumentation with a single drm_info marker. The
+          # read path is proven dead in both arms by phase 50 (zero-expectation)
+          # so it is never the rung verdict - the verdict comes from the GPIO
+          # 144/160 rail capture + the X=Y dump check. New grep anchors pin the
+          # e3-probe symbol and marker string.
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_e3_rail_probe.patch"
+          grep -R 'e3-probe' drivers/gpu/drm/i915/display/vlv_dsi.c
+          grep -R 'GEN_READ_DATA_AVAIL' drivers/gpu/drm/i915/display/vlv_dsi.c
+
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
           set -euxo pipefail
