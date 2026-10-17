@@ -58,3 +58,4 @@ Distinguishing 1 vs 2 requires driving LP/HS from outside the kernel — Phase 5
 ## Consequences for Phase 51
 
 E1 (skip panel-side teardown) and E2 (warm-resume enable) are unaffected — they do not depend on DCS reads. E3 must be redefined: its discriminator is now "does the image come back" (E1/E2 outcome itself), not a DCS read. Phase 53's buy-gate (KingstVIS MIPI-DSI LP decoder demo-mode validation) becomes the identification path if E1/E2 fail and the panel still matters.
+<!-- planner-discipline-allow: No PMIC found by name on bus 6 -->

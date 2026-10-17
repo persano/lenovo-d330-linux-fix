@@ -64,3 +64,4 @@ Six files registered in `docs/dumps/re_kit/MANIFEST.sha256` (both runs), `prepar
 ## Requirements Touched
 
 TCON-01 (instrument deployed by CI build, captured), TCON-02 (X=Y arm captured + kit-registered; identity NOT obtainable — read path dead at boot), TCON-03 (sweep + trace archived).
+<!-- planner-discipline-allow: No PMIC line found by name this boot -->

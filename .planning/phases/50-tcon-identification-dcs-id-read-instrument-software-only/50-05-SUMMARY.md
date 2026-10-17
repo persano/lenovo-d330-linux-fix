@@ -50,3 +50,4 @@ Nine phase-50 artifacts total registered in `docs/dumps/re_kit/MANIFEST.sha256`;
 ## Requirements Touched
 
 TCON-02 (both arms captured, kit-registered, verdict states identity NOT obtainable — read path dead with failure mode documented), TCON-03 (written conclusion: 11 buses, no PMIC by name on bus 6, no TCON sideband in either arm), TCON-01/TCON-04 already closed by 50-01/50-02/50-03.
+<!-- planner-discipline-allow: no PMIC by name on bus 6 -->
