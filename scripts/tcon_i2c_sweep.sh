@@ -87,7 +87,9 @@ SWEEP_TIME="$(date '+%F %T %z')"
     # ---- tool provenance (Assumption A4: degrade honestly) -------------------
     echo "== tool provenance"
     if command -v i2cdetect >/dev/null 2>&1; then
-        echo "i2cdetect: $(i2cdetect --version 2>&1 | head -1)"
+        # i2cdetect parses options with plain getopt (short-only): --version is
+        # rejected; -V is the documented version flag (i2c-tools >= 4.x).
+        echo "i2cdetect: $(i2cdetect -V 2>&1 | head -1)"
     else
         echo "i2cdetect: NOT INSTALLED - bus inventory degrades to sysfs only; per-bus probes unavailable"
     fi
