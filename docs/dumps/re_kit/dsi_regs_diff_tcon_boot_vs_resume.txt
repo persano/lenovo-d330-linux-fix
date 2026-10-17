@@ -1,0 +1,44 @@
+# DSI MMIO dump diff
+
+# parse summary
+records tcon_boot_dsi_regs.txt=7296 warnings=0
+records tcon_resume_dsi_regs.txt=7296 warnings=0
+
+| offset | boot | resume | interpretation | verdict | citation |
+|---|---|---|---|---|---|
+| 0x46000 | 0080013b | 00b0013b | - | differs | tcon_boot_dsi_regs.txt:5124; tcon_resume_dsi_regs.txt:5124 |
+| 0x6b004 | 00080000 | 40200000 | interrupt status (write-1-to-clear), volatile | excluded-volatile | tcon_boot_dsi_regs.txt:3; tcon_resume_dsi_regs.txt:3 |
+| 0x6b010 | 003fffff | 0000b8ea | - | differs | tcon_boot_dsi_regs.txt:6; tcon_resume_dsi_regs.txt:6 |
+| 0x6b044 | 0000001d | 0000001e | - | differs | tcon_boot_dsi_regs.txt:19; tcon_resume_dsi_regs.txt:19 |
+| 0x6b080 | 09051003 | 0a051003 | - | differs | tcon_boot_dsi_regs.txt:34; tcon_resume_dsi_regs.txt:34 |
+| 0x6b088 | 0022000f | 0014000c | - | differs | tcon_boot_dsi_regs.txt:36; tcon_resume_dsi_regs.txt:36 |
+| 0x6b094 | 00000001 | 00000000 | interrupt-enable mask, config state; prior differing row 00000001→00000000 (DISPLAY_RESUME_CCS_MODIFIER.md:82), de-prioritized per ledger rows 3/18 (prior forcing result disproven) | excluded-volatile | tcon_boot_dsi_regs.txt:39; tcon_resume_dsi_regs.txt:39 |
+| 0x6b098 | 09051003 | 0a051003 | - | differs | tcon_boot_dsi_regs.txt:40; tcon_resume_dsi_regs.txt:40 |
+| 0x138070 | 00000617 | 000042fb | monotonic counters, not config | excluded-volatile | tcon_boot_dsi_regs.txt:6306; tcon_resume_dsi_regs.txt:6306 |
+| 0x138074 | 0000899d | 0000d343 | monotonic counters, not config | excluded-volatile | tcon_boot_dsi_regs.txt:6307; tcon_resume_dsi_regs.txt:6307 |
+| 0x138108 | 82cb1699 | 01bdaab1 | - | differs | tcon_boot_dsi_regs.txt:6344; tcon_resume_dsi_regs.txt:6344 |
+| 0x13816c | 081c0804 | 0b1c0804 | - | differs | tcon_boot_dsi_regs.txt:6369; tcon_resume_dsi_regs.txt:6369 |
+| 0x13819c | 00001231 | 00000cc8 | - | differs | tcon_boot_dsi_regs.txt:6381; tcon_resume_dsi_regs.txt:6381 |
+| 0x160018 | 00000115 | 00000001 | - | differs | tcon_boot_dsi_regs.txt:1033; tcon_resume_dsi_regs.txt:1033 |
+| 0x160020 | 00000646 | 00008646 | - | differs | tcon_boot_dsi_regs.txt:1035; tcon_resume_dsi_regs.txt:1035 |
+
+## DCS ID READ comparison
+
+| read | tcon_boot_dsi_regs.txt | tcon_resume_dsi_regs.txt |
+|---|---|---|
+| 0x04 | timeout | timeout |
+| 0xDA | timeout | timeout |
+| 0xDB | timeout | timeout |
+| 0xDC | timeout | timeout |
+| GEN00 | timeout | timeout |
+
+## summary
+- identical 0x138000-0x139000: 1019 register(s) matching
+- identical 0x160000-0x164000: 4094 register(s) matching
+- identical 0x46000-0x47000: 1023 register(s) matching
+- identical 0x6b000-0x6c000: 1017 register(s) matching
+- identical 0xc7200-0xc7400: 128 register(s) matching
+- excluded-volatile rows: 4
+- state rows: 0
+- parse warnings: boot=0 resume=0
+- DCS ID READ: comparison block emitted (5 read ids)
