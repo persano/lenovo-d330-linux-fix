@@ -36,6 +36,15 @@
 #                    present on ONE arm renders the block with
 #                    `missing-section` rows for the other arm - never
 #                    silently vanish.
+#   X=Y operational set    phase-51 rung criterion (design-doc fact 10,
+#                    verbatim): 0x6b010=003fffff, 0x6b044=0000001d,
+#                    0x6b080/0x6b098=09051003, 0x6b088=0022000f,
+#                    0x6b094=1, 0x160018=00000115. Emitted iff the RESUME
+#                    arm carries the DSI range; per-register
+#                    expected-vs-actual rows plus ONE verdict line:
+#                    `verdict: X=Y` when all seven register values match,
+#                    `verdict: X=Z` otherwise (a missing register on the
+#                    resume arm never matches - it counts toward X=Z).
 #
 # Output: one markdown table with columns
 #   offset | boot | resume | interpretation | verdict | citation
@@ -252,6 +261,26 @@ run_diff() {
         }
     ' "$tmp/all.rep" > "$tmp/dcs.tsv"
 
+    # --- X=Y operational-set extraction (phase-51 rung criterion, fact 10) ---
+    # Checks the RESUME arm only (the ~4 s post-commit discriminator dump)
+    # against the verbatim six-register literal; the resume DSI range's
+    # presence gates the section (absent -> "NONE", no section rendered).
+    awk -F'\t' '
+        BEGIN {
+            n = split("0006b010=003fffff 0006b044=0000001d 0006b080=09051003 0006b088=0022000f 0006b094=00000001 0006b098=09051003 00160018=00000115", pairs, " ")
+            for (i = 1; i <= n; i++) { split(pairs[i], a, "="); exp_[a[1]] = a[2]; order[i] = a[1] }
+        }
+        $1 == "R" && $2 == "resume" && $3 == "6b000" { dsi = 1 }
+        $1 == "R" && $2 == "resume" && ($5 in exp_) { val[$5] = $6 }
+        END {
+            if (!dsi) { print "NONE"; exit }
+            for (i = 1; i <= n; i++) {
+                o = order[i]; v = (o in val) ? val[o] : "-"
+                print o "\t" exp_[o] "\t" v "\t" ((v == exp_[o]) ? "match" : "mismatch")
+            }
+        }
+    ' "$tmp/all.rep" > "$tmp/opset.tsv"
+
     # --- per-(arm,range) state classification (hardened) ---
     awk -F'\t' -v dsi_lo="$DSI_LO" -v dsi_hi="$DSI_HI" \
             -v phy_lo="$PHY_LO" -v phy_hi="$PHY_HI" '
@@ -436,7 +465,8 @@ run_diff() {
         cat "$tmp/meta.tsv"
     } | awk -F'\t' -v bootname="$bootname" -v resumename="$resumename" \
             -v recb="$rboot" -v recr="$rresume" -v warnb="$wboot" -v warnr="$wresume" \
-            -v excl="$excl" -v scount="$scount" -v namesf="$names" -v dcsf="$tmp/dcs.tsv" '
+            -v excl="$excl" -v scount="$scount" -v namesf="$names" -v dcsf="$tmp/dcs.tsv" \
+            -v osf="$tmp/opset.tsv" '
         BEGIN {
             if (namesf != "") {
                 while ((getline nline < namesf) > 0) {
@@ -495,6 +525,32 @@ run_diff() {
                     split(dcs_rows[i], dc, "\t")
                     print "| " dc[1] " | " dc[2] " | " dc[3] " |"
                 }
+                print ""
+            }
+            # X=Y operational-set block (phase-51 rung criterion): present
+            # iff the resume arm carries the DSI range; one verdict line
+            # after the per-register rows (binary criterion, KEEP-03).
+            os_state = ""
+            while ((getline ol < osf) > 0) {
+                if (ol == "NONE") { os_state = "absent"; continue }
+                split(ol, oa, "\t")
+                os_rows[++os_n] = oa[1] "\t" oa[2] "\t" oa[3] "\t" oa[4]
+            }
+            if (os_state != "absent") {
+                print "## X=Y operational set"
+                print ""
+                nmism = 0
+                for (i = 1; i <= os_n; i++) {
+                    split(os_rows[i], oc, "\t")
+                    if (oc[4] == "mismatch") nmism++
+                    disp = oc[1]; sub(/^0+/, "", disp)
+                    print "0x" disp " expected=" oc[2] " actual=" oc[3] " " oc[4]
+                }
+                print ""
+                if (nmism == 0)
+                    print "verdict: X=Y (operational set held: " os_n "/" os_n " registers match)"
+                else
+                    print "verdict: X=Z (operational set NOT held: " (os_n - nmism) "/" os_n " registers match)"
                 print ""
             }
             print "## summary"
@@ -852,6 +908,62 @@ selftest() {
         '## DCS ID READ comparison' 0
     expect_has "M: explicit absent note pinned" "$d/m.md" \
         'DCS ID READ: section absent on both arms'
+
+    # --- fixture X (51-02): X=Y operational set on the resume arm ->
+    # --- per-register match rows + verdict X=Y (six-register literal,
+    # --- design-doc fact 10 quoted verbatim in the extraction awk) ---
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b010=003fffff"
+        echo "0x6b044=0000001d"
+        echo "0x6b080=09051003"
+        echo "0x6b088=0022000f"
+        echo "0x6b094=00000001"
+        echo "0x6b098=09051003"
+        echo "# RANGE 0x160000-0x164000 (4096 words)"
+        echo "0x160018=00000115"
+    } > "$bootf"
+    cp "$bootf" "$resumef"
+    run_diff "$bootf" "$resumef" "$d/x.md"
+    expect_has "X: operational-set section emitted" "$d/x.md" \
+        '## X=Y operational set'
+    expect_count "X: seven per-register lines, all match" "$d/x.md" \
+        '^0x[0-9a-f]+ expected=[0-9a-f]{8} actual=[0-9a-f]{8} match$' 7
+    expect_has "X: verdict X=Y" "$d/x.md" \
+        'verdict: X=Y \(operational set held: 7/7 registers match\)'
+
+    # --- fixture Z (51-02): the known-broken X=Z counterparts on the
+    # --- resume arm -> verdict X=Z, non-vacuous in the opposite direction
+    # --- (docs/research/DSI_MMIO_DIFF.md:117 + ledger rows 30-31) ---
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b010=003fffff"
+        echo "0x6b044=0000001d"
+        echo "0x6b080=09051003"
+        echo "0x6b088=0022000f"
+        echo "0x6b094=00000001"
+        echo "0x6b098=09051003"
+        echo "# RANGE 0x160000-0x164000 (4096 words)"
+        echo "0x160018=00000115"
+    } > "$bootf"
+    {
+        echo "# RANGE 0x6b000-0x6c000 (1024 words)"
+        echo "0x6b010=0000b8ea"
+        echo "0x6b044=0000001e"
+        echo "0x6b080=0a051003"
+        echo "0x6b088=0014000c"
+        echo "0x6b094=00000000"
+        echo "0x6b098=0a051003"
+        echo "# RANGE 0x160000-0x164000 (4096 words)"
+        echo "0x160018=00000001"
+    } > "$resumef"
+    run_diff "$bootf" "$resumef" "$d/z.md"
+    expect_has "Z: operational-set section emitted" "$d/z.md" \
+        '## X=Y operational set'
+    expect_count "Z: seven per-register lines, all mismatch" "$d/z.md" \
+        '^0x[0-9a-f]+ expected=[0-9a-f]{8} actual=[0-9a-f]{8} mismatch$' 7
+    expect_has "Z: verdict X=Z" "$d/z.md" \
+        'verdict: X=Z \(operational set NOT held: 0/7 registers match\)'
 
     rm -rf "$d"
     trap - EXIT
