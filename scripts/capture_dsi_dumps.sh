@@ -11,8 +11,11 @@
 #              semantics, so a slow cat can never leak past the 18 s window)
 #   echo 2  -> unchanged MMIO walk PLUS the phase-50 DCS ID-read section
 #              (# DCS ID READ, five LP-mode ID reads, 50-01 node); the
-#              trigger write here is wrapped in `timeout 15` so a wedged
-#              DSI read can never strand the session (locked decision)
+#              trigger write here is wrapped in `timeout -k 5 15`, which
+#              bounds interruptible hangs (TERM then KILL). The load-bearing
+#              bound is the kernel's 50 ms x 2 per-read waits (50-01); a
+#              true D-state kernel sleep cannot be bounded from userspace
+#              (locked decision)
 #   cat     -> emits that frozen buffer
 #
 # Zero register writes, no mode changes: the helper only triggers the node's
@@ -71,9 +74,11 @@
 #   - missing DSI section, no skip    -> exit 1 (corrupted section header)
 #   - per-section count mismatch      -> loud warning, capture still delivered
 #   - < 5000 record lines WITH the PLL-off skip marker -> loud warning only
-#   - echo-2 arms only: the trigger write is wrapped in `timeout 15`
-#     (failure/timeout -> exit 1 with the captured stderr; the session can
-#     never wedge on a hanging DSI read) and the dump MUST carry the
+#   - echo-2 arms only: the trigger write is wrapped in `timeout -k 5 15`
+#     (failure/timeout -> exit 1 with the captured stderr; bounds
+#     interruptible hangs - the load-bearing bound is the kernel's 50 ms x 2
+#     per-read waits, and a true D-state kernel sleep is unbounded from
+#     userspace by design) and the dump MUST carry the
 #     `# DCS ID READ` section with five DCS rows (or an explicit DCS SKIP
 #     annotation, accepted as a loud warning) -> a missing section or a
 #     short section exits non-zero like a truncated dump
@@ -117,8 +122,9 @@ Trigger the CI-built D330 DSI MMIO snapshot node and capture one arm's dump.
             'resume'  S3-resume failure state (panel BLACK, within 18 s of wake)
             'boot2'   echo-2 capture at the boot arm (MMIO walk + DCS ID reads)
             'resume2' echo-2 capture at the resume arm (same; the trigger is
-                      wrapped in 'timeout 15' so a wedged read cannot strand
-                      the session)
+                      wrapped in 'timeout -k 5 15', which bounds
+                      interruptible hangs - a D-state kernel sleep stays
+                      unbounded from userspace)
   outdir    output directory (default: \$SUDO_USER's home + /d330_dsi_capture)
 
 Run as root (sudo). The node performs a read-only register walk; re-running
@@ -192,10 +198,11 @@ T0="$(date +%s)"
 BEFORE=$(dmesg 2>/dev/null | grep -c 'D330DSIREG' || true)
 ERRFILE="$(mktemp)"
 if [ "$ECHO" -eq 2 ]; then
-    # Echo-2 arms: timeout-wrapped trigger (locked decision, T-50-04) - a
-    # hanging DSI ID read is bounded in userspace and can never wedge the
-    # session; the kernel side is bounded too (50-01) - belt and braces.
-    if ! timeout 15 sh -c "echo 2 > '$NODE'" 2>"$ERRFILE"; then
+    # Echo-2 arms: timeout-wrapped trigger (locked decision, T-50-04) - TERM
+    # at 15 s, KILL at 20 s bounds interruptible hangs. The load-bearing bound
+    # is the kernel side (50-01: two 50 ms waits per DCS read); a write stuck
+    # in D-state ignores TERM/KILL and stays unbounded from userspace.
+    if ! timeout -k 5 15 sh -c "echo 2 > '$NODE'" 2>"$ERRFILE"; then
         log_err "echo-2 trigger failed or timed out after 15 s: $(cat "$ERRFILE")"
         log_err "(EBUSY would mean another trigger is in flight; a timeout means the DSI read path wedged - do NOT retry blindly, capture the dmesg first)"
         rm -f "$ERRFILE"
