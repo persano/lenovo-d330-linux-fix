@@ -256,11 +256,11 @@ device session for the black-resume arm).
   4. DSI_MMIO_DIFF §6's 0x6b004 row carries the bit-accurate decode (SPL_PKT_SENT |
      HS_TX_TIMEOUT | LOW_CONTENTION; bit 22 not set) and the ledger gate stays green
 
-**Plans**: 3/5 plans executed
+**Plans**: 4/5 plans executed
 - [x] 50-01-PLAN.md
 - [x] 50-02-PLAN.md
 - [x] 50-03-PLAN.md
-- [ ] 50-04-PLAN.md
+- [x] 50-04-PLAN.md
 - [ ] 50-05-PLAN.md
 
 - [ ] `50-01-PLAN.md` — echo-2 DCS ID-read instrument (kernel node extension + CI build)
@@ -495,7 +495,7 @@ capture sessions, user-authorized); the purchase itself is user-gated.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 3/5 | In Progress | - |
+| 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 4/5 | In Progress | - |
 | 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 0/0 | Not started | - |
 | 52. Black-Resume Self-Healing (d330-blackguard) | 0/0 | Not started | - |
 | 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/0 | Not started | - |
