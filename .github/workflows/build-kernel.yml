@@ -127,25 +127,26 @@ jobs:
           grep -R 'bxt_dsi_pll_is_enabled' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
           grep -R 'DCS ID READ' drivers/gpu/drm/i915/display/
           grep -R 'mipi_dsi_dcs_read' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
-          # patches/d330_dsi_panel_power_cycle.patch is the phase-48
-          # iteration-2 fix (48-01): DMI-gated to 82H0, runs the reload
-          # path's panel power teardown (assert reset, rails off, a
-          # reload-scale settle) at the very top of the DSI enable path,
-          # in the resume window only. Replaces the iteration-1
-          # d330_dsi_device_ready_fix.patch (disproven, RESUME_FIX_LEDGER
-          # row 30; the patch file stays in git history but is no longer
-          # applied by CI).
-          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_panel_power_cycle.patch"
-          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/vlv_dsi.c
-          # patches/d330_dsi_mipio_reset.patch is the phase-48 iteration-3
-          # fix (48-01): DMI-gated to 82H0, pulses the DSI-block MIPIO
-          # hardware reset (drop + re-assert of BXT_P_CR_GT_DISP_PWRON's
-          # MIPIO_RST_CTRL bit) at the very top of the DSI enable path, in
-          # the resume window only, mimicking the power-well-cycle reset
-          # the re-probe performs. Requires the iteration-2 patch applied
-          # first (reuses its DMI helper and follows its insertion).
-          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_mipio_reset.patch"
-          grep -R 'resume: MIPIO reset pulse' drivers/gpu/drm/i915/display/vlv_dsi.c
+          # Phase 51 (51-01): the two falsified pre-enable candidates are no
+          # longer applied. d330_dsi_panel_power_cycle.patch (RESUME_FIX_LEDGER
+          # row 31) runs MIPI_SEQ_POWER_OFF at the top of intel_dsi_pre_enable()
+          # in the resume window, which would clear exactly the keep-hot state
+          # the E1 patch needs to survive S3; and it defines d330_82h0_panel(),
+          # which would collide with the E1 patch's own definition (PITFALLS
+          # P3). d330_dsi_mipio_reset.patch (row 32) reuses that helper and
+          # follows that insertion, so it goes with it. Both patch files stay
+          # in git history as the falsified-candidate record.
+          # patches/d330_dsi_keep_hot.patch is the phase-51 E1 rung: a
+          # self-contained DMI-gated (82H0) suspend-commit discriminator that
+          # skips the three panel-facing teardown VBT calls plus the
+          # video-mode SHUTDOWN while keeping all host-side teardown; it
+          # carries its own compiled-in drm_info skip markers (the only kind
+          # that produce dmesg output - rows 16/2-adjacent evidence chain).
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_keep_hot.patch"
+          grep -R 'd330_82h0_panel' drivers/gpu/drm/i915/display/vlv_dsi.c
+          grep -R 'suspend_commit_in_progress' drivers/gpu/drm/i915/display/
+          grep -R 'panel_keep_hot' drivers/gpu/drm/i915/display/
+          grep -R 'skip DISPLAY_OFF/ASSERT_RESET/POWER_OFF' drivers/gpu/drm/i915/display/vlv_dsi.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
