@@ -343,20 +343,20 @@ if E1 works.
      quantified once; on failure ledger rows appended + honest-closure doc updated — never
      a fake fix
 
-**Plans**: 2/6 plans executed
+**Plans**: 5/6 plans executed
 
 Plans:
 - [x] 51-01-PLAN.md
 - [x] 51-02-PLAN.md
-- [ ] 51-03-PLAN.md
+- [x] 51-03-PLAN.md
 - [ ] 51-04-PLAN.md
-- [ ] 51-05-PLAN.md
+- [x] 51-05-PLAN.md
 - [ ] 51-06-PLAN.md
-- [ ] `51-01-PLAN.md` — E1 keep-hot kernel patch (self-contained DMI helper, suspend-discriminator flags, gated skip sites + markers) + CI apply-stack cleanup + build
-- [ ] `51-02-PLAN.md` — Rung-session capture tooling (~0-1 s / ~4 s resume arms, X=Y operational-set check + fixtures, runbook block)
-- [ ] `51-03-PLAN.md` — E1 device session (deploy behind verified rollback, one user-authorized suspend, two dumps + marker evidence, fail-fast verdict)
+- [x] `51-01-PLAN.md` — E1 keep-hot kernel patch (self-contained DMI helper, suspend-discriminator flags, gated skip sites + markers) + CI apply-stack cleanup + build
+- [x] `51-02-PLAN.md` — Rung-session capture tooling (~0-1 s / ~4 s resume arms, X=Y operational-set check + fixtures, runbook block)
+- [x] `51-03-PLAN.md` — E1 device session (deploy behind verified rollback, one user-authorized suspend, two dumps + marker evidence, fail-fast verdict)
 - [ ] `51-04-PLAN.md` — E2 warm-resume enable: flag-B pre_enable skips, dedicated CI candidate, one device session (conditional — runs when the rails are alive)
-- [ ] `51-05-PLAN.md` — Lazy E3 rail-survival discriminator (zero-expectation pre-INIT_OTP DCS read + GPIO 144/160 rail evidence; built only on E1 falsification; routes to E2 or the Phase 53 buy-gate)
+- [x] `51-05-PLAN.md` — Lazy E3 rail-survival discriminator (zero-expectation pre-INIT_OTP DCS read + GPIO 144/160 rail evidence; built only on E1 falsification; routes to E2 or the Phase 53 buy-gate)
 - [ ] `51-06-PLAN.md` — Honest-verdict closure: ledger integrity + NO_CLEAN_FIX_PROOF.md v10.0 section on full-ladder falsification, success record otherwise (KEEP-05)
 
 ### Phase 52: Black-Resume Self-Healing (d330-blackguard)
@@ -510,7 +510,7 @@ capture sessions, user-authorized); the purchase itself is user-gated.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 5/5 | Complete    | 2026-10-17 |
-| 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 2/6 | In Progress | - |
+| 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 5/6 | In Progress | - |
 | 52. Black-Resume Self-Healing (d330-blackguard) | 0/0 | Not started | - |
 | 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/0 | Not started | - |
 

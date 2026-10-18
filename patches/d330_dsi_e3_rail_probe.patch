@@ -33,7 +33,7 @@ Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
 index 429e0be..7f1c2aa 100644
 --- a/drivers/gpu/drm/i915/display/vlv_dsi.c
 +++ b/drivers/gpu/drm/i915/display/vlv_dsi.c
-@@ -790,6 +790,67 @@ static void intel_dsi_pre_enable(struct intel_atomic_state *state,
+@@ -809,6 +809,67 @@ static void intel_dsi_pre_enable(struct intel_atomic_state *state,
  	/* Send initialization commands in LP mode */
  	intel_dsi_vbt_exec_sequence(intel_dsi, MIPI_SEQ_INIT_OTP);
  

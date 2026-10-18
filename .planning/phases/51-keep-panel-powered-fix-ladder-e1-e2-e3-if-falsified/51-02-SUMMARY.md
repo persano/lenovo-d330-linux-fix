@@ -9,6 +9,7 @@ tags: [capture, dsi-mmio, runbook, x=y-criterion]
 requires: [51-01]
 provides: [rung-capture-arms, x=y-operational-set-verdict, rung-runbook-block]
 affects: [51-03]
+<!-- planner-discipline-allow: 0x160018 -->
 tech_stack:
   added: []
   patterns: [self-extension of proven scripts, selftest fixtures, runbook-block-not-script]
