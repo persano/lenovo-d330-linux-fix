@@ -493,7 +493,8 @@ capture sessions, user-authorized); the purchase itself is user-gated.
   1. The buy-gate decision is documented with reason: KingstVIS MIPI-DSI LP decoder
      validated in demo mode BEFORE purchase, the decision (buy LA5016 / add U3Pro16 /
      decline) recorded with the user's authorization — or the documented decline and its
-     consequence for the hunt
+     consequence for the hunt. **[VALIDATED 2026-10-18: decoder confirmed real and shipping —
+     see `.planning/phases/53-hardware-logic-analyzer-probe-buy-gate-teardown-capture-a-vs-b/53-BUY-GATE.md`.]**
   2. Physical access achieved: battery disconnected first, connector pitch/pin count
      measured, empirical pin ID completed (GND → rails → LP-11 pairs → behavior), no-solder
      interposition in place
@@ -512,7 +513,7 @@ capture sessions, user-authorized); the purchase itself is user-gated.
 | 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 5/5 | Complete    | 2026-10-17 |
 | 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 5/6 | In Progress | - |
 | 52. Black-Resume Self-Healing (d330-blackguard) | 0/0 | Not started | - |
-| 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/0 | Not started | - |
+| 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/1 | In Progress | - |
 
 ---
 

@@ -2,13 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v10.0
 milestone_name: Crack the Panel — TCON Identification and the GOP-Init Hunt
-current_phase: 51
-current_phase_name: Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified)
-status: planning
-stopped_at: Phase 50 complete, ready to plan Phase 51
-last_updated: "2026-10-17T04:15:34.288Z"
-last_activity: 2026-10-17
-last_activity_desc: Phase 50 complete, transitioned to Phase 51
+current_phase: 53
+current_phase_name: Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B)
+status: executing
+stopped_at: Phase 51 falsified (E3 skip never engaged); Phase 53 buy-gate validated — awaiting user purchase authorization
+last_updated: "2026-10-18T12:00:00.000Z"
+last_activity: 2026-10-18
+last_activity_desc: Phase 53 opened; KingstVIS MIPI-DSI LP decoder validated pre-purchase
+progress:
+  total_phases: 4
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 5
+  percent: 50
 state_head: 006ea97f8279c3ec6c61da5f3275a1f1a9f8f908
 progress:
   total_phases: 4
@@ -21,11 +27,12 @@ progress:
 # STATE: Project Execution State
 
 - **Active Milestone**: Milestone 10 (v10.0) — Crack the Panel: TCON Identification and the GOP-Init Hunt
-- **Active Phase**: — (roadmap created; Phases 50-53 defined, awaiting `/gsd-plan-phase 50`)
-- **Status**: Phase 50 COMPLETE (5/5 plans, verification passed 8/8). DCS read path proven dead in both arms (3 identical runs) - E3 discriminator falsified; E1/E2 unaffected. Next: Phase 51 planning.
+- **Active Phase**: 53 — Hardware Logic-Analyzer Probe (buy-gate validated; teardown + captures pending user purchase authorization)
+- **Status**: Phase 53 BUY-GATE VALIDATED (2026-10-18). KingstVIS MIPI-DSI LP decoder confirmed real and shipping (`libMIPI-DSI.so`, `MIPI_DSI_LP_Analyzer` with escape-mode/TA-exit/packet parsing + `GenerateSimulationData`), model-gated LA5016/LA5032 only. Awaiting user authorization to buy the LA5016 ($238).
 - **Blockers**:
+  * **[USER GATE]** Phase 53 purchase authorization — LA5016 ($238) + FPC breakout (~$5–15, order after teardown confirms pitch/pin count). U3Pro16 ($299) conditional, do not pre-buy.
   * [PENDING DEPLOY — inherited from v7.0] 12 documented VERIFICATION overrides (11 `uat_gaps` + 1 `deferred_items` resolved in place) for hardware-in-the-loop, daemon, package-build and live-session criteria (Phases 32-42). Machine-checked equivalents are green; re-run each at deployment sign-off with `/gsd-verify-work <N>`. Detail in `.planning/milestones/v7.0-ROADMAP.md` and `.planning/v7.0-MILESTONE-AUDIT.md`.
-- **Next Immediate Action**: `/gsd-plan-phase 51`
+- **Next Immediate Action**: User authorizes the LA5016 purchase → teardown + empirical pin ID → captures A/B/C
 
 ## Project Reference
 
@@ -36,10 +43,10 @@ See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 ## Current Position
 
-Phase: 51 — Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-17 — Phase 50 complete, transitioned to Phase 51
+Phase: 53 — Hardware Logic-Analyzer Probe (buy-gate validated; awaiting user purchase authorization)
+Plan: 53-01 (buy-gate) complete; teardown + captures pending
+Status: Awaiting user decision on LA5016 purchase
+Last activity: 2026-10-18 — Phase 53 opened, buy-gate validated
 
 ## Performance Metrics
 
@@ -96,8 +103,8 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 
 ## Session Continuity
 
-Last session: 2026-10-17
-Stopped at: Phase 50 complete, ready to plan Phase 51
+Last session: 2026-10-18
+Stopped at: Phase 53 buy-gate validated; awaiting user purchase authorization
 Resume file: None
 
 ## Archived Milestones
