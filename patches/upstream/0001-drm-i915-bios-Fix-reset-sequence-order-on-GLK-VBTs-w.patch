@@ -1,0 +1,132 @@
+From 6f64bec3a49979d5866494cc3f7a11ff55e89add Mon Sep 17 00:00:00 2001
+From: Lucas Moreno <TU_EMAIL@example.com>
+Date: Wed, 7 Oct 2026 00:55:36 +0000
+Subject: [PATCH] drm/i915/bios: Fix reset sequence order on GLK VBTs with
+ DEASSERT_RESET in INIT_OTP
+
+Some Gemini Lake VBTs, such as the one on the Lenovo IdeaPad
+D330-10IGL, have an empty MIPI_SEQ_DEASSERT_RESET and perform the whole
+panel reset pulse (GPIO set/clear/set with delays) from
+MIPI_SEQ_INIT_OTP. The driver runs INIT_OTP after the DSI host has been
+brought up, so the panel gets reset with the link already active. On
+the affected machine this leaves the panel black with the backlight on
+after S3 resume (the driver reports success at every step), and
+randomly on boot and on output off/on cycles.
+
+vlv_fixup_mipi_sequences() already handles the same kind of VBT bug on
+VLV, but only for version 1 sequence blocks. The D330 uses a version 3
+block, so add an equivalent fixup for GLK: if DEASSERT_RESET is
+missing or empty, ASSERT_RESET exists, the panel is in video mode and
+INIT_OTP only contains GPIO and delay elements, run INIT_OTP as
+DEASSERT_RESET and leave INIT_OTP empty (or swap them if an empty
+DEASSERT_RESET was present).
+
+Tested on a Lenovo IdeaPad D330-10IGL (BIOS G0CN14WW, Celeron N4020)
+with an otherwise unmodified v6.12.107 i915: 10/10 S3 resumes, 10/10
+rotations and output off/on cycles, and 10/10 reboots with a working
+display, where it failed every time before.
+---
+ drivers/gpu/drm/i915/display/intel_bios.c | 80 +++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_bios.c b/drivers/gpu/drm/i915/display/intel_bios.c
+index 4793d46..0ab0b70 100644
+--- a/drivers/gpu/drm/i915/display/intel_bios.c
++++ b/drivers/gpu/drm/i915/display/intel_bios.c
+@@ -2045,6 +2045,84 @@ static void icl_fixup_mipi_sequences(struct intel_display *display,
+ 	}
+ }
+ 
++/*
++ * Count the elements of a v3 MIPI sequence, and report whether all of
++ * them are GPIO or delay elements (i.e. nothing that needs the DSI host
++ * to be up, like sending a packet).
++ */
++static int mipi_seq_v3_count_elems(const u8 *seq, bool *gpio_delay_only)
++{
++	const u8 *p = seq + 5;	/* skip the sequence byte and the size */
++	const u8 *end = seq + 5 + *((const u32 *)(seq + 1));
++	int count = 0;
++
++	*gpio_delay_only = true;
++
++	while (p < end) {
++		u8 op = *p++;
++
++		if (op == MIPI_SEQ_ELEM_END)
++			break;
++		if (p >= end) {
++			*gpio_delay_only = false;
++			break;
++		}
++		if (op != MIPI_SEQ_ELEM_GPIO && op != MIPI_SEQ_ELEM_DELAY)
++			*gpio_delay_only = false;
++
++		p += 1 + *p;	/* length byte + payload */
++		count++;
++	}
++
++	return count;
++}
++
++/*
++ * Some GLK VBTs (e.g. Lenovo IdeaPad D330-10IGL) have an empty
++ * MIPI_SEQ_DEASSERT_RESET and do the whole panel reset pulse from
++ * MIPI_SEQ_INIT_OTP instead. INIT_OTP runs after the DSI host has been
++ * brought up, but the panel reset must happen before that. When
++ * INIT_OTP only contains GPIO and delay elements, run it as
++ * DEASSERT_RESET instead.
++ */
++static void glk_fixup_mipi_sequences(struct intel_display *display,
++				     struct intel_panel *panel)
++{
++	u8 *deassert = (u8 *)panel->vbt.dsi.sequence[MIPI_SEQ_DEASSERT_RESET];
++	u8 *init_otp = (u8 *)panel->vbt.dsi.sequence[MIPI_SEQ_INIT_OTP];
++	bool gpio_delay_only;
++
++	if (panel->vbt.dsi.seq_version != 3 ||
++	    panel->vbt.dsi.config->is_cmd_mode)
++		return;
++
++	if (!init_otp || !panel->vbt.dsi.sequence[MIPI_SEQ_ASSERT_RESET])
++		return;
++
++	/* Only if DEASSERT_RESET is missing or empty */
++	if (deassert && mipi_seq_v3_count_elems(deassert, &gpio_delay_only))
++		return;
++
++	/* And INIT_OTP only toggles GPIOs and waits */
++	if (!mipi_seq_v3_count_elems(init_otp, &gpio_delay_only) ||
++	    !gpio_delay_only)
++		return;
++
++	drm_dbg_kms(display->drm,
++		    "Running INIT_OTP (GPIO/delay only) as DEASSERT_RESET\n");
++
++	/* The sequence executor checks the id byte of each sequence */
++	init_otp[0] = MIPI_SEQ_DEASSERT_RESET;
++	panel->vbt.dsi.sequence[MIPI_SEQ_DEASSERT_RESET] = init_otp;
++
++	if (deassert) {
++		deassert[0] = MIPI_SEQ_INIT_OTP;
++		panel->vbt.dsi.sequence[MIPI_SEQ_INIT_OTP] = deassert;
++	} else {
++		panel->vbt.dsi.sequence[MIPI_SEQ_INIT_OTP] = NULL;
++	}
++}
++
+ static void fixup_mipi_sequences(struct intel_display *display,
+ 				 struct intel_panel *panel)
+ {
+@@ -2054,6 +2132,8 @@ static void fixup_mipi_sequences(struct intel_display *display,
+ 		icl_fixup_mipi_sequences(display, panel);
+ 	else if (IS_VALLEYVIEW(i915))
+ 		vlv_fixup_mipi_sequences(display, panel);
++	else if (IS_GEMINILAKE(i915))
++		glk_fixup_mipi_sequences(display, panel);
+ }
+ 
+ static void
+-- 
+2.43.0
+

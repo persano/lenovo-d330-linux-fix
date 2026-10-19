@@ -136,3 +136,26 @@ In upstream Linux (`drivers/gpu/drm/drm_panel_orientation_quirks.c`):
 1. **Panel Power Cycle Timing Delay (t11_t12)**: The LCD timing controller requires a mandatory minimum power-off delay (typically 500ms) before re-applying VDD. Linux `i915` defaults or VBT values may be too short (e.g. 200ms), causing TCON lockup on fast resume.
 2. **Backlight PWM / GPIO Enable Sequencing**: Windows driver (`igdkmd64.sys`) controls backlight enable via GPIO lines or specific PWM sequences before VDD or in strict coordination with panel reset. Linux i915 may sequence backlight enable prior to stable panel link training.
 3. **Intel S0ix Modern Standby vs S3**: Lenovo BIOS defaults to Modern Standby (PEP / S0ix). Linux kernel suspend defaults may trigger partial S3 / S0ix mismatch, leaving the display controller rails unpowered upon resume.
+
+## 5. Resolution (2026-10-19): the community thread paid off
+
+The most valuable community lead was never in this file's hypotheses but in
+the upstream issue tracker: GitLab issue #13225 (drm/i915/kernel, OPEN, same
+machine model) carried both the mechanism analysis (vsyrjala, note 3169683:
+the D330 VBT is "kinda borked" — empty `MIPI_SEQ_DEASSERT_RESET`, reset pulse
+GPIO 160 executed from `INIT_OTP` after DSI host up; `vlv_fixup_mipi_sequences()`
+repairs this only for VLV + v1 blocks) and a GLK fixup patch (note 3698515 by
+lucasgabmoreno — the same community author whose Mint repo is analyzed in
+section 2).
+
+That patch, adapted to our v7.0 tree (one-line dispatch change
+`IS_GEMINILAKE(i915)` → `display->platform.geminilake`), fixed the bug on our
+unit: 10/10 lit S3 resumes eyes-on + every boot lit, kernel `7.0.14-d330-fix`,
+ledger row 34, shipped in release v11.0
+(`patches/d330_dsi_glk_reset_order_fixup.patch`, sha F97F4E87).
+
+Our own upstream filing (work item #17401, 2026-10-18) is a likely duplicate
+of #13225 once the fixup lands. Every hypothesis in section 4 — power-off
+delay, backlight sequencing, S0ix — was wrong or secondary; the truth was
+sequence *ordering* at VBT parse time. Lesson recorded: search the upstream
+tracker before building fix ladders.
