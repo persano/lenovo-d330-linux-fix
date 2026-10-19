@@ -136,31 +136,35 @@ jobs:
           # P3). d330_dsi_mipio_reset.patch (row 32) reuses that helper and
           # follows that insertion, so it goes with it. Both patch files stay
           # in git history as the falsified-candidate record.
-          # patches/d330_dsi_keep_hot.patch is the phase-51 E1 rung: a
-          # self-contained DMI-gated (82H0) suspend-commit discriminator that
-          # skips the three panel-facing teardown VBT calls plus the
-          # video-mode SHUTDOWN while keeping all host-side teardown; it
-          # carries its own compiled-in drm_info skip markers (the only kind
-          # that produce dmesg output - rows 16/2-adjacent evidence chain).
-          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_keep_hot.patch"
-          grep -R 'd330_82h0_panel' drivers/gpu/drm/i915/display/vlv_dsi.c
-          grep -R 'suspend_commit_in_progress' drivers/gpu/drm/i915/display/
-          grep -R 'panel_keep_hot' drivers/gpu/drm/i915/display/
-          grep -R 'skip DISPLAY_OFF/ASSERT_RESET/POWER_OFF' drivers/gpu/drm/i915/display/vlv_dsi.c
+          # Phase-51 diagnostic rungs are NO LONGER APPLIED as of the GLK
+          # reset-order fixup validation build:
+          # - patches/d330_dsi_keep_hot.patch (E1, falsified: skip markers
+          #   fired yet the panel stayed black, 51-03) changed suspend
+          #   teardown behavior, which would confound attribution of any
+          #   resume improvement to the GLK fixup. The upstream candidate
+          #   was validated on a STOCK teardown path (issue 13225 note
+          #   3698515), so the validation build must match that shape.
+          # - patches/d330_dsi_e3_rail_probe.patch (E3, falsified: DCS read
+          #   ret=4 avail=0, panel-side confirmed) depends on the E1 helper
+          #   and goes with it. Both patch files stay in git history as the
+          #   falsified-candidate record (RESUME_FIX_LEDGER rows 30-33).
 
-          # patches/d330_dsi_e3_rail_probe.patch is the phase-51 E3 rung
-          # (lazy rail-survival discriminator, plan 51-05), built ONLY because
-          # 51-03 left the rails question open (E1 skip markers fired yet the
-          # panel stayed X=Z). It rides the pinned E1 baseline above: one
-          # one-shot LP DCS ID read set over the re-trained link, DMI-gated to
-          # 82H0, read-only instrumentation with a single drm_info marker. The
-          # read path is proven dead in both arms by phase 50 (zero-expectation)
-          # so it is never the rung verdict - the verdict comes from the GPIO
-          # 144/160 rail capture + the X=Y dump check. New grep anchors pin the
-          # e3-probe symbol and marker string.
-          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_e3_rail_probe.patch"
-          grep -R 'e3-probe' drivers/gpu/drm/i915/display/vlv_dsi.c
-          grep -R 'GEN_READ_DATA_AVAIL' drivers/gpu/drm/i915/display/vlv_dsi.c
+          # patches/d330_dsi_glk_reset_order_fixup.patch is the upstream
+          # candidate fix from gitlab issue 13225 (lucasgabmoreno note 3698515),
+          # adapted for the v7.0 display->platform() API. Root cause per
+          # vsyrjala (13225 note 3169683): this VBT has an empty
+          # MIPI_SEQ_DEASSERT_RESET and does the whole panel reset pulse
+          # (GPIO 160) from MIPI_SEQ_INIT_OTP, which runs AFTER the DSI host
+          # is up - so the panel is reset with the link already active and
+          # stays black while every driver step reports success. The fixup
+          # runs INIT_OTP as DEASSERT_RESET on GLK (the VLV-only v1 fixup
+          # never covered this). Touches intel_bios.c only; no overlap with
+          # the instrumentation patches above. Grep anchors pin the new
+          # function and the GLK dispatch branch.
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_glk_reset_order_fixup.patch"
+          grep -R 'glk_fixup_mipi_sequences' drivers/gpu/drm/i915/display/intel_bios.c
+          grep -R 'platform.geminilake' drivers/gpu/drm/i915/display/intel_bios.c
+          grep -R 'Running INIT_OTP (GPIO/delay only) as DEASSERT_RESET' drivers/gpu/drm/i915/display/intel_bios.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |
