@@ -1,20 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone:
-milestone_name: (none — between milestones; v11.0 shipped 2026-10-19)
-current_phase: 0
-current_phase_name: (none)
-status: complete
-stopped_at: v11.0 shipped — release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 (kernel debs + one-script installer + patches); device audit green
-last_updated: "2026-10-19T21:30:00.000Z"
+milestone: v12.0
+milestone_name: Boot the Other OSes
+status: planning
+last_updated: "2026-10-19T21:27:57.851Z"
 last_activity: 2026-10-19
-last_activity_desc: v11.0 phases 54-56 executed same day: d330-full-setup.sh, release v11.0 tagged with artifacts, reference device audited
 progress:
-  total_phases: 3
-  completed_phases: 3
+  total_phases: 0
+  completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 0
 ---
 
 # STATE: Project Execution State
@@ -35,10 +31,10 @@ See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 ## Current Position
 
-Phase: none — v11.0 shipped 2026-10-19
+Phase: Not started (defining requirements)
 Plan: —
-Status: milestone complete; release v11.0 published
-Last activity: 2026-10-19 — release + installer + device audit
+Status: Defining requirements
+Last activity: 2026-10-19 — Milestone v12.0 started
 
 ## Accumulated Context
 
