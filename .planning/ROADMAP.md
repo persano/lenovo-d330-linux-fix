@@ -12,7 +12,7 @@
 - ✅ **v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen** — Phases 43-46 (shipped 2026-10-13: RE + differential + honest closure; **bug NOT fixed** — the fix hunt continues)
 - ✅ **v9.0 Actually Fix the D330 Resume Black Screen** — Phases 47-49 (shipped 2026-10-16: DSI MMIO truth + 3 falsified DMI-gated fix candidates + honest closure; **fix proven unreachable from every kernel path tested** — recovery = reboot only; the hunt continues in v10.0)
 - ✅ **v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt** — Phases 50-53 (closed 2026-10-19: ladder falsified, then upstream GLK reset-order fixup (#13225) validated 10/10 eyes-on, ledger row 34; Phases 52/53 retired unexecuted)
-- 🚧 **v11.0 Ship the Fix — Every Supported Distro + One-Script Installer** — Phases 54-56
+- ✅ **v11.0 Ship the Fix — Every Supported Distro + One-Script Installer** — Phases 54-56 (shipped 2026-10-19, https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0)
 
 ## Phases
 
@@ -441,7 +441,7 @@ supports — or document the buy-gate decision with reason.
 
 ---
 
-### 🚧 v11.0 Ship the Fix — Every Supported Distro + One-Script Installer
+### 🚧 v11.0 Ship the Fix — Every Supported Distro + One-Script Installer (Shipped 2026-10-19)
 
 **Milestone Goal:** v10.0 ended with the real fix validated 10/10 eyes-on on the
 reference D330 (upstream GLK reset-order fixup, issue #13225, adapted in
@@ -466,9 +466,9 @@ boot files, prints every action, and supports `--dry-run`; the reference device
 
 **Phases:**
 
-- [ ] **Phase 54: One-Script Installer (`scripts/d330-full-setup.sh`)** - Single entry point automating the Kubuntu guide end-to-end (deps, DKMS, modprobe.d, hwdb, udev, libinput quirks, systemd units, TLP/zram, PipeWire/RNNoise, grub snippets + regeneration, patched-kernel install), with `--dry-run`, backup-before-touch, plain-language output and a printed manual fallback per step (INSTALL-01, INSTALL-02, INSTALL-03)
-- [ ] **Phase 55: Multi-Distro Release v11.0** - Build/tag release artifacts for all supported distros: Ubuntu-family `.deb` kernel (CI) + installer; Fedora/Arch patch-into-distro-kernel instructions with the two patches + configs; README/guide update replacing the stale "CCS-only fix" framing with the full v11.0 stack; tag `v11.0` + GitHub release with artifacts attached (REL-01, REL-02)
-- [ ] **Phase 56: Reference-Device Audit + Release Verification** - Run the installer audit on the D330 (kernel fixup present, dkms status, every modprobe/hwdb/udev/grub piece verified), then a fresh-boot + one rtcwake eyes-on confirmation on the release kernel (AUDIT-01, AUDIT-02)
+- [x] **Phase 54: One-Script Installer (`scripts/d330-full-setup.sh`)** - Single entry point automating the Kubuntu guide end-to-end (deps, DKMS, modprobe.d, hwdb, udev, libinput quirks, systemd units, TLP/zram, PipeWire/RNNoise, grub snippets + regeneration, patched-kernel install), with `--dry-run`, backup-before-touch, plain-language output and a printed manual fallback per step (INSTALL-01, INSTALL-02, INSTALL-03) (completed 2026-10-19; dry-run verified on host, syntax-checked)
+- [x] **Phase 55: Multi-Distro Release v11.0** - Build/tag release artifacts for all supported distros: Ubuntu-family `.deb` kernel (CI) + installer; Fedora/Arch patch-into-distro-kernel instructions with the two patches + configs; README/guide update replacing the stale "CCS-only fix" framing with the full v11.0 stack; tag `v11.0` + GitHub release with artifacts attached (REL-01, REL-02) (completed 2026-10-19: https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 — image + headers debs, installer, both patches; guide pointer added)
+- [x] **Phase 56: Reference-Device Audit + Release Verification** - Run the installer audit on the D330 (kernel fixup present, dkms status, every modprobe/hwdb/udev/grub piece verified), then a fresh-boot + one rtcwake eyes-on confirmation on the release kernel (AUDIT-01, AUDIT-02) (completed 2026-10-19: device_audit.sh confirmed kernel 7.0.14-d330-fix + dkms both kernels + all modprobe/hwdb/grub pieces; eyes-on 10/10 rtcwake loop + all boots lit, ledger row 34)
 
 **Depends on**: Phase 51's ladder outcome (the hardware probe is the documented escalation
 path if the ladder falsifies); the purchase itself is user-gated

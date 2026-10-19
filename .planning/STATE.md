@@ -2,28 +2,28 @@
 gsd_state_version: "1.0"
 milestone: v11.0
 milestone_name: Ship the Fix — Every Supported Distro + One-Script Installer
-current_phase: 54
-current_phase_name: One-Script Installer (d330-full-setup.sh)
-status: planning
-stopped_at: v10.0 closed — upstream GLK reset-order fixup validated 10/10 eyes-on (ledger row 34); v11.0 opened
-last_updated: "2026-10-19T20:00:00.000Z"
+current_phase: 0
+current_phase_name: (milestone shipped)
+status: complete
+stopped_at: v11.0 shipped — release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 (kernel debs + one-script installer + patches); device audit green
+last_updated: "2026-10-19T21:30:00.000Z"
 last_activity: 2026-10-19
-last_activity_desc: v10.0 closed (51-06 closure, 52/53 retired unexecuted, NO_CLEAN_FIX_PROOF §9 overturn); v11.0 roadmap opened
+last_activity_desc: v11.0 phases 54-56 executed same day: d330-full-setup.sh, release v11.0 tagged with artifacts, reference device audited
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 3
   total_plans: 0
   completed_plans: 0
-  percent: 0
+  percent: 100
 ---
 
 # STATE: Project Execution State
 
-- **Active Milestone**: Milestone 11 (v11.0) — Ship the Fix: Every Supported Distro + One-Script Installer
-- **Active Phase**: 54 — One-Script Installer (`scripts/d330-full-setup.sh`)
-- **Status**: v10.0 CLOSED (2026-10-19). The milestone's "no clean fix" premise was overturned: the upstream GLK reset-order fixup (issue #13225, note 3698515), adapted in `patches/d330_dsi_glk_reset_order_fixup.patch` (sha F97F4E87), validated 10/10 lit S3 resumes + all boots on the reference D330 (ledger row 34; `docs/research/NO_CLEAN_FIX_PROOF.md` §9). Kernel `7.0.14-d330-fix` (CI run 39281203672) carries the fixup + CCS quirk; device audit confirmed every parity config installed.
-- **Blockers**: None.
-- **Next Immediate Action**: Plan Phase 54 (one-script installer) → Phase 55 (multi-distro release) → Phase 56 (device audit + tag v11.0)
+- **Active Milestone**: Milestone 11 (v11.0) — Ship the Fix: Every Supported Distro + One-Script Installer — **SHIPPED 2026-10-19**
+- **Active Phase**: none (milestone complete)
+- **Status**: v11.0 SHIPPED (2026-10-19). Release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 — `linux-image-7.0.14-d330-fix` + headers (GLK reset-order fixup + CCS quirk, from CI run 39281203672), `scripts/d330-full-setup.sh` one-script installer, both kernel patches for Fedora/Arch builds. Reference device audited green: kernel fixup booted, dkms for both kernels, all modprobe/hwdb/udev/grub pieces present, 10/10 eyes-on rtcwake (ledger row 34).
+- **Blockers**: None. Remaining user actions: paste the two upstream comments on #13225/#17401 (bodies in chat, 2026-10-19) when convenient.
+- **Next Immediate Action**: none — next milestone via /gsd-new-milestone when the user wants one
 
 ## Project Reference
 
@@ -34,10 +34,10 @@ See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 ## Current Position
 
-Phase: 54 — One-Script Installer
-Plan: not yet planned
-Status: v11.0 opened; roadmap written
-Last activity: 2026-10-19 — v10.0 closure + v11.0 opening
+Phase: none — v11.0 shipped 2026-10-19
+Plan: —
+Status: milestone complete; release v11.0 published
+Last activity: 2026-10-19 — release + installer + device audit
 
 ## Accumulated Context
 
