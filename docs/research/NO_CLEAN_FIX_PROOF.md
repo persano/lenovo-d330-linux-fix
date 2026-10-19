@@ -212,3 +212,48 @@ reason and concrete next instrument).
   (d330_dsi_device_ready_fix.patch) is in git history only (ledger row 30).
 - /gsd-ship merges the branch to main; the deferred-commit ledger of
   uncommitted code (scripts, kit, docs) ships with it.
+
+## 9. v10.0 closure (2026-10-19): the "no clean fix" verdict is OVERTURNED
+
+<!-- planner-discipline-allow: MIPI_SEQ_INIT_OTP -->
+<!-- planner-discipline-allow: panel power cycle -->
+<!-- planner-discipline-allow: keep the panel powered -->
+
+The document's thesis - that no clean fix exists - is **false as a
+generalization**. Sections 1-8 remain an accurate record of what the
+host-side levers showed; S7's extrapolation from those negatives to
+"nothing clean can work" was refuted by a fix that never enters the
+space those sections searched.
+
+**The fix** (upstream candidate, issue #13225 note 3698515, adapted in
+`patches/d330_dsi_glk_reset_order_fixup.patch`, sha F97F4E87): at VBT
+parse time, move the panel reset pulse out of `MIPI_SEQ_INIT_OTP`
+(which runs after the DSI host is already up) so it executes in
+`MIPI_SEQ_DEASSERT_RESET`, before link training - mirroring what
+`vlv_fixup_mipi_sequences()` already does for VLV + v1 VBTs, extended
+to the GLK v3 path.
+
+**Root cause of the black resume** (vsyrjala, #13225 note 3169683): the
+D330's VBT is "kinda borked" - empty DEASSERT_RESET, reset GPIO 160
+frobbing inside INIT_OTP. GLK never got the fixup VLV got.
+
+**Why the earlier falsifications still stand**: rows 30-33 proved what
+they claimed. No host-MMIO lever discriminates working vs broken
+(row 32 byte-identical trap unchanged); a runtime
+`<!-- planner-discipline-allow: intel_dsi_post_disable() -->`
+teardown-skip cannot re-reach boot X=Y; no rail verdict was derivable.
+The fix operates on sequence *ordering* during VBT parsing - a lever
+located below every register dump this project could take. The ladder
+was correctly falsified; only the induction to "no clean fix exists"
+was wrong. Instrumentation never saw it because the difference is not
+in any state the host exposes, it is in what the host *does* and *when*.
+
+**Validation (this unit, eyes-on)**: 10/10 lit S3 resumes in a rtcwake
+loop + all reboots show graphics since install (kernel 7.0.14-d330-fix,
+ledger row 34, dumps `docs/dumps/re_kit/glkfix/`). User verdict
+verbatim: "it is lit with graphics! all the times it booted well!!!!"
+
+**Honest reading of S4's future-work list**: item 1 (see what the GOP
+puts on the wire) turned out unnecessary - the wire content was always
+fine; the host ordered its own reset wrong. Phases 52 (self-healing)
+and 53 (logic analyzer) are superseded, not executed.

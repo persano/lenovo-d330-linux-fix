@@ -1,0 +1,1196 @@
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 1184/1184   #P:2
+#
+#                                _-----=> irqs-off/BH-disabled
+#                               / _----=> need-resched
+#                              | / _---=> hardirq/softirq
+#                              || / _--=> preempt-depth
+#                              ||| / _-=> migrate-disable
+#                              |||| /     delay
+#           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
+#              | |         |   |||||     |         |
+       i2cdetect-8077    [001] .....  3937.568197: i2c_read: i2c-0 #0 a=030 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.568371: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.568433: i2c_read: i2c-0 #0 a=031 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.568605: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.568648: i2c_read: i2c-0 #0 a=032 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.568843: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.568886: i2c_read: i2c-0 #0 a=033 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.569012: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.569050: i2c_read: i2c-0 #0 a=034 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.569178: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.569214: i2c_read: i2c-0 #0 a=035 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.569304: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.569340: i2c_read: i2c-0 #0 a=036 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.569528: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.569562: i2c_read: i2c-0 #0 a=037 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.569662: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570045: i2c_read: i2c-0 #0 a=050 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.570141: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570180: i2c_read: i2c-0 #0 a=051 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.570276: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570303: i2c_read: i2c-0 #0 a=052 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.570428: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570460: i2c_read: i2c-0 #0 a=053 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.570577: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570613: i2c_read: i2c-0 #0 a=054 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.570750: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570783: i2c_read: i2c-0 #0 a=055 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.570871: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.570909: i2c_read: i2c-0 #0 a=056 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571008: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571034: i2c_read: i2c-0 #0 a=057 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571120: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571153: i2c_read: i2c-0 #0 a=058 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571246: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571280: i2c_read: i2c-0 #0 a=059 f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571375: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571429: i2c_read: i2c-0 #0 a=05a f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571526: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571558: i2c_read: i2c-0 #0 a=05b f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571647: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571675: i2c_read: i2c-0 #0 a=05c f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571773: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571807: i2c_read: i2c-0 #0 a=05d f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.571895: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.571921: i2c_read: i2c-0 #0 a=05e f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.572014: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8077    [001] .....  3937.572049: i2c_read: i2c-0 #0 a=05f f=0001 l=1
+       i2cdetect-8077    [001] .....  3937.572142: i2c_result: i2c-0 n=1 ret=-121
+       i2cdetect-8078    [001] .....  3937.577162: i2c_read: i2c-1 #0 a=030 f=0001 l=1
+       i2cdetect-8078    [001] .....  3937.577302: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [001] .....  3937.577339: i2c_read: i2c-1 #0 a=031 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.577457: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.577498: i2c_read: i2c-1 #0 a=032 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.577624: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.577664: i2c_read: i2c-1 #0 a=033 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.577792: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.577830: i2c_read: i2c-1 #0 a=034 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.577954: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.577994: i2c_read: i2c-1 #0 a=035 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.578093: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.578132: i2c_read: i2c-1 #0 a=036 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.578226: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.578262: i2c_read: i2c-1 #0 a=037 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.578356: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.578742: i2c_read: i2c-1 #0 a=050 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.578843: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.578876: i2c_read: i2c-1 #0 a=051 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.578972: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.578998: i2c_read: i2c-1 #0 a=052 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579088: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579122: i2c_read: i2c-1 #0 a=053 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579217: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579249: i2c_read: i2c-1 #0 a=054 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579340: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579373: i2c_read: i2c-1 #0 a=055 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579498: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579534: i2c_read: i2c-1 #0 a=056 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579632: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579663: i2c_read: i2c-1 #0 a=057 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579755: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579781: i2c_read: i2c-1 #0 a=058 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579877: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.579908: i2c_read: i2c-1 #0 a=059 f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.579999: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.580033: i2c_read: i2c-1 #0 a=05a f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.580130: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.580163: i2c_read: i2c-1 #0 a=05b f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.580256: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.580294: i2c_read: i2c-1 #0 a=05c f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.580386: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.580437: i2c_read: i2c-1 #0 a=05d f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.580526: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.580559: i2c_read: i2c-1 #0 a=05e f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.580650: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8078    [000] .....  3937.580683: i2c_read: i2c-1 #0 a=05f f=0001 l=1
+       i2cdetect-8078    [000] .....  3937.580781: i2c_result: i2c-1 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.585752: i2c_read: i2c-2 #0 a=030 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.585936: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.585970: i2c_read: i2c-2 #0 a=031 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586096: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.586128: i2c_read: i2c-2 #0 a=032 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586217: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.586250: i2c_read: i2c-2 #0 a=033 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586344: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.586377: i2c_read: i2c-2 #0 a=034 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586532: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.586570: i2c_read: i2c-2 #0 a=035 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586659: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.586684: i2c_read: i2c-2 #0 a=036 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586774: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.586807: i2c_read: i2c-2 #0 a=037 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.586903: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.587276: i2c_read: i2c-2 #0 a=050 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.587368: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.587430: i2c_read: i2c-2 #0 a=051 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.587522: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.587550: i2c_read: i2c-2 #0 a=052 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.587642: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.587672: i2c_read: i2c-2 #0 a=053 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.587759: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.587787: i2c_read: i2c-2 #0 a=054 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.587887: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.587922: i2c_read: i2c-2 #0 a=055 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588009: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588044: i2c_read: i2c-2 #0 a=056 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588138: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588170: i2c_read: i2c-2 #0 a=057 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588261: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588287: i2c_read: i2c-2 #0 a=058 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588376: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588454: i2c_read: i2c-2 #0 a=059 f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588549: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588585: i2c_read: i2c-2 #0 a=05a f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588681: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588709: i2c_read: i2c-2 #0 a=05b f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588808: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588842: i2c_read: i2c-2 #0 a=05c f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.588929: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.588953: i2c_read: i2c-2 #0 a=05d f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.589041: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.589074: i2c_read: i2c-2 #0 a=05e f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.589164: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8079    [000] .....  3937.589198: i2c_read: i2c-2 #0 a=05f f=0001 l=1
+       i2cdetect-8079    [000] .....  3937.589295: i2c_result: i2c-2 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.594132: i2c_read: i2c-3 #0 a=030 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.594284: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.594313: i2c_read: i2c-3 #0 a=031 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.594438: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.594470: i2c_read: i2c-3 #0 a=032 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.594622: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.594649: i2c_read: i2c-3 #0 a=033 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.594774: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.594812: i2c_read: i2c-3 #0 a=034 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.594906: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.594940: i2c_read: i2c-3 #0 a=035 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.595034: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.595065: i2c_read: i2c-3 #0 a=036 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.595155: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.595187: i2c_read: i2c-3 #0 a=037 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.595283: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.595705: i2c_read: i2c-3 #0 a=050 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.595843: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.595877: i2c_read: i2c-3 #0 a=051 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.595969: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.596002: i2c_read: i2c-3 #0 a=052 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.596097: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.596129: i2c_read: i2c-3 #0 a=053 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.596216: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.596240: i2c_read: i2c-3 #0 a=054 f=0001 l=1
+       i2cdetect-8080    [000] .....  3937.596329: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [000] .....  3937.596362: i2c_read: i2c-3 #0 a=055 f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.596464: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.596506: i2c_read: i2c-3 #0 a=056 f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.596612: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.596645: i2c_read: i2c-3 #0 a=057 f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.596738: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.596766: i2c_read: i2c-3 #0 a=058 f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.596865: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.596896: i2c_read: i2c-3 #0 a=059 f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.596983: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.597011: i2c_read: i2c-3 #0 a=05a f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.597112: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.597143: i2c_read: i2c-3 #0 a=05b f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.597234: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.597262: i2c_read: i2c-3 #0 a=05c f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.597360: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.597408: i2c_read: i2c-3 #0 a=05d f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.597496: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.597525: i2c_read: i2c-3 #0 a=05e f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.597629: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8080    [001] .....  3937.597663: i2c_read: i2c-3 #0 a=05f f=0001 l=1
+       i2cdetect-8080    [001] .....  3937.597754: i2c_result: i2c-3 n=1 ret=-121
+       i2cdetect-8081    [001] .....  3937.602838: i2c_read: i2c-4 #0 a=030 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.603281: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.603314: i2c_read: i2c-4 #0 a=031 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.603721: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.603759: i2c_read: i2c-4 #0 a=032 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.604080: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.604110: i2c_read: i2c-4 #0 a=033 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.604481: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.604520: i2c_read: i2c-4 #0 a=034 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.604840: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.604871: i2c_read: i2c-4 #0 a=035 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.605196: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.605233: i2c_read: i2c-4 #0 a=036 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.605599: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.605637: i2c_read: i2c-4 #0 a=037 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.605950: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.606371: i2c_read: i2c-4 #0 a=050 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.606696: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.606737: i2c_read: i2c-4 #0 a=051 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.607031: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.607063: i2c_read: i2c-4 #0 a=052 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.607366: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.607436: i2c_read: i2c-4 #0 a=053 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.607748: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.607782: i2c_read: i2c-4 #0 a=054 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.608090: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.608124: i2c_read: i2c-4 #0 a=055 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.608465: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.608502: i2c_read: i2c-4 #0 a=056 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.608890: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.608926: i2c_read: i2c-4 #0 a=057 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.609226: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.609262: i2c_read: i2c-4 #0 a=058 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.609678: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.609715: i2c_read: i2c-4 #0 a=059 f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.610012: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.610050: i2c_read: i2c-4 #0 a=05a f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.610360: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.610432: i2c_read: i2c-4 #0 a=05b f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.610819: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.610859: i2c_read: i2c-4 #0 a=05c f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.611161: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.611197: i2c_read: i2c-4 #0 a=05d f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.611590: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.611627: i2c_read: i2c-4 #0 a=05e f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.611924: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8081    [001] .....  3937.611961: i2c_read: i2c-4 #0 a=05f f=0001 l=1
+       i2cdetect-8081    [001] .....  3937.612283: i2c_result: i2c-4 n=1 ret=-11
+       i2cdetect-8082    [001] .....  3937.617981: i2c_read: i2c-5 #0 a=030 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.618114: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.618145: i2c_read: i2c-5 #0 a=031 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.618242: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.618276: i2c_read: i2c-5 #0 a=032 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.618374: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.618441: i2c_read: i2c-5 #0 a=033 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.618539: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.618578: i2c_read: i2c-5 #0 a=034 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.618674: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.618711: i2c_read: i2c-5 #0 a=035 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.618810: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.618843: i2c_read: i2c-5 #0 a=036 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.619014: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.619051: i2c_read: i2c-5 #0 a=037 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.619150: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.619671: i2c_read: i2c-5 #0 a=050 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.619792: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.619829: i2c_read: i2c-5 #0 a=051 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.619932: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.619966: i2c_read: i2c-5 #0 a=052 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620059: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620095: i2c_read: i2c-5 #0 a=053 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620195: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620230: i2c_read: i2c-5 #0 a=054 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620322: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620351: i2c_read: i2c-5 #0 a=055 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620467: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620502: i2c_read: i2c-5 #0 a=056 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620593: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620623: i2c_read: i2c-5 #0 a=057 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620724: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620759: i2c_read: i2c-5 #0 a=058 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620856: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.620896: i2c_read: i2c-5 #0 a=059 f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.620990: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.621022: i2c_read: i2c-5 #0 a=05a f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.621121: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.621156: i2c_read: i2c-5 #0 a=05b f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.621253: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.621289: i2c_read: i2c-5 #0 a=05c f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.621416: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.621451: i2c_read: i2c-5 #0 a=05d f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.621554: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.621586: i2c_read: i2c-5 #0 a=05e f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.621678: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8082    [001] .....  3937.621706: i2c_read: i2c-5 #0 a=05f f=0001 l=1
+       i2cdetect-8082    [001] .....  3937.621803: i2c_result: i2c-5 n=1 ret=-121
+       i2cdetect-8083    [001] .....  3937.627520: i2c_write: i2c-6 #0 a=008 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.636026: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.636071: i2c_write: i2c-6 #0 a=009 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.644575: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.644617: i2c_write: i2c-6 #0 a=00a f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.653025: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.653067: i2c_write: i2c-6 #0 a=00b f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.661568: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.661610: i2c_write: i2c-6 #0 a=00c f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.670020: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.670063: i2c_write: i2c-6 #0 a=00d f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.678560: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.678602: i2c_write: i2c-6 #0 a=00e f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.687019: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.687063: i2c_write: i2c-6 #0 a=00f f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.695569: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.695619: i2c_write: i2c-6 #0 a=010 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.704022: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.704064: i2c_write: i2c-6 #0 a=011 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.712554: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.712598: i2c_write: i2c-6 #0 a=012 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.721022: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.721064: i2c_write: i2c-6 #0 a=013 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.729571: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.729615: i2c_write: i2c-6 #0 a=014 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.738021: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.738064: i2c_write: i2c-6 #0 a=015 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3937.746614: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3937.746723: i2c_write: i2c-6 #0 a=016 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.755267: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.755384: i2c_write: i2c-6 #0 a=017 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.764144: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.764254: i2c_write: i2c-6 #0 a=018 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.772769: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.772880: i2c_write: i2c-6 #0 a=019 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.781318: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.781494: i2c_write: i2c-6 #0 a=01a f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.790151: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.790263: i2c_write: i2c-6 #0 a=01b f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.798754: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.798861: i2c_write: i2c-6 #0 a=01c f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.807319: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.807458: i2c_write: i2c-6 #0 a=01d f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.816161: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.816272: i2c_write: i2c-6 #0 a=01e f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.824821: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.824932: i2c_write: i2c-6 #0 a=01f f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.833633: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.833748: i2c_write: i2c-6 #0 a=020 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.842328: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.842466: i2c_write: i2c-6 #0 a=021 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.851132: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.851245: i2c_write: i2c-6 #0 a=022 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.859617: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.859724: i2c_write: i2c-6 #0 a=023 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.868518: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.868628: i2c_write: i2c-6 #0 a=024 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.877141: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.877251: i2c_write: i2c-6 #0 a=025 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.885769: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.885879: i2c_write: i2c-6 #0 a=026 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.894485: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.894593: i2c_write: i2c-6 #0 a=027 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.903146: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.903258: i2c_write: i2c-6 #0 a=028 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.911725: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.911834: i2c_write: i2c-6 #0 a=029 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.920481: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.920590: i2c_write: i2c-6 #0 a=02a f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.929177: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.929288: i2c_write: i2c-6 #0 a=02b f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.937910: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.938020: i2c_write: i2c-6 #0 a=02c f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.946697: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.946808: i2c_write: i2c-6 #0 a=02d f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.955354: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.955487: i2c_write: i2c-6 #0 a=02e f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.964158: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.964269: i2c_write: i2c-6 #0 a=02f f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3937.972719: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.972836: i2c_read: i2c-6 #0 a=030 f=0001 l=1
+       i2cdetect-8083    [000] .....  3937.981329: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.981467: i2c_read: i2c-6 #0 a=031 f=0001 l=1
+       i2cdetect-8083    [000] .....  3937.990195: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.990304: i2c_read: i2c-6 #0 a=032 f=0001 l=1
+       i2cdetect-8083    [000] .....  3937.998953: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3937.999062: i2c_read: i2c-6 #0 a=033 f=0001 l=1
+       i2cdetect-8083    [001] .....  3938.007522: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.007637: i2c_read: i2c-6 #0 a=034 f=0001 l=1
+       i2cdetect-8083    [001] .....  3938.016298: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.016470: i2c_read: i2c-6 #0 a=035 f=0001 l=1
+       i2cdetect-8083    [001] .....  3938.025171: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.025281: i2c_read: i2c-6 #0 a=036 f=0001 l=1
+       i2cdetect-8083    [001] .....  3938.034554: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.034659: i2c_read: i2c-6 #0 a=037 f=0001 l=1
+       i2cdetect-8083    [001] .....  3938.043341: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.043480: i2c_write: i2c-6 #0 a=038 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.052290: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.052437: i2c_write: i2c-6 #0 a=039 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.060970: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.061078: i2c_write: i2c-6 #0 a=03a f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.069481: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.069589: i2c_write: i2c-6 #0 a=03b f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.078175: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.078289: i2c_write: i2c-6 #0 a=03c f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.086910: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.087009: i2c_write: i2c-6 #0 a=03d f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.095538: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.095647: i2c_write: i2c-6 #0 a=03e f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.104139: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.104250: i2c_write: i2c-6 #0 a=03f f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.112799: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.112914: i2c_write: i2c-6 #0 a=040 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.121497: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.121607: i2c_write: i2c-6 #0 a=041 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.130182: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.130292: i2c_write: i2c-6 #0 a=042 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.138914: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.139024: i2c_write: i2c-6 #0 a=043 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.147700: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.147810: i2c_write: i2c-6 #0 a=044 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.156559: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.156668: i2c_write: i2c-6 #0 a=045 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.165322: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.165461: i2c_write: i2c-6 #0 a=046 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.174252: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.174364: i2c_write: i2c-6 #0 a=047 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.182829: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.182940: i2c_write: i2c-6 #0 a=048 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.191451: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.191561: i2c_write: i2c-6 #0 a=049 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.200128: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.200239: i2c_write: i2c-6 #0 a=04a f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.208775: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.208884: i2c_write: i2c-6 #0 a=04b f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.217291: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.217436: i2c_write: i2c-6 #0 a=04c f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.226197: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.226309: i2c_write: i2c-6 #0 a=04d f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.234862: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.234974: i2c_write: i2c-6 #0 a=04e f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.243484: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.243593: i2c_write: i2c-6 #0 a=04f f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.252162: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.252278: i2c_read: i2c-6 #0 a=050 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.260658: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.260769: i2c_read: i2c-6 #0 a=051 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.269470: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.269579: i2c_read: i2c-6 #0 a=052 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.278160: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.278273: i2c_read: i2c-6 #0 a=053 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.286775: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.286886: i2c_read: i2c-6 #0 a=054 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.295333: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.295471: i2c_read: i2c-6 #0 a=055 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.304281: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.304451: i2c_read: i2c-6 #0 a=056 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.313130: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.313242: i2c_read: i2c-6 #0 a=057 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.321722: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.321831: i2c_read: i2c-6 #0 a=058 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.330527: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.330639: i2c_read: i2c-6 #0 a=059 f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.339238: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.339347: i2c_read: i2c-6 #0 a=05a f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.347927: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.348037: i2c_read: i2c-6 #0 a=05b f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.356494: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.356603: i2c_read: i2c-6 #0 a=05c f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.365164: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.365276: i2c_read: i2c-6 #0 a=05d f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.373782: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.373892: i2c_read: i2c-6 #0 a=05e f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.382476: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.382585: i2c_read: i2c-6 #0 a=05f f=0001 l=1
+       i2cdetect-8083    [000] .....  3938.391168: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.391285: i2c_write: i2c-6 #0 a=060 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.400161: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.400272: i2c_write: i2c-6 #0 a=061 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.408773: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.408884: i2c_write: i2c-6 #0 a=062 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.417470: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.417579: i2c_write: i2c-6 #0 a=063 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.426187: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.426300: i2c_write: i2c-6 #0 a=064 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.434836: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.434944: i2c_write: i2c-6 #0 a=065 f=0000 l=0 []
+       i2cdetect-8083    [001] .....  3938.443482: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [001] .....  3938.443592: i2c_write: i2c-6 #0 a=066 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.452356: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.452533: i2c_write: i2c-6 #0 a=067 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.461162: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.461271: i2c_write: i2c-6 #0 a=068 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.469660: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.469770: i2c_write: i2c-6 #0 a=069 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.478290: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.478435: i2c_write: i2c-6 #0 a=06a f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.486950: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.487060: i2c_write: i2c-6 #0 a=06b f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.495844: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.495957: i2c_write: i2c-6 #0 a=06c f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.504495: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.504603: i2c_write: i2c-6 #0 a=06d f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.513143: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.513253: i2c_write: i2c-6 #0 a=06e f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.521839: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.521950: i2c_write: i2c-6 #0 a=06f f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.530850: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.530965: i2c_write: i2c-6 #0 a=070 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.539454: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.539565: i2c_write: i2c-6 #0 a=071 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.548277: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.548387: i2c_write: i2c-6 #0 a=072 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.557166: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.557278: i2c_write: i2c-6 #0 a=073 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.565694: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.565804: i2c_write: i2c-6 #0 a=074 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.574450: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.574561: i2c_write: i2c-6 #0 a=075 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.583167: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.583279: i2c_write: i2c-6 #0 a=076 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.591837: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8083    [000] .....  3938.591947: i2c_write: i2c-6 #0 a=077 f=0000 l=0 []
+       i2cdetect-8083    [000] .....  3938.600458: i2c_result: i2c-6 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.605753: i2c_write: i2c-7 #0 a=008 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.606106: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.606140: i2c_write: i2c-7 #0 a=009 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.606478: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.606511: i2c_write: i2c-7 #0 a=00a f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.606834: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.606860: i2c_write: i2c-7 #0 a=00b f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.607182: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.607215: i2c_write: i2c-7 #0 a=00c f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.607549: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.607584: i2c_write: i2c-7 #0 a=00d f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.607919: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.607951: i2c_write: i2c-7 #0 a=00e f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.608274: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.608302: i2c_write: i2c-7 #0 a=00f f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.608623: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.608658: i2c_write: i2c-7 #0 a=010 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.608981: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.609014: i2c_write: i2c-7 #0 a=011 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.609338: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.609366: i2c_write: i2c-7 #0 a=012 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.609706: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.609740: i2c_write: i2c-7 #0 a=013 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.610064: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.610092: i2c_write: i2c-7 #0 a=014 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.610431: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.610462: i2c_write: i2c-7 #0 a=015 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.610789: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.610821: i2c_write: i2c-7 #0 a=016 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.611162: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.611197: i2c_write: i2c-7 #0 a=017 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.611524: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.611556: i2c_write: i2c-7 #0 a=018 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.611898: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.611935: i2c_write: i2c-7 #0 a=019 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.612261: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.612290: i2c_write: i2c-7 #0 a=01a f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.612631: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.612666: i2c_write: i2c-7 #0 a=01b f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.612996: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.613024: i2c_write: i2c-7 #0 a=01c f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.613353: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.613387: i2c_write: i2c-7 #0 a=01d f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.613741: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.613774: i2c_write: i2c-7 #0 a=01e f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.614103: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.614137: i2c_write: i2c-7 #0 a=01f f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.614467: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.614499: i2c_write: i2c-7 #0 a=020 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.614832: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.614864: i2c_write: i2c-7 #0 a=021 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.615189: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.615223: i2c_write: i2c-7 #0 a=022 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.615574: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.615608: i2c_write: i2c-7 #0 a=023 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.615934: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.615969: i2c_write: i2c-7 #0 a=024 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.616299: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.616332: i2c_write: i2c-7 #0 a=025 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.616658: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.616690: i2c_write: i2c-7 #0 a=026 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.617023: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.617058: i2c_write: i2c-7 #0 a=027 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.617415: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.617449: i2c_write: i2c-7 #0 a=028 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.617774: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.617801: i2c_write: i2c-7 #0 a=029 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.618122: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.618156: i2c_write: i2c-7 #0 a=02a f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.618488: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.618521: i2c_write: i2c-7 #0 a=02b f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.618850: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.618885: i2c_write: i2c-7 #0 a=02c f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.619216: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.619250: i2c_write: i2c-7 #0 a=02d f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.619590: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.619621: i2c_write: i2c-7 #0 a=02e f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.619962: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.619999: i2c_write: i2c-7 #0 a=02f f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.620328: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.620360: i2c_read: i2c-7 #0 a=030 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.620691: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.620726: i2c_read: i2c-7 #0 a=031 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.621058: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.621088: i2c_read: i2c-7 #0 a=032 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.621426: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.621458: i2c_read: i2c-7 #0 a=033 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.621782: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.621817: i2c_read: i2c-7 #0 a=034 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.622148: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.622179: i2c_read: i2c-7 #0 a=035 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.622510: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.622543: i2c_read: i2c-7 #0 a=036 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.622871: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.622900: i2c_read: i2c-7 #0 a=037 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.623234: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.623267: i2c_write: i2c-7 #0 a=038 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.623616: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.623647: i2c_write: i2c-7 #0 a=039 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.623978: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.624011: i2c_write: i2c-7 #0 a=03a f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.624354: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.624387: i2c_write: i2c-7 #0 a=03b f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.624731: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.624766: i2c_write: i2c-7 #0 a=03c f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.625099: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.625133: i2c_write: i2c-7 #0 a=03d f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.625478: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.625515: i2c_write: i2c-7 #0 a=03e f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.625839: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.625874: i2c_write: i2c-7 #0 a=03f f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.626205: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.626240: i2c_write: i2c-7 #0 a=040 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.626588: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.626619: i2c_write: i2c-7 #0 a=041 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.626952: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.626985: i2c_write: i2c-7 #0 a=042 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.627316: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.627345: i2c_write: i2c-7 #0 a=043 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.627674: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.627708: i2c_write: i2c-7 #0 a=044 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.628052: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.628087: i2c_write: i2c-7 #0 a=045 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.628429: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.628457: i2c_write: i2c-7 #0 a=046 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.628780: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.628816: i2c_write: i2c-7 #0 a=047 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.629147: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.629175: i2c_write: i2c-7 #0 a=048 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.629508: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.629539: i2c_write: i2c-7 #0 a=049 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.629881: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.629917: i2c_write: i2c-7 #0 a=04a f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.630246: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.630274: i2c_write: i2c-7 #0 a=04b f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.630627: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.630660: i2c_write: i2c-7 #0 a=04c f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.630986: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.631017: i2c_write: i2c-7 #0 a=04d f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.631365: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.631417: i2c_write: i2c-7 #0 a=04e f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.631739: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.631767: i2c_write: i2c-7 #0 a=04f f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.632096: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.632132: i2c_read: i2c-7 #0 a=050 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.632463: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.632498: i2c_read: i2c-7 #0 a=051 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.632837: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.632871: i2c_read: i2c-7 #0 a=052 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.633196: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.633226: i2c_read: i2c-7 #0 a=053 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.633590: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.633623: i2c_read: i2c-7 #0 a=054 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.633959: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.633988: i2c_read: i2c-7 #0 a=055 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.634331: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.634364: i2c_read: i2c-7 #0 a=056 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.634696: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.634732: i2c_read: i2c-7 #0 a=057 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.635061: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.635096: i2c_read: i2c-7 #0 a=058 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.635452: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.635485: i2c_read: i2c-7 #0 a=059 f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.635817: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.635847: i2c_read: i2c-7 #0 a=05a f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.636184: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.636218: i2c_read: i2c-7 #0 a=05b f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.636545: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.636581: i2c_read: i2c-7 #0 a=05c f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.636913: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.636946: i2c_read: i2c-7 #0 a=05d f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.637271: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.637300: i2c_read: i2c-7 #0 a=05e f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.637631: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.637665: i2c_read: i2c-7 #0 a=05f f=0001 l=1
+       i2cdetect-8084    [000] .....  3938.638010: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.638045: i2c_write: i2c-7 #0 a=060 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.638369: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.638411: i2c_write: i2c-7 #0 a=061 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.638739: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.638774: i2c_write: i2c-7 #0 a=062 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.639118: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.639152: i2c_write: i2c-7 #0 a=063 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.639479: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.639509: i2c_write: i2c-7 #0 a=064 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.639838: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.639871: i2c_write: i2c-7 #0 a=065 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.640196: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.640225: i2c_write: i2c-7 #0 a=066 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.640575: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.640608: i2c_write: i2c-7 #0 a=067 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.640938: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.640972: i2c_write: i2c-7 #0 a=068 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.641313: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.641346: i2c_write: i2c-7 #0 a=069 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.641675: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.641706: i2c_write: i2c-7 #0 a=06a f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.642047: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.642083: i2c_write: i2c-7 #0 a=06b f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.642429: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.642458: i2c_write: i2c-7 #0 a=06c f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.642804: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.642841: i2c_write: i2c-7 #0 a=06d f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.643167: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.643197: i2c_write: i2c-7 #0 a=06e f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.643540: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.643572: i2c_write: i2c-7 #0 a=06f f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.643898: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.643927: i2c_write: i2c-7 #0 a=070 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.644251: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.644286: i2c_write: i2c-7 #0 a=071 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.644626: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.644661: i2c_write: i2c-7 #0 a=072 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.644999: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.645033: i2c_write: i2c-7 #0 a=073 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.645354: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.645382: i2c_write: i2c-7 #0 a=074 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.645736: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.645769: i2c_write: i2c-7 #0 a=075 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.646100: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.646129: i2c_write: i2c-7 #0 a=076 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.646469: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8084    [000] .....  3938.646502: i2c_write: i2c-7 #0 a=077 f=0000 l=0 []
+       i2cdetect-8084    [000] .....  3938.646831: i2c_result: i2c-7 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3938.650949: i2c_write: i2c-8 #0 a=008 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3938.717429: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3938.717537: i2c_write: i2c-8 #0 a=009 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3938.784428: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3938.784533: i2c_write: i2c-8 #0 a=00a f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3938.851430: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3938.851533: i2c_write: i2c-8 #0 a=00b f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3938.918432: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3938.918534: i2c_write: i2c-8 #0 a=00c f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3938.986431: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3938.986531: i2c_write: i2c-8 #0 a=00d f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.054433: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.054536: i2c_write: i2c-8 #0 a=00e f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.121431: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.121538: i2c_write: i2c-8 #0 a=00f f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.189434: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.189546: i2c_write: i2c-8 #0 a=010 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.257432: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.257535: i2c_write: i2c-8 #0 a=011 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.324431: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.324537: i2c_write: i2c-8 #0 a=012 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.391431: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.391537: i2c_write: i2c-8 #0 a=013 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.458436: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.458540: i2c_write: i2c-8 #0 a=014 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.525435: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.525540: i2c_write: i2c-8 #0 a=015 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.592435: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.592541: i2c_write: i2c-8 #0 a=016 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.659434: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.659542: i2c_write: i2c-8 #0 a=017 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.726436: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.726540: i2c_write: i2c-8 #0 a=018 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.793435: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.793542: i2c_write: i2c-8 #0 a=019 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.860437: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.860547: i2c_write: i2c-8 #0 a=01a f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3939.927436: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.927539: i2c_write: i2c-8 #0 a=01b f=0000 l=0 []
+       i2cdetect-8085    [000] .l...  3939.994440: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3939.994574: i2c_write: i2c-8 #0 a=01c f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.061442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.061549: i2c_write: i2c-8 #0 a=01d f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.128437: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.128543: i2c_write: i2c-8 #0 a=01e f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.195442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.195546: i2c_write: i2c-8 #0 a=01f f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.262442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.262551: i2c_write: i2c-8 #0 a=020 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.329438: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.329543: i2c_write: i2c-8 #0 a=021 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.397439: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.397545: i2c_write: i2c-8 #0 a=022 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.465442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.465548: i2c_write: i2c-8 #0 a=023 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.532439: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.532545: i2c_write: i2c-8 #0 a=024 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.600440: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.600545: i2c_write: i2c-8 #0 a=025 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.667443: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.667551: i2c_write: i2c-8 #0 a=026 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.734442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.734547: i2c_write: i2c-8 #0 a=027 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3940.801442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3940.801548: i2c_write: i2c-8 #0 a=028 f=0000 l=0 []
+       i2cdetect-8085    [001] .....  3940.869442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [001] .....  3940.869552: i2c_write: i2c-8 #0 a=029 f=0000 l=0 []
+       i2cdetect-8085    [001] .....  3940.936443: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [001] .....  3940.936550: i2c_write: i2c-8 #0 a=02a f=0000 l=0 []
+       i2cdetect-8085    [001] .....  3941.003442: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [001] .....  3941.003551: i2c_write: i2c-8 #0 a=02b f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3941.070444: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.070555: i2c_write: i2c-8 #0 a=02c f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3941.137443: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.137549: i2c_write: i2c-8 #0 a=02d f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3941.205444: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.205550: i2c_write: i2c-8 #0 a=02e f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3941.273444: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.273551: i2c_write: i2c-8 #0 a=02f f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3941.340446: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.340556: i2c_read: i2c-8 #0 a=030 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.407445: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.407552: i2c_read: i2c-8 #0 a=031 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.474445: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.474552: i2c_read: i2c-8 #0 a=032 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.541447: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.541554: i2c_read: i2c-8 #0 a=033 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.608446: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.608553: i2c_read: i2c-8 #0 a=034 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.675469: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.675576: i2c_read: i2c-8 #0 a=035 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.742447: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.742555: i2c_read: i2c-8 #0 a=036 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.809448: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.809554: i2c_read: i2c-8 #0 a=037 f=0001 l=1
+       i2cdetect-8085    [000] .....  3941.876449: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.876557: i2c_write: i2c-8 #0 a=038 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3941.944448: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3941.944554: i2c_write: i2c-8 #0 a=039 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.012455: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.012557: i2c_write: i2c-8 #0 a=03a f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.079450: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.079557: i2c_write: i2c-8 #0 a=03b f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.146450: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.146559: i2c_write: i2c-8 #0 a=03c f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.213450: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.213558: i2c_write: i2c-8 #0 a=03d f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.280452: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.280558: i2c_write: i2c-8 #0 a=03e f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.347450: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.347558: i2c_write: i2c-8 #0 a=03f f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.414452: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.414562: i2c_write: i2c-8 #0 a=040 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.481453: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.481560: i2c_write: i2c-8 #0 a=041 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.549455: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.549557: i2c_write: i2c-8 #0 a=042 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.616453: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.616561: i2c_write: i2c-8 #0 a=043 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.683453: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.683558: i2c_write: i2c-8 #0 a=044 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.750454: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.750561: i2c_write: i2c-8 #0 a=045 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.817453: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.817555: i2c_write: i2c-8 #0 a=046 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.884455: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.884558: i2c_write: i2c-8 #0 a=047 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3942.951455: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3942.951561: i2c_write: i2c-8 #0 a=048 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.018466: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.018557: i2c_write: i2c-8 #0 a=049 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.085457: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.085564: i2c_write: i2c-8 #0 a=04a f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.152457: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.152562: i2c_write: i2c-8 #0 a=04b f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.219462: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.219571: i2c_write: i2c-8 #0 a=04c f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.286458: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.286566: i2c_write: i2c-8 #0 a=04d f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.353457: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.353562: i2c_write: i2c-8 #0 a=04e f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.420458: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.420564: i2c_write: i2c-8 #0 a=04f f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3943.487459: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.487572: i2c_read: i2c-8 #0 a=050 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.555460: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.555568: i2c_read: i2c-8 #0 a=051 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.622462: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.622569: i2c_read: i2c-8 #0 a=052 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.689462: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.689568: i2c_read: i2c-8 #0 a=053 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.756460: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.756568: i2c_read: i2c-8 #0 a=054 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.823489: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.823625: i2c_read: i2c-8 #0 a=055 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.890460: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.890567: i2c_read: i2c-8 #0 a=056 f=0001 l=1
+       i2cdetect-8085    [000] .....  3943.958462: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3943.958567: i2c_read: i2c-8 #0 a=057 f=0001 l=1
+       i2cdetect-8085    [000] .l...  3944.026467: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.026614: i2c_read: i2c-8 #0 a=058 f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.093463: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.093565: i2c_read: i2c-8 #0 a=059 f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.160464: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.160569: i2c_read: i2c-8 #0 a=05a f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.227465: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.227571: i2c_read: i2c-8 #0 a=05b f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.295464: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.295571: i2c_read: i2c-8 #0 a=05c f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.362464: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.362569: i2c_read: i2c-8 #0 a=05d f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.429463: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.429570: i2c_read: i2c-8 #0 a=05e f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.496465: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.496574: i2c_read: i2c-8 #0 a=05f f=0001 l=1
+       i2cdetect-8085    [000] .....  3944.563468: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.563578: i2c_write: i2c-8 #0 a=060 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3944.630464: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.630571: i2c_write: i2c-8 #0 a=061 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3944.697465: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.697572: i2c_write: i2c-8 #0 a=062 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3944.765467: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.765573: i2c_write: i2c-8 #0 a=063 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3944.832468: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.832564: i2c_write: i2c-8 #0 a=064 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3944.899468: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.899577: i2c_write: i2c-8 #0 a=065 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3944.966469: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3944.966574: i2c_write: i2c-8 #0 a=066 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.033467: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.033573: i2c_write: i2c-8 #0 a=067 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.100470: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.100571: i2c_write: i2c-8 #0 a=068 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.167468: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.167576: i2c_write: i2c-8 #0 a=069 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.234469: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.234574: i2c_write: i2c-8 #0 a=06a f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.301470: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.301576: i2c_write: i2c-8 #0 a=06b f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.368470: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.368577: i2c_write: i2c-8 #0 a=06c f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.435471: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.435579: i2c_write: i2c-8 #0 a=06d f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.502472: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.502580: i2c_write: i2c-8 #0 a=06e f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.570470: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.570578: i2c_write: i2c-8 #0 a=06f f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.637473: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.637583: i2c_write: i2c-8 #0 a=070 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.704472: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.704580: i2c_write: i2c-8 #0 a=071 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.771472: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.771578: i2c_write: i2c-8 #0 a=072 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.838475: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.838570: i2c_write: i2c-8 #0 a=073 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.906473: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.906581: i2c_write: i2c-8 #0 a=074 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3945.973473: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3945.973578: i2c_write: i2c-8 #0 a=075 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3946.041476: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3946.041578: i2c_write: i2c-8 #0 a=076 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3946.108477: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8085    [000] .....  3946.108580: i2c_write: i2c-8 #0 a=077 f=0000 l=0 []
+       i2cdetect-8085    [000] .....  3946.175476: i2c_result: i2c-8 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.180377: i2c_write: i2c-9 #0 a=008 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.188421: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.188477: i2c_write: i2c-9 #0 a=009 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.196555: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.196592: i2c_write: i2c-9 #0 a=00a f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.204690: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.204725: i2c_write: i2c-9 #0 a=00b f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.212828: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.212864: i2c_write: i2c-9 #0 a=00c f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.220916: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.220952: i2c_write: i2c-9 #0 a=00d f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.229009: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.229047: i2c_write: i2c-9 #0 a=00e f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.237144: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.237181: i2c_write: i2c-9 #0 a=00f f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.245285: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.245323: i2c_write: i2c-9 #0 a=010 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.253416: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.253467: i2c_write: i2c-9 #0 a=011 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.261556: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.261589: i2c_write: i2c-9 #0 a=012 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.269645: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.269681: i2c_write: i2c-9 #0 a=013 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.277739: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.277772: i2c_write: i2c-9 #0 a=014 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.285873: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.285909: i2c_write: i2c-9 #0 a=015 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.293969: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.294005: i2c_write: i2c-9 #0 a=016 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.302054: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.302085: i2c_write: i2c-9 #0 a=017 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.310140: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.310175: i2c_write: i2c-9 #0 a=018 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.318232: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.318263: i2c_write: i2c-9 #0 a=019 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.326322: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.326358: i2c_write: i2c-9 #0 a=01a f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.334410: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.334458: i2c_write: i2c-9 #0 a=01b f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.342555: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.342591: i2c_write: i2c-9 #0 a=01c f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.350646: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.350685: i2c_write: i2c-9 #0 a=01d f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.358784: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.358820: i2c_write: i2c-9 #0 a=01e f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.366919: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.366955: i2c_write: i2c-9 #0 a=01f f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.375052: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.375086: i2c_write: i2c-9 #0 a=020 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.383145: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.383179: i2c_write: i2c-9 #0 a=021 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.391233: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.391265: i2c_write: i2c-9 #0 a=022 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.399322: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.399357: i2c_write: i2c-9 #0 a=023 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.407413: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.407467: i2c_write: i2c-9 #0 a=024 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.415556: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.415591: i2c_write: i2c-9 #0 a=025 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.423611: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.423641: i2c_write: i2c-9 #0 a=026 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.431700: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.431733: i2c_write: i2c-9 #0 a=027 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.439787: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.439819: i2c_write: i2c-9 #0 a=028 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.447874: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.447910: i2c_write: i2c-9 #0 a=029 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.456006: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.456037: i2c_write: i2c-9 #0 a=02a f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.464098: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.464132: i2c_write: i2c-9 #0 a=02b f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.472189: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.472220: i2c_write: i2c-9 #0 a=02c f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.480279: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.480313: i2c_write: i2c-9 #0 a=02d f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.488369: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.488399: i2c_write: i2c-9 #0 a=02e f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.496466: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.496502: i2c_write: i2c-9 #0 a=02f f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.504557: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.504596: i2c_read: i2c-9 #0 a=030 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.512693: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.512729: i2c_read: i2c-9 #0 a=031 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.520825: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.520860: i2c_read: i2c-9 #0 a=032 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.528917: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.528949: i2c_read: i2c-9 #0 a=033 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.537010: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.537046: i2c_read: i2c-9 #0 a=034 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.545147: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.545180: i2c_read: i2c-9 #0 a=035 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.553279: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.553318: i2c_read: i2c-9 #0 a=036 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.561368: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.561405: i2c_read: i2c-9 #0 a=037 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.569466: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.569499: i2c_write: i2c-9 #0 a=038 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.577558: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.577593: i2c_write: i2c-9 #0 a=039 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.585667: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.585699: i2c_write: i2c-9 #0 a=03a f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.593780: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.593814: i2c_write: i2c-9 #0 a=03b f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.601875: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.601907: i2c_write: i2c-9 #0 a=03c f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.609970: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.610005: i2c_write: i2c-9 #0 a=03d f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.618096: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.618130: i2c_write: i2c-9 #0 a=03e f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.626191: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.626221: i2c_write: i2c-9 #0 a=03f f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.634275: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.634310: i2c_write: i2c-9 #0 a=040 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.642373: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.642404: i2c_write: i2c-9 #0 a=041 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.650466: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.650500: i2c_write: i2c-9 #0 a=042 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.658557: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.658587: i2c_write: i2c-9 #0 a=043 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.666647: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.666682: i2c_write: i2c-9 #0 a=044 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.674740: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.674770: i2c_write: i2c-9 #0 a=045 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.682790: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.682827: i2c_write: i2c-9 #0 a=046 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.690885: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.690920: i2c_write: i2c-9 #0 a=047 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.699009: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.699047: i2c_write: i2c-9 #0 a=048 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.707147: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.707180: i2c_write: i2c-9 #0 a=049 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.715239: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.715273: i2c_write: i2c-9 #0 a=04a f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.723372: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.723406: i2c_write: i2c-9 #0 a=04b f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.731512: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.731547: i2c_write: i2c-9 #0 a=04c f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.739604: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.739641: i2c_write: i2c-9 #0 a=04d f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.747738: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.747773: i2c_write: i2c-9 #0 a=04e f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.755829: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.755860: i2c_write: i2c-9 #0 a=04f f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.763920: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.763954: i2c_read: i2c-9 #0 a=050 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.772054: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.772085: i2c_read: i2c-9 #0 a=051 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.780144: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.780178: i2c_read: i2c-9 #0 a=052 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.788235: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.788266: i2c_read: i2c-9 #0 a=053 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.796324: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.796357: i2c_read: i2c-9 #0 a=054 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.804415: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.804465: i2c_read: i2c-9 #0 a=055 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.812559: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.812595: i2c_read: i2c-9 #0 a=056 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.820694: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.820726: i2c_read: i2c-9 #0 a=057 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.828785: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.828820: i2c_read: i2c-9 #0 a=058 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.836845: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.836881: i2c_read: i2c-9 #0 a=059 f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.844969: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.845003: i2c_read: i2c-9 #0 a=05a f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.853102: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.853139: i2c_read: i2c-9 #0 a=05b f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.861193: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.861229: i2c_read: i2c-9 #0 a=05c f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.869284: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.869318: i2c_read: i2c-9 #0 a=05d f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.877372: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.877404: i2c_read: i2c-9 #0 a=05e f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.885467: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.885503: i2c_read: i2c-9 #0 a=05f f=0001 l=1
+       i2cdetect-8086    [000] .....  3946.893560: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.893592: i2c_write: i2c-9 #0 a=060 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.901651: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.901687: i2c_write: i2c-9 #0 a=061 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.909784: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.909815: i2c_write: i2c-9 #0 a=062 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.917877: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.917910: i2c_write: i2c-9 #0 a=063 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.925973: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.926002: i2c_write: i2c-9 #0 a=064 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.934062: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.934099: i2c_write: i2c-9 #0 a=065 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.942152: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.942187: i2c_write: i2c-9 #0 a=066 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.950230: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.950270: i2c_write: i2c-9 #0 a=067 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.958337: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.958374: i2c_write: i2c-9 #0 a=068 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.966472: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.966506: i2c_write: i2c-9 #0 a=069 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.974604: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.974638: i2c_write: i2c-9 #0 a=06a f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.982695: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.982730: i2c_write: i2c-9 #0 a=06b f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.990785: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.990816: i2c_write: i2c-9 #0 a=06c f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3946.998875: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3946.998910: i2c_write: i2c-9 #0 a=06d f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3947.006968: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3947.007002: i2c_write: i2c-9 #0 a=06e f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3947.015063: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3947.015101: i2c_write: i2c-9 #0 a=06f f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3947.023189: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3947.023224: i2c_write: i2c-9 #0 a=070 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3947.031283: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3947.031316: i2c_write: i2c-9 #0 a=071 f=0000 l=0 []
+       i2cdetect-8086    [000] .....  3947.039417: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [000] .....  3947.039471: i2c_write: i2c-9 #0 a=072 f=0000 l=0 []
+       i2cdetect-8086    [001] .....  3947.047530: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [001] .....  3947.047576: i2c_write: i2c-9 #0 a=073 f=0000 l=0 []
+       i2cdetect-8086    [001] .....  3947.055653: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [001] .....  3947.055692: i2c_write: i2c-9 #0 a=074 f=0000 l=0 []
+       i2cdetect-8086    [001] .....  3947.063786: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [001] .....  3947.063821: i2c_write: i2c-9 #0 a=075 f=0000 l=0 []
+       i2cdetect-8086    [001] .....  3947.071872: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [001] .....  3947.071908: i2c_write: i2c-9 #0 a=076 f=0000 l=0 []
+       i2cdetect-8086    [001] .....  3947.080003: i2c_result: i2c-9 n=1 ret=-6
+       i2cdetect-8086    [001] .....  3947.080037: i2c_write: i2c-9 #0 a=077 f=0000 l=0 []
+       i2cdetect-8086    [001] .....  3947.088070: i2c_result: i2c-9 n=1 ret=-6

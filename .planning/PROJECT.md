@@ -49,6 +49,10 @@
 - **Phases 41-42**: 36-script test harness made trustworthy (failure counters, `--apply` gating, mutation meta-guard); documentation/packaging parity (`100755` exec bits, FCC hook shipped as the `8086:7360` target, fail-loud packagers, no 0-byte tracked files, `scripts/test_doc_parity.sh`) (M12/M17/N1-N5/N8-N10).
 - **Milestone audit**: Fixed a cross-phase packaging gap — all three packagers + the CI `.deb` now install the same suffix-free tool names the shipped units `Exec`, ship the tray autostart, and the CI build no longer `cp ... || true` (commit `5e4948b`).
 
+### Key Decisions (Milestone 10)
+- **Phase 50**: The software DCS read path is dead on the D330 panel — `echo 2` ID reads returned `ret=4 avail=0 data=00 00 00` in 3 runs across both arms (X=Y ×2, X=Z ×1). No TCON identity from the kernel; the Phase 51 E3 DCS discriminator is falsified as designed, and wire-level identification (Phase 53) is the remaining path. Verdict: `docs/research/TCON_IDENTIFICATION.md`.
+- **Phase 50**: No panel-TCON I2C sideband exists (zero i2c-core transfers during the instrument run; wake trace only Goodix + one misc write); PMIC-by-name on bus 6 not confirmed (bus 6 = gmbus dpb). I2C claims are kernel-era-window-scoped — GOP pre-kernel activity needs Phase 53.
+
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
@@ -67,4 +71,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-12 after v8.0 milestone started*
+*Last updated: 2026-10-17 after Phase 50 complete*

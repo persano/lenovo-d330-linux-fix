@@ -122,3 +122,38 @@ rails) during GOP boot vs kernel re-probe, to see what the GOP does that
 the kernel cannot; alternatives: GOP re-execution replay, or the TCON
 datasheet once the panel controller is identified (block-55 VBT table
 still undecoded).
+
+## v10.0/v11.0 addendum (2026-10-19): filed, superseded, FIXED
+
+Everything above this line is historical. Resolution, in order:
+
+1. **Filed**: the report was filed as a new work item,
+   https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/17401
+   (2026-10-18) with triage note + evidence comment + 4 privacy-scanned
+   attachments. Issue 6619 (the original possible-match) was a different
+   bug class and is closed. GitLab labels were impossible to set
+   (community reporter role silently drops label writes) — left to
+   maintainers.
+2. **The fix already existed upstream**: issue
+   #13225 (OPEN, same machine model) carries a GLK reset-order fixup
+   patch (note 3698515) and the mechanism analysis (vsyrjala, note
+   3169683: VBT "kinda borked" — empty `MIPI_SEQ_DEASSERT_RESET`, reset
+   pulse GPIO 160 inside `MIPI_SEQ_INIT_OTP`, running after DSI host up;
+   `vlv_fixup_mipi_sequences()` repairs this only for VLV + v1 blocks).
+   The "logic analyzer on the panel flex" instrument this handoff asked
+   for was never needed: the wire content was fine, the host ordered its
+   own reset wrong.
+3. **Validated on a second unit (this project's D330)**: the #13225 patch
+   adapted to a v7.0 tree (one-line dispatch change
+   `IS_GEMINILAKE(i915)` → `display->platform.geminilake`), shipped in
+   `patches/d330_dsi_glk_reset_order_fixup.patch` (sha F97F4E87) inside
+   kernel `7.0.14-d330-fix` (CI run 39281203672): 10/10 lit S3 resumes
+   eyes-on + every boot lit. Ledger row 34; NO_CLEAN_FIX_PROOF §9
+   overturns the v9.0 "no clean fix" verdict. Block 55 was meanwhile
+   decoded negative (`BDB_COMPRESSION_PARAMETERS_OLD`).
+4. **Shipped**: release v11.0 (2026-10-19) carries the fix to users with
+   the one-script installer `scripts/d330-full-setup.sh`.
+5. **Still open upstream**: confirmation comments on #13225 (second-unit
+   validation) and #17401 (suggest duplicate once fixup lands) — user to
+   paste manually; Akismet flags every API-posted comment from this
+   account as spam.

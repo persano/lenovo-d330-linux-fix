@@ -1,0 +1,347 @@
+# I2C SWEEP 2026-10-16 23:24:45 -0300 (phase 50 TCON sideband, TCON-03)
+# kernel: 7.0.14-d330-fix
+== tool provenance
+i2cdetect: i2cdetect: invalid option -- '-'
+gpioinfo: gpioinfo (libgpiod) v2.2.1
+== i2cdetect -l (adapter inventory)
+i2c-0	i2c       	Synopsys DesignWare I2C adapter 	I2C adapter
+i2c-1	i2c       	Synopsys DesignWare I2C adapter 	I2C adapter
+i2c-2	i2c       	Synopsys DesignWare I2C adapter 	I2C adapter
+i2c-3	i2c       	Synopsys DesignWare I2C adapter 	I2C adapter
+i2c-4	i2c       	Synopsys DesignWare I2C adapter 	I2C adapter
+i2c-5	i2c       	Synopsys DesignWare I2C adapter 	I2C adapter
+i2c-6	i2c       	i915 gmbus dpb                  	I2C adapter
+i2c-7	i2c       	i915 gmbus dpc                  	I2C adapter
+i2c-8	i2c       	i915 gmbus misc                 	I2C adapter
+i2c-9	i2c       	AUX B/DDI B/PHY B               	I2C adapter
+i2c-10	smbus     	SMBus I801 adapter at 0000:00:1f.1	SMBus adapter
+== /sys/bus/i2c/devices (name reads)
+/sys/bus/i2c/devices/i2c-0 name=Synopsys DesignWare I2C adapter
+/sys/bus/i2c/devices/i2c-1 name=Synopsys DesignWare I2C adapter
+/sys/bus/i2c/devices/i2c-10 name=SMBus I801 adapter at 0000:00:1f.1
+/sys/bus/i2c/devices/i2c-2 name=Synopsys DesignWare I2C adapter
+/sys/bus/i2c/devices/i2c-3 name=Synopsys DesignWare I2C adapter
+/sys/bus/i2c/devices/i2c-4 name=Synopsys DesignWare I2C adapter
+/sys/bus/i2c/devices/i2c-5 name=Synopsys DesignWare I2C adapter
+/sys/bus/i2c/devices/i2c-6 name=i915 gmbus dpb
+/sys/bus/i2c/devices/i2c-7 name=i915 gmbus dpc
+/sys/bus/i2c/devices/i2c-8 name=i915 gmbus misc
+/sys/bus/i2c/devices/i2c-9 name=AUX B/DDI B/PHY B
+/sys/bus/i2c/devices/i2c-BOSC0200:00 name=BOSC0200:00
+/sys/bus/i2c/devices/i2c-GDIX1002:00 name=GDIX1002:00
+== enumerated buses: 0 1 2 3 4 5 6 7 8 9 10 
+== i2cdetect -y 0
+Warning: Can't use SMBus Quick Write command, will skip some addresses
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                                                 
+10:                                                 
+20:                                                 
+30: -- -- -- -- -- -- -- --                         
+40:                                                 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60:                                                 
+70:                                                 
+== i2cdetect -y 1
+Warning: Can't use SMBus Quick Write command, will skip some addresses
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                                                 
+10:                                                 
+20:                                                 
+30: -- -- -- -- -- -- -- --                         
+40:                                                 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60:                                                 
+70:                                                 
+== i2cdetect -y 2
+Warning: Can't use SMBus Quick Write command, will skip some addresses
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                                                 
+10:                                                 
+20:                                                 
+30: -- -- -- -- -- -- -- --                         
+40:                                                 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60:                                                 
+70:                                                 
+== i2cdetect -y 3
+Warning: Can't use SMBus Quick Write command, will skip some addresses
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                                                 
+10:                                                 
+20:                                                 
+30: -- -- -- -- -- -- -- --                         
+40:                                                 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60:                                                 
+70:                                                 
+== i2cdetect -y 4
+Warning: Can't use SMBus Quick Write command, will skip some addresses
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                                                 
+10:                                                 
+20:                                                 
+30: -- -- -- -- -- -- -- --                         
+40:                                                 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60:                                                 
+70:                                                 
+== i2cdetect -y 5
+Warning: Can't use SMBus Quick Write command, will skip some addresses
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                                                 
+10:                                                 
+20:                                                 
+30: -- -- -- -- -- -- -- --                         
+40:                                                 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60:                                                 
+70:                                                 
+== i2cdetect -y 6
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+== i2cdetect -y 7
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+== i2cdetect -y 8
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+== i2cdetect -y 9
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+== i2cdetect -y 10
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         08 -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- 44 -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+== gpioinfo (panel/backlight/reset/PMIC claims)
+gpioinfo unfiltered line count: 219
+	line  23:	unnamed         	output consumer=reset
+== dmesg (PMIC / I2C controller lines)
+[   15.347007] input: Goodix Capacitive TouchScreen as /devices/pci0000:00/0000:00:16.3/i2c_designware.1/i2c-1/i2c-GDIX1002:00/input/input19
+[ 1791.057329] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.057426] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.057502] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.057573] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.059679] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.059807] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.059894] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060012] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060150] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060227] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060299] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060372] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060493] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060571] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060752] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060826] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.060951] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061034] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061105] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061183] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061306] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061383] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061458] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061533] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061786] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061866] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.061946] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.062019] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.062152] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.062232] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.062303] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.062378] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.062999] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063082] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063161] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063228] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063344] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063421] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063497] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063567] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063832] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063915] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.063989] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064060] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064175] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064250] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064321] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064391] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064512] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064590] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064813] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.064889] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065009] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065093] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065175] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065244] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065367] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065445] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065523] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.065741] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.066700] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.066975] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.067133] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.067227] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.067394] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.067513] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.067745] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.067859] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.068488] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.068728] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.068901] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.069018] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.069164] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.069253] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.069342] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.069510] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.069724] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.070180] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.070314] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.070538] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.070806] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.070970] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.071095] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.071185] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.071721] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.072164] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.072275] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.072413] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.072585] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.072799] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.072946] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.073060] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.073710] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.073845] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.073949] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 1791.074067] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.595884] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596017] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596093] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596170] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596373] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596453] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596528] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596609] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596729] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596808] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596885] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.596968] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597080] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597158] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597234] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597368] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597494] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597583] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597654] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597728] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597840] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.597934] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598011] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598085] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598204] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598281] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598412] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598487] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598612] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598693] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598766] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.598839] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599363] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599444] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599514] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599584] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599708] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599779] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599849] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.599919] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600032] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600113] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600183] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600255] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600409] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600481] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600557] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600637] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600755] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600832] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600905] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.600978] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601094] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601171] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601250] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601352] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601550] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601632] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601705] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601778] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601898] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.601971] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602048] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602115] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602232] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602346] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602489] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602567] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602683] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602760] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602831] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.602900] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603026] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603101] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603174] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603249] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603476] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603568] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603638] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603708] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603825] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603898] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.603972] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604049] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604166] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604238] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604333] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604478] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604596] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604670] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604740] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604813] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.604943] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.605027] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.605099] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+[ 3937.605172] i2c_designware i2c_designware.4: i2c_dw_handle_tx_abort: lost arbitration
+# END OF SWEEP - kernel-era traffic only; pre-kernel GOP I2C is
+# invisible here (needs the Phase 53 logic analyzer).

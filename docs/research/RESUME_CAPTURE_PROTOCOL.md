@@ -207,3 +207,92 @@ documents two state-file variables in its header comment:
 resume), and `D330_REAL_FIX=1` makes the hook stand down while the Phase 45
 real fix owns display restoration (contract shipped in Phase 43; the marker is
 written by Phase 45). See the hook's header comment for the full wording.
+
+---
+
+## Rung-session block (phase 51 keep-panel-powered ladder)
+
+One rung = one CI kernel + one user-authorized device session: deploy
+(sha-verified rollback first) → suspend → wake → dump pair + marker
+evidence → eyes-on verdict. This block is executed verbatim by the
+session; no new script is created (marker collection is a runbook step,
+not a collector).
+
+### One-time pre-check (before spending a CI build)
+
+Confirm the installed kernel carries no historical markers, so the E1
+patch's own compiled-in skip markers are the only source (research A1,
+P2):
+
+```bash
+dmesg | grep -c D330SEQ     # expected 0 on the installed echo-2 kernel
+```
+
+A non-zero count means the ad-hoc historical markers ARE present in the
+installed kernel; zero means the rung kernel's compiled-in markers carry
+the whole proof.
+
+### Marker collection: dmesg-based, compiled-in markers only
+
+Only unconditional `pr_info`/`drm_info` markers prefixed `D330` produce
+output (ledger row 16 disproved drm.debug/dyndbg: writes accepted, zero
+`[drm:...]` lines land). The E1 skip markers (`[D330 82H0] ...`
+`drm_info` lines) therefore land in dmesg / `journalctl -k`, never in
+tracefs. Collect a dmesg excerpt covering the whole cycle and archive it:
+
+```bash
+dmesg | grep 'D330 82H0' > rung_<N>_dmesg_markers.txt
+```
+
+### Two-dump sequence inside one >=18 s wake window
+
+For a span covering the whole suspend-plus-resume cycle in one session,
+use the prior on-device method (cited above):
+
+```bash
+rtcwake -m no -s 45
+systemctl suspend
+```
+
+On wake (user-triggered, no lid interaction), immediately:
+
+```bash
+sudo capture_dsi_dumps.sh resumefast   # ~0-1 s post-wake, pre-KWin-commit
+sudo capture_dsi_dumps.sh resumelate   # ~4 s post-wake, post-KWin-commit
+```
+
+Both captures MUST land inside the single >=18 s wake window. Never
+shorten the window: a 6-second window already produced one wrong
+conclusion (Capture window section above). The trigger is synchronous,
+so back-to-back invocation is safe; `EBUSY` means another trigger is in
+flight. The `resumelate` dump is the X=Y/X=Z discriminator; compare with:
+
+```bash
+scripts/dsi_mmio_diff.sh boot_dsi_regs.txt resumelate_dsi_regs.txt
+```
+
+The `## X=Y operational set` verdict in the diff output is the binary
+criterion (design-doc fact 10 literal).
+
+### Kit registration
+
+Register both dumps and the marker excerpt before ending the session:
+
+```bash
+scripts/prepare_safety_kit.sh --register resumefast_dsi_regs.txt
+scripts/prepare_safety_kit.sh --register resumelate_dsi_regs.txt
+scripts/prepare_safety_kit.sh --register rung_<N>_dmesg_markers.txt
+scripts/prepare_safety_kit.sh --verify --kit-dir docs/dumps/re_kit
+```
+
+### Success-path battery block (only after X=Y + eyes-on)
+
+Quantify the keep-hot battery cost: one 15-min S3 with keep-hot ON vs
+OFF, battery % and energy-rate deltas, recorded before and after each S3:
+
+```bash
+upower -i $(upower -e | grep BAT)
+```
+
+Fallback when upower is absent: `/sys/class/power_supply/BAT*`
+(`capacity`, `energy_now`/`energy_full`, `power_now`).

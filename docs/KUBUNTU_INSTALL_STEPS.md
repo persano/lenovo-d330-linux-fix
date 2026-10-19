@@ -1,5 +1,11 @@
 # Kubuntu Install Steps for the Lenovo IdeaPad D330-10IGL
 
+> **v11.0 shortcut:** `sudo ./scripts/d330-full-setup.sh` now automates this
+> whole guide (deps → parity stack → patched kernel → verification), with
+> `--dry-run`, backups before every boot-file touch, and a printed manual
+> fallback per step. The steps below remain the manual path and the
+> reference for what the script does.
+
 A copy-paste procedure to bring a fresh **Kubuntu 26.04** install on the D330
 (`82H0`, `81MD`, `81H3`) to full parity, including the screen-resume fix,
 touch/touchpad under **Wayland**, and the RNNoise mic denoiser.

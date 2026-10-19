@@ -1,10 +1,16 @@
 # drm/i915 GLK DSI: panel stays black after S3 resume on Lenovo IdeaPad D330-10IGL (82H0)
 
-This is a paste-and-submit report. If GitLab issue 6619
-("Black screen waking from suspend", https://gitlab.freedesktop.org/drm/i915/kernel/-/issues/6619)
-is still open and matches, post this as a comment there; otherwise file it as
-a new issue with this text. No repo-internal tooling is referenced; every
-command below uses mainline tools.
+> **FILED as https://gitlab.freedesktop.org/drm/i915/kernel/-/work_items/17401**
+> (2026-10-18, with triage note + evidence comment and 4 privacy-scanned
+> attachments). The fix turned out to already exist upstream: issue #13225
+> (open) carries the GLK reset-order fixup patch, validated on this second
+> unit 10/10 eyes-on (2026-10-19, ledger row 34; shipped in release v11.0).
+> #17401 is a likely duplicate of #13225 once the fixup lands. This file is
+> kept as the record of the original report text.
+
+Original paste-and-submit text below. (Historical note: it referenced issue
+6619 as a possible match; 6619 turned out to be a different bug class and was
+closed by its author's own efifb DMI quirk.)
 
 ## Subject
 

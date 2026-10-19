@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,456 @@
 +// SPDX-License-Identifier: MIT
 +/*
 + * Additive D330 instrumentation: MIPI-DSI / display MMIO snapshot node.
@@ -11,6 +11,13 @@
 + * emits that frozen buffer.  The instrument performs zero register writes
 + * and no mode changes, so re-running it at any point cannot perturb what
 + * it measures.
++ *
++ * Phase 50 (TCON identification) extends the write side with a value
++ * trigger: "echo 2 > ..." performs the unchanged MMIO walk and then
++ * issues five LP-mode DCS/generic ID reads against the live panel,
++ * appended as an annotated "# DCS ID READ" section.  The new code is
++ * strictly read-only too: it issues read transactions and reads one
++ * status register, never writes a register.
 + *
 + * DSI-block and DSI-PHY reads are gated on bxt_dsi_pll_is_enabled()
 + * (the DSI-block gate matches intel_dsi_get_hw_state()):
@@ -30,6 +37,27 @@
 + *   NAME 0x<off>=<8-hex> <decode>   # NAMED OVERLAY section rows (the
 + *                                   leading NAME keeps overlay rows out
 + *                                   of the ^0x...=... record regex)
++ *   # DCS ID READ                   phase-50 echo-2 section header,
++ *                                   emitted strictly AFTER the NAMED
++ *                                   OVERLAY (echo 1 never emits it, so
++ *                                   all 47/49 captures stay valid)
++ *   DCS <tag> ret=<n> avail=<0|1> data=<3 hex bytes>
++ *                                   one row per ID read; the leading
++ *                                   DCS keeps rows out of the
++ *                                   ^0x...=... record regex like NAME
++ *                                   does; ret is the raw transfer
++ *                                   return value, avail is the
++ *                                   GEN_READ_DATA_AVAIL (bit 29 of
++ *                                   MIPI_INTR_STAT(A)) post-check that
++ *                                   discriminates answered-vs-dead (the
++ *                                   host transfer path returns >= 4 even
++ *                                   on RX timeout - never trust ret),
++ *                                   data is the 3-byte scratch buffer
++ *                                   (reads shorter than 3 bytes leave
++ *                                   the remaining bytes zeroed)
++ *   DCS SKIP pll-off                emitted instead of any read when
++ *                                   the PLL gate is off (same
++ *                                   machine-hang rule as the walk)
 + */
 +
 +#include <linux/debugfs.h>
@@ -40,6 +68,7 @@
 +#include <linux/string.h>
 +#include <linux/uaccess.h>
 +
++#include <drm/drm_mipi_dsi.h>
 +#include <drm/drm_modeset_lock.h>
 +#include <drm/drm_print.h>
 +
@@ -47,7 +76,9 @@
 +#include "intel_de.h"
 +#include "intel_display_rpm.h"
 +#include "intel_display_types.h"
++#include "intel_dsi.h"
 +#include "vlv_dsi_pll.h"
++#include "vlv_dsi_regs.h"
 +
 +/* ~7.3k data lines x 14 bytes + headers/overlay: 256 KiB is ample. */
 +#define D330_DSI_DUMP_BUF_SIZE (256u * 1024u)
@@ -161,7 +192,134 @@
 +			  intel_de_read(display, _MMIO(0x138090)));
 +}
 +
-+static void d330_dsi_dump_walk(struct intel_display *display)
++/*
++ * Phase-50 TCON identification: one annotated row per DCS/generic ID read.
++ *
++ * intel_dsi_host_transfer() (the RX path behind mipi_dsi_dcs_read()) NEVER
++ * returns a negative errno for a dead panel: on RX timeout it logs
++ * "Timeout waiting for read data." and unconditionally reads the FIFO,
++ * returning 4 + payload length.  So the answered-vs-refused discriminator
++ * is the GEN_READ_DATA_AVAIL post-check (bit 29 of MIPI_INTR_STAT(A),
++ * read-only: this W1C register clears on write, not on read), not the
++ * return value.  Both are recorded; the raw bytes may be stale FIFO
++ * contents when avail is 0.
++ */
++static void d330_dsi_dump_dcs_row(struct intel_display *display,
++				  const char *tag, ssize_t ret, const u8 *buf)
++{
++	unsigned int avail;
++
++	avail = !!(intel_de_read(display, MIPI_INTR_STAT(display, PORT_A)) &
++		   GEN_READ_DATA_AVAIL);
++	d330_dsi_dump_add("DCS %s ret=%zd avail=%u data=%*ph\n",
++			  tag, ret, avail, 3, buf);
++}
++
++/*
++ * The echo-2 DCS ID-read section (strictly after the overlay; every row
++ * DCS-prefixed so the ^0x...=... record regex and the 47/49 record counts
++ * never see these lines).
++ *
++ * All five reads are always attempted; a failed/refused one is recorded
++ * and skipped past, never aborting the section (refusals are themselves
++ * informative).  Read-only by contract: read transactions and one
++ * status-register read, zero register writes.
++ */
++static void d330_dsi_dump_id_reads(struct intel_display *display, bool dsi_ok)
++{
++	struct drm_connector_list_iter iter;
++	struct drm_connector *connector;
++	struct intel_encoder *intel_encoder = NULL;
++	struct intel_dsi *intel_dsi;
++	struct mipi_dsi_device *dsi_dev;
++	u8 buf[3];
++	u8 reg0 = 0x00;
++	ssize_t ret;
++
++	d330_dsi_dump_add("# DCS ID READ\n");
++
++	if (!dsi_ok) {
++		/*
++		 * Same BSpec machine-hang rule as the walk: with the DSI
++		 * PLL off, never touch the DSI FIFOs - annotate the skip
++		 * instead (the gate never tripped on 47-49 captures).
++		 */
++		d330_dsi_dump_add("DCS SKIP pll-off\n");
++		return;
++	}
++
++	/*
++	 * Find the DSI encoder on this display: connector -> intel
++	 * encoder -> intel_dsi -> port-A host -> the virtual
++	 * mipi_dsi_device intel_dsi_host_init() created per port ("our
++	 * little hack" - it is never registered with the driver model, so
++	 * this is the only way to reach it).
++	 */
++	drm_connector_list_iter_begin(display->drm, &iter);
++	drm_for_each_connector_iter(connector, &iter) {
++		if (connector->connector_type != DRM_MODE_CONNECTOR_DSI)
++			continue;
++		intel_encoder = to_intel_connector(connector)->encoder;
++		if (intel_encoder && intel_encoder->type == INTEL_OUTPUT_DSI)
++			break;
++		intel_encoder = NULL;
++	}
++	drm_connector_list_iter_end(&iter);
++
++	if (!intel_encoder) {
++		drm_WARN(display->drm, 1,
++			 "D330DSIREG: no DSI encoder found for the DCS ID reads\n");
++		d330_dsi_dump_add("DCS SKIP no-dsi-device-for-port-A\n");
++		return;
++	}
++
++	intel_dsi = enc_to_intel_dsi(intel_encoder);
++	if (!intel_dsi->dsi_hosts[PORT_A] ||
++	    !intel_dsi->dsi_hosts[PORT_A]->device) {
++		d330_dsi_dump_add("DCS SKIP no-dsi-device-for-port-A\n");
++		return;
++	}
++	dsi_dev = intel_dsi->dsi_hosts[PORT_A]->device;
++
++	/*
++	 * The VBT sequence executor mutates mode_flags and channel in
++	 * place on this same object per packet, so never assume defaults:
++	 * force LP mode + VC 0 at the start of every run (reads must not
++	 * contend with the HS video stream on a running link).
++	 */
++	dsi_dev->mode_flags |= MIPI_DSI_MODE_LPM;
++	dsi_dev->channel = 0;
++
++	/* Get Display ID (0x04). */
++	memset(buf, 0, sizeof(buf));
++	ret = mipi_dsi_dcs_read(dsi_dev, 0x04, buf, 3);
++	d330_dsi_dump_dcs_row(display, "0x04", ret, buf);
++
++	/* Per-byte ID1/ID2/ID3 fallbacks (0xDA/0xDB/0xDC: not kernel enums). */
++	memset(buf, 0, sizeof(buf));
++	ret = mipi_dsi_dcs_read(dsi_dev, 0xDA, buf, 1);
++	d330_dsi_dump_dcs_row(display, "0xDA", ret, buf);
++
++	memset(buf, 0, sizeof(buf));
++	ret = mipi_dsi_dcs_read(dsi_dev, 0xDB, buf, 1);
++	d330_dsi_dump_dcs_row(display, "0xDB", ret, buf);
++
++	memset(buf, 0, sizeof(buf));
++	ret = mipi_dsi_dcs_read(dsi_dev, 0xDC, buf, 1);
++	d330_dsi_dump_dcs_row(display, "0xDC", ret, buf);
++
++	/*
++	 * Generic register-0x00 fallback (the datasheets' "0x83" generic
++	 * read-with-1-param is kernel enum
++	 * MIPI_DSI_GENERIC_READ_REQUEST_1_PARAM = 0x14; the kernel
++	 * formats the wire header itself - do not hand-roll packets).
++	 */
++	memset(buf, 0, sizeof(buf));
++	ret = mipi_dsi_generic_read(dsi_dev, &reg0, 1, buf, 3);
++	d330_dsi_dump_dcs_row(display, "GEN00", ret, buf);
++}
++
++static void d330_dsi_dump_walk(struct intel_display *display, bool id_reads)
 +{
 +	struct ref_tracker *wakeref;
 +	bool dsi_ok;
@@ -197,6 +355,15 @@
 +	d330_dsi_dump_range(display, 0x138000, 0x139000);
 +
 +	d330_dsi_dump_overlay(display, dsi_ok);
++
++	/*
++	 * Phase-50 echo-2 only, strictly after the overlay (the frozen
++	 * snapshot stays byte-identical for echo 1 / all 47/49 captures).
++	 * Reuses the walk's PLL decision - same machine-hang rule, now
++	 * covering the DCS read transactions too.
++	 */
++	if (id_reads)
++		d330_dsi_dump_id_reads(display, dsi_ok);
 +
 +	drm_modeset_unlock_all(display->drm);
 +	intel_display_rpm_put(display, wakeref);
@@ -244,12 +411,21 @@
 +		    size_t cnt, loff_t *ppos)
 +{
 +	struct intel_display *display = filp->private_data;
-+	bool trigger;
++	unsigned int trigger;
 +	int ret;
 +
-+	ret = kstrtobool_from_user(ubuf, cnt, &trigger);
++	/*
++	 * Phase-50: a uint value parse replaces the old bool parse ("2" is
++	 * not a bool token): 0 = no-op, 1 = the unchanged MMIO walk, 2 =
++	 * walk + DCS ID reads; anything above 2 is rejected.  The node
++	 * still accepts exactly what it accepted before for echo 1.
++	 */
++	ret = kstrtouint_from_user(ubuf, cnt, 10, &trigger);
 +	if (ret)
 +		return ret;
++
++	if (trigger > 2)
++		return -EINVAL;
 +
 +	if (!trigger)
 +		return cnt;
@@ -264,7 +440,7 @@
 +
 +	d330_dsi_dump.len = 0;
 +	d330_dsi_dump.words = 0;
-+	d330_dsi_dump_walk(display);
++	d330_dsi_dump_walk(display, trigger == 2);
 +
 +	pr_info("D330DSIREG: snapshot captured (%u words, %zu bytes buffered)\n",
 +		d330_dsi_dump.words, d330_dsi_dump.len);

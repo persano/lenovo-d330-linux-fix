@@ -11,7 +11,8 @@
 - ✅ **v7.0 Pre-Deployment Audit Remediation** — Phases 32-42 (shipped 2026-10-08)
 - ✅ **v8.0 Reverse-Engineer & Fix the D330 Resume Black Screen** — Phases 43-46 (shipped 2026-10-13: RE + differential + honest closure; **bug NOT fixed** — the fix hunt continues)
 - ✅ **v9.0 Actually Fix the D330 Resume Black Screen** — Phases 47-49 (shipped 2026-10-16: DSI MMIO truth + 3 falsified DMI-gated fix candidates + honest closure; **fix proven unreachable from every kernel path tested** — recovery = reboot only; the hunt continues in v10.0)
-- 🚧 **v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt** — Phases 50-53 (in progress)
+- ✅ **v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt** — Phases 50-53 (closed 2026-10-19: ladder falsified, then upstream GLK reset-order fixup (#13225) validated 10/10 eyes-on, ledger row 34; Phases 52/53 retired unexecuted)
+- ✅ **v11.0 Ship the Fix — Every Supported Distro + One-Script Installer** — Phases 54-56 (shipped 2026-10-19, https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0)
 
 ## Phases
 
@@ -142,7 +143,7 @@ Outcome: honest closure — 3 DMI-gated fix candidates eyes-on-falsified, then m
 
 ---
 
-### 🚧 v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt (In Progress)
+### ✅ v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt (Shipped 2026-10-19)
 
 **Milestone Goal:** v9.0 closed honestly: every kernel-visible display state is
 byte-identical working-vs-broken, the failure lives below host MMIO on the panel TCON side,
@@ -181,10 +182,10 @@ user-gated.
 
 **Phases:**
 
-- [ ] **Phase 50: TCON Identification — DCS ID-Read Instrument (Software-Only)** - Extend `i915_dsi_regs` with an `echo 2` DCS read mode, capture boot (X=Y) vs black-resume (X=Z) ID reads, rule the I2C sideband in/out, correct the DSI_MMIO_DIFF §6 label (TCON-01, TCON-02, TCON-03, TCON-04)
-- [ ] **Phase 51: Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified)** - Hold the panel rails/TCON alive through S3 so resume never needs the unreachable re-init — the actual fix attempt, DMI-gated `82H0`, one candidate per CI iteration (KEEP-01, KEEP-02, KEEP-03, KEEP-04, KEEP-05)
-- [ ] **Phase 52: Black-Resume Self-Healing (d330-blackguard)** - Hotkey → beeps → countdown → reboot safety net + stand down the legacy display-resume hook + tests + one rtcwake on-device validation (BLK-01, BLK-02, BLK-03, BLK-04)
-- [ ] **Phase 53: Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B)** - KingstVIS MIPI-DSI LP demo-mode buy-gate, FPC teardown + empirical pin ID, capture A (boot GOP LP DCS) vs B (kernel re-probe) + PMIC I2C bus 6 rails (HW-01, HW-02, HW-03, HW-04)
+- [x] **Phase 50: TCON Identification — DCS ID-Read Instrument (Software-Only)** - Extend `i915_dsi_regs` with an `echo 2` DCS read mode, capture boot (X=Y) vs black-resume (X=Z) ID reads, rule the I2C sideband in/out, correct the DSI_MMIO_DIFF §6 label (TCON-01, TCON-02, TCON-03, TCON-04) (completed 2026-10-17)
+- [x] **Phase 51: Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified)** - Hold the panel rails/TCON alive through S3 so resume never needs the unreachable re-init — the actual fix attempt, DMI-gated `82H0`, one candidate per CI iteration (KEEP-01, KEEP-02, KEEP-03, KEEP-04, KEEP-05) (closed 2026-10-19: ladder falsified as recorded, then the upstream GLK reset-order fixup (#13225) landed and validated 10/10 eyes-on — ledger row 34; NO_CLEAN_FIX_PROOF §9 overturns the "no clean fix" verdict)
+- [x] **Phase 52: Black-Resume Self-Healing (d330-blackguard)** - Hotkey → beeps → countdown → reboot safety net (closed 2026-10-19 WITHOUT execution: superseded by the root-cause fix — no black resume left to heal; see 52-SUMMARY.md)
+- [x] **Phase 53: Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B)** - KingstVIS MIPI-DSI LP demo-mode buy-gate, FPC teardown + empirical pin ID, capture A vs B (closed 2026-10-19 WITHOUT execution: purchase declined by user verbatim, then superseded by the fix; block 55 decoded negative; see 53-SUMMARY.md + 53-BUY-GATE.md)
 
 ### Phase 50: TCON Identification — DCS ID-Read Instrument (Software-Only)
 
@@ -256,7 +257,12 @@ device session for the black-resume arm).
   4. DSI_MMIO_DIFF §6's 0x6b004 row carries the bit-accurate decode (SPL_PKT_SENT |
      HS_TX_TIMEOUT | LOW_CONTENTION; bit 22 not set) and the ledger gate stays green
 
-**Plans**: 5 plans
+**Plans**: 5/5 plans complete
+- [x] 50-01-PLAN.md
+- [x] 50-02-PLAN.md
+- [x] 50-03-PLAN.md
+- [x] 50-04-PLAN.md
+- [x] 50-05-PLAN.md
 
 - [ ] `50-01-PLAN.md` — echo-2 DCS ID-read instrument (kernel node extension + CI build)
 - [ ] `50-02-PLAN.md` — Userspace tooling (capture echo-2 mode, diff DCS parser, I2C sweep script)
@@ -338,7 +344,21 @@ if E1 works.
      quantified once; on failure ledger rows appended + honest-closure doc updated — never
      a fake fix
 
-**Plans**: TBD
+**Plans**: 5/6 plans executed
+
+Plans:
+- [x] 51-01-PLAN.md
+- [x] 51-02-PLAN.md
+- [x] 51-03-PLAN.md
+- [ ] 51-04-PLAN.md
+- [x] 51-05-PLAN.md
+- [ ] 51-06-PLAN.md
+- [x] `51-01-PLAN.md` — E1 keep-hot kernel patch (self-contained DMI helper, suspend-discriminator flags, gated skip sites + markers) + CI apply-stack cleanup + build
+- [x] `51-02-PLAN.md` — Rung-session capture tooling (~0-1 s / ~4 s resume arms, X=Y operational-set check + fixtures, runbook block)
+- [x] `51-03-PLAN.md` — E1 device session (deploy behind verified rollback, one user-authorized suspend, two dumps + marker evidence, fail-fast verdict)
+- [ ] `51-04-PLAN.md` — E2 warm-resume enable: flag-B pre_enable skips, dedicated CI candidate, one device session (conditional — runs when the rails are alive)
+- [x] `51-05-PLAN.md` — Lazy E3 rail-survival discriminator (zero-expectation pre-INIT_OTP DCS read + GPIO 144/160 rail evidence; built only on E1 falsification; routes to E2 or the Phase 53 buy-gate)
+- [ ] `51-06-PLAN.md` — Honest-verdict closure: ledger integrity + NO_CLEAN_FIX_PROOF.md v10.0 section on full-ladder falsification, success record otherwise (KEEP-05)
 
 ### Phase 52: Black-Resume Self-Healing (d330-blackguard)
 
@@ -419,6 +439,37 @@ identify the panel FPC pins empirically, capture boot GOP LP DCS (A) vs kernel r
 re-probe (B) plus PMIC I2C bus 6 rails (C), and record which mechanism story the evidence
 supports — or document the buy-gate decision with reason.
 
+---
+
+### 🚧 v11.0 Ship the Fix — Every Supported Distro + One-Script Installer (Shipped 2026-10-19)
+
+**Milestone Goal:** v10.0 ended with the real fix validated 10/10 eyes-on on the
+reference D330 (upstream GLK reset-order fixup, issue #13225, adapted in
+`patches/d330_dsi_glk_reset_order_fixup.patch`, sha F97F4E87) running inside kernel
+`7.0.14-d330-fix` together with the CCS modifier quirk and every parity config. v11.0
+makes that reachable by anyone without this repo's tribal knowledge: (1) a single
+per-device installer `.sh` that reproduces the full Kubuntu guide — distro detection,
+dependencies, DKMS module, all modprobe/hwdb/udev/grub parity pieces, and the patched
+kernel install — with an explicit sudo prompt and a documented manual path; (2) a
+release for every distro the project supports (Ubuntu/Kubuntu/Mint/Debian family with
+the `.deb` kernel + installer; Fedora/Arch with the documented patch-into-distro-kernel
+path); (3) verification that the reference device carries every fix. SC1 bar: a user on
+any supported distro runs one command (or follows one clearly labelled manual path) and
+ends with the GLK fixup in the booted kernel plus all parity configs, verified by the
+script's own checks.
+
+**Process rules (standing constraints, binding):** all patches DMI/DMO-gated `82H0`;
+the ledger gate stays green; script never `rm`s anything, writes backups before touching
+boot files, prints every action, and supports `--dry-run`; the reference device
+(`santiago@192.168.2.195`) is audited before the release is tagged; commits via
+`gsd-tools query commit`; user eyes-on verdict gates the release tag.
+
+**Phases:**
+
+- [x] **Phase 54: One-Script Installer (`scripts/d330-full-setup.sh`)** - Single entry point automating the Kubuntu guide end-to-end (deps, DKMS, modprobe.d, hwdb, udev, libinput quirks, systemd units, TLP/zram, PipeWire/RNNoise, grub snippets + regeneration, patched-kernel install), with `--dry-run`, backup-before-touch, plain-language output and a printed manual fallback per step (INSTALL-01, INSTALL-02, INSTALL-03) (completed 2026-10-19; dry-run verified on host, syntax-checked)
+- [x] **Phase 55: Multi-Distro Release v11.0** - Build/tag release artifacts for all supported distros: Ubuntu-family `.deb` kernel (CI) + installer; Fedora/Arch patch-into-distro-kernel instructions with the two patches + configs; README/guide update replacing the stale "CCS-only fix" framing with the full v11.0 stack; tag `v11.0` + GitHub release with artifacts attached (REL-01, REL-02) (completed 2026-10-19: https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 — image + headers debs, installer, both patches; guide pointer added)
+- [x] **Phase 56: Reference-Device Audit + Release Verification** - Run the installer audit on the D330 (kernel fixup present, dkms status, every modprobe/hwdb/udev/grub piece verified), then a fresh-boot + one rtcwake eyes-on confirmation on the release kernel (AUDIT-01, AUDIT-02) (completed 2026-10-19: device_audit.sh confirmed kernel 7.0.14-d330-fix + dkms both kernels + all modprobe/hwdb/grub pieces; eyes-on 10/10 rtcwake loop + all boots lit, ledger row 34)
+
 **Depends on**: Phase 51's ladder outcome (the hardware probe is the documented escalation
 path if the ladder falsifies); the purchase itself is user-gated
 
@@ -474,7 +525,8 @@ capture sessions, user-authorized); the purchase itself is user-gated.
   1. The buy-gate decision is documented with reason: KingstVIS MIPI-DSI LP decoder
      validated in demo mode BEFORE purchase, the decision (buy LA5016 / add U3Pro16 /
      decline) recorded with the user's authorization — or the documented decline and its
-     consequence for the hunt
+     consequence for the hunt. **[VALIDATED 2026-10-18: decoder confirmed real and shipping —
+     see `.planning/phases/53-hardware-logic-analyzer-probe-buy-gate-teardown-capture-a-vs-b/53-BUY-GATE.md`.]**
   2. Physical access achieved: battery disconnected first, connector pitch/pin count
      measured, empirical pin ID completed (GND → rails → LP-11 pairs → behavior), no-solder
      interposition in place
@@ -490,10 +542,10 @@ capture sessions, user-authorized); the purchase itself is user-gated.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 0/5 | Planned | - |
-| 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 0/0 | Not started | - |
+| 50. TCON Identification — DCS ID-Read Instrument (Software-Only) | 5/5 | Complete    | 2026-10-17 |
+| 51. Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified) | 5/6 | In Progress | - |
 | 52. Black-Resume Self-Healing (d330-blackguard) | 0/0 | Not started | - |
-| 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/0 | Not started | - |
+| 53. Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B) | 0/1 | In Progress | - |
 
 ---
 

@@ -114,29 +114,57 @@ jobs:
           # patches/d330_dsi_dump.patch is strictly-additive phase-47 instrumentation
           # (47-01): one new debugfs snapshot node + 2 wiring lines. It touches no
           # DSI enable/disable path and writes no registers, so it cannot change
-          # what the boot-vs-resume arms measure.
+          # what the boot-vs-resume arms measure. Phase 50 (50-01) extends the same
+          # node in place: the write side gains a value trigger (echo 2 = the
+          # unchanged MMIO walk + five LP-mode DCS/generic ID reads appended as an
+          # annotated "# DCS ID READ" section strictly after the named overlay).
+          # Also read-only by contract — read transactions only, zero register
+          # writes — so echo 1 output stays byte-compatible with every 47/49
+          # capture, and the two new grep anchors below prove the echo-2 code
+          # landed in the CI tree.
           git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_dump.patch"
           grep -R 'i915_dsi_regs' drivers/gpu/drm/i915/display/
           grep -R 'bxt_dsi_pll_is_enabled' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
-          # patches/d330_dsi_panel_power_cycle.patch is the phase-48
-          # iteration-2 fix (48-01): DMI-gated to 82H0, runs the reload
-          # path's panel power teardown (assert reset, rails off, a
-          # reload-scale settle) at the very top of the DSI enable path,
-          # in the resume window only. Replaces the iteration-1
-          # d330_dsi_device_ready_fix.patch (disproven, RESUME_FIX_LEDGER
-          # row 30; the patch file stays in git history but is no longer
-          # applied by CI).
-          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_panel_power_cycle.patch"
-          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/vlv_dsi.c
-          # patches/d330_dsi_mipio_reset.patch is the phase-48 iteration-3
-          # fix (48-01): DMI-gated to 82H0, pulses the DSI-block MIPIO
-          # hardware reset (drop + re-assert of BXT_P_CR_GT_DISP_PWRON's
-          # MIPIO_RST_CTRL bit) at the very top of the DSI enable path, in
-          # the resume window only, mimicking the power-well-cycle reset
-          # the re-probe performs. Requires the iteration-2 patch applied
-          # first (reuses its DMI helper and follows its insertion).
-          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_mipio_reset.patch"
-          grep -R 'resume: MIPIO reset pulse' drivers/gpu/drm/i915/display/vlv_dsi.c
+          grep -R 'DCS ID READ' drivers/gpu/drm/i915/display/
+          grep -R 'mipi_dsi_dcs_read' drivers/gpu/drm/i915/display/intel_dsi_dump_debugfs.c
+          # Phase 51 (51-01): the two falsified pre-enable candidates are no
+          # longer applied. d330_dsi_panel_power_cycle.patch (RESUME_FIX_LEDGER
+          # row 31) runs MIPI_SEQ_POWER_OFF at the top of intel_dsi_pre_enable()
+          # in the resume window, which would clear exactly the keep-hot state
+          # the E1 patch needs to survive S3; and it defines d330_82h0_panel(),
+          # which would collide with the E1 patch's own definition (PITFALLS
+          # P3). d330_dsi_mipio_reset.patch (row 32) reuses that helper and
+          # follows that insertion, so it goes with it. Both patch files stay
+          # in git history as the falsified-candidate record.
+          # Phase-51 diagnostic rungs are NO LONGER APPLIED as of the GLK
+          # reset-order fixup validation build:
+          # - patches/d330_dsi_keep_hot.patch (E1, falsified: skip markers
+          #   fired yet the panel stayed black, 51-03) changed suspend
+          #   teardown behavior, which would confound attribution of any
+          #   resume improvement to the GLK fixup. The upstream candidate
+          #   was validated on a STOCK teardown path (issue 13225 note
+          #   3698515), so the validation build must match that shape.
+          # - patches/d330_dsi_e3_rail_probe.patch (E3, falsified: DCS read
+          #   ret=4 avail=0, panel-side confirmed) depends on the E1 helper
+          #   and goes with it. Both patch files stay in git history as the
+          #   falsified-candidate record (RESUME_FIX_LEDGER rows 30-33).
+
+          # patches/d330_dsi_glk_reset_order_fixup.patch is the upstream
+          # candidate fix from gitlab issue 13225 (lucasgabmoreno note 3698515),
+          # adapted for the v7.0 display->platform() API. Root cause per
+          # vsyrjala (13225 note 3169683): this VBT has an empty
+          # MIPI_SEQ_DEASSERT_RESET and does the whole panel reset pulse
+          # (GPIO 160) from MIPI_SEQ_INIT_OTP, which runs AFTER the DSI host
+          # is up - so the panel is reset with the link already active and
+          # stays black while every driver step reports success. The fixup
+          # runs INIT_OTP as DEASSERT_RESET on GLK (the VLV-only v1 fixup
+          # never covered this). Touches intel_bios.c only; no overlap with
+          # the instrumentation patches above. Grep anchors pin the new
+          # function and the GLK dispatch branch.
+          git apply -p1 "$GITHUB_WORKSPACE/patches/d330_dsi_glk_reset_order_fixup.patch"
+          grep -R 'glk_fixup_mipi_sequences' drivers/gpu/drm/i915/display/intel_bios.c
+          grep -R 'platform.geminilake' drivers/gpu/drm/i915/display/intel_bios.c
+          grep -R 'Running INIT_OTP (GPIO/delay only) as DEASSERT_RESET' drivers/gpu/drm/i915/display/intel_bios.c
 
       - name: Configure (seeded from the target kernel, no debug info)
         run: |

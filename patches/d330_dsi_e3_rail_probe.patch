@@ -1,0 +1,103 @@
+From: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+Subject: [PATCH] drm/i915/dsi: one-shot resume-side rail probe for the Lenovo IdeaPad D330 (82H0) lazy E3 rung
+
+Phase 51 rung E3 (plan 51-05), built only because 51-03 left the rails
+question open: the E1 keep-hot suspend teardown skip provably FIRED (both
+skip markers present, RESUME_FIX_LEDGER + 51-03-SUMMARY) yet the panel came
+back X=Z (0/7 operational-set registers held). That leaves two live
+hypotheses and E1 cannot separate them: the PMIC cut the panel power rails
+despite the teardown skip (rails-cut), or the rails stayed up but the reset
+toggle / link re-init destroyed the TCON's live state (reset-destroyed-state).
+
+This probe is instrumentation, not a verdict source. It sends ONE bounded
+LP-mode DCS ID read over the re-trained link after MIPI_SEQ_INIT_OTP and
+before the display-on path, behind the same DMI gate E1 uses, and emits a
+single compiled-in drm_info marker with ret / GEN_READ_DATA_AVAIL (bit 29,
+the answered-vs-dead discriminator - the host RX path returns >= 4 on
+timeout, so ret alone never decides) / raw bytes. Zero register writes, zero
+new waits beyond the read's own bounded one. The DCS read path is PROVEN
+DEAD in both arms by phase 50 (ret=4 avail=0 data=00 00 00), so a dead
+result here is the expected zero-expectation outcome and is never mistaken
+for TCON life. The real rail discriminator for the rung verdict is the GPIO
+144/160 line-state capture the session takes pre-suspend and post-wake (plan
+51-05 Task 2); this probe only records the link-side read state for
+completeness.
+
+Read-only by contract, sequenced at a point the driver already runs reads
+elsewhere (the echo-2 debugfs instrument issues the identical set), one new
+CI candidate riding the pinned E1 baseline. Nothing here writes a register,
+adds a wait, or changes panel behaviour.
+
+Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
+---diff --git a/drivers/gpu/drm/i915/display/vlv_dsi.c b/drivers/gpu/drm/i915/display/vlv_dsi.c
+index 429e0be..7f1c2aa 100644
+--- a/drivers/gpu/drm/i915/display/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/display/vlv_dsi.c
+@@ -809,6 +809,67 @@ static void intel_dsi_pre_enable(struct intel_atomic_state *state,
+ 	/* Send initialization commands in LP mode */
+ 	intel_dsi_vbt_exec_sequence(intel_dsi, MIPI_SEQ_INIT_OTP);
+ 
++	/*
++	 * Lenovo IdeaPad D330-10IGL (82H0) lazy E3 rail-survival probe
++	 * (phase 51 / plan 51-05). Instrumentation ONLY, zero-expectation:
++	 * the read path is proven dead in both arms by phase 50, so this
++	 * never decides the rung - the verdict comes from the GPIO 144/160
++	 * line-state capture plus the X=Y operational-set dump check. Runs
++	 * AFTER link re-train (MIPI_SEQ_INIT_OTP) and BEFORE the display-on
++	 * path, so the link is up but the panel is not yet streaming. DMI-
++	 * gated to 82H0 (same helper E1 added); read-only - one bounded DCS
++	 * ID read over port A, LP mode, VC 0, no register writes, no new
++	 * waits. ret + MIPI_INTR_STAT(A) bit 29 (GEN_READ_DATA_AVAIL - the
++	 * answered-vs-dead discriminator; the host RX path returns >= 4 on
++	 * timeout so ret alone never decides) + raw bytes, one marker line.
++	 */
++	if (d330_82h0_panel()) {
++		struct drm_connector_list_iter iter;
++		struct drm_connector *connector;
++		struct intel_encoder *probe_enc = NULL;
++		struct mipi_dsi_device *dsi_dev;
++		unsigned int avail;
++		u8 pbuf[3];
++		ssize_t ret;
++
++		drm_connector_list_iter_begin(display->drm, &iter);
++		drm_for_each_connector_iter(connector, &iter) {
++			if (connector->connector_type != DRM_MODE_CONNECTOR_DSI)
++				continue;
++			probe_enc = to_intel_connector(connector)->encoder;
++			if (probe_enc && probe_enc->type == INTEL_OUTPUT_DSI)
++				break;
++			probe_enc = NULL;
++		}
++		drm_connector_list_iter_end(&iter);
++
++		if (probe_enc) {
++			struct intel_dsi *p_dsi = enc_to_intel_dsi(probe_enc);
++
++			if (p_dsi->dsi_hosts[PORT_A] &&
++			    p_dsi->dsi_hosts[PORT_A]->device) {
++				dsi_dev = p_dsi->dsi_hosts[PORT_A]->device;
++				dsi_dev->mode_flags |= MIPI_DSI_MODE_LPM;
++				dsi_dev->channel = 0;
++
++				memset(pbuf, 0, sizeof(pbuf));
++				ret = mipi_dsi_dcs_read(dsi_dev, 0x04, pbuf, 3);
++				avail = !!(intel_de_read(display,
++					MIPI_INTR_STAT(display, PORT_A)) &
++					GEN_READ_DATA_AVAIL);
++				drm_info(display->drm,
++					 "[D330 82H0] e3-probe: DCS read ret=%zd avail=%u data=%*ph\n",
++					 ret, avail, 3, pbuf);
++			} else {
++				drm_info(display->drm,
++					 "[D330 82H0] e3-probe: no-dsi-device-for-port-A\n");
++			}
++		} else {
++			drm_info(display->drm,
++				 "[D330 82H0] e3-probe: no-dsi-encoder\n");
++		}
++	}
++
+ 	/*
+ 	 * Enable port in pre-enable phase itself because as per hw team
+ 	 * recommendation, port should be enabled before plane & pipe
