@@ -11,6 +11,31 @@ plan depends on is real, ships in the free download, and decodes LP-escape
 DSI — the exact traffic the D330's panel-init DCS uses (VBT block 53 flags
 it LP). Validated without opening the wallet.
 
+## USER DECISION (2026-10-18): DECLINE — no purchase
+
+User authorization recorded verbatim: **"totally decline, do not want to
+spend a dime!"** No hardware is bought. The LA5016, the FPC breakout and
+the conditional U3Pro16 are all declined.
+
+**Consequence for the hunt (roadmap Phase 53 SC1, decline branch):** the
+three wire-level questions (§0 of `v10.0-hardware-instrument.md`) go
+**unanswered by hardware**: whether GOP sends un-seen TCON init on the DSI
+lanes, whether the PMIC toggles rails differently at boot vs resume, and
+whether the kernel re-probe transmits at all, remain open at wire level.
+No capture A/B/C will exist. The mechanism evidence therefore stops at
+what the software ladder established (Phase 51 falsified; X=Y reachable
+only via GOP boot init; NO_CLEAN_FIX_PROOF §7.1). The content answer
+shrinks to the **zero-cost path already identified**: static decode of VBT
+block 55 (258 raw bytes already dumped in `docs/dumps/re_kit/`) and the
+documented honest mitigation (reboot after a black resume). UPDATE
+(2026-10-19): block 55 was decoded in the meantime - it is
+BDB_COMPRESSION_PARAMETERS_OLD (DSC params), which the kernel never
+parses on any VBT version; it carries no DCS bytes, GPIO numbers or I2C
+register pairs (`v10.0-tcon-hunt.md` 1). So the decline branch's one
+zero-cost content path also came back negative. The real fix arrived
+from a different direction entirely: the upstream GLK reset-order
+fixup (issue #13225), validated 10/10 on this unit - ledger row 34.
+
 ## Why this gate existed
 
 Phase 51's software ladder falsified: the keep-hot teardown skip never

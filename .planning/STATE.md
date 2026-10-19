@@ -1,67 +1,43 @@
 ---
 gsd_state_version: "1.0"
-milestone: v10.0
-milestone_name: Crack the Panel — TCON Identification and the GOP-Init Hunt
-current_phase: 53
-current_phase_name: Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B)
-status: executing
-stopped_at: Phase 51 falsified (E3 skip never engaged); Phase 53 buy-gate validated — awaiting user purchase authorization
-last_updated: "2026-10-18T12:00:00.000Z"
-last_activity: 2026-10-18
-last_activity_desc: Phase 53 opened; KingstVIS MIPI-DSI LP decoder validated pre-purchase
+milestone: v11.0
+milestone_name: Ship the Fix — Every Supported Distro + One-Script Installer
+current_phase: 54
+current_phase_name: One-Script Installer (d330-full-setup.sh)
+status: planning
+stopped_at: v10.0 closed — upstream GLK reset-order fixup validated 10/10 eyes-on (ledger row 34); v11.0 opened
+last_updated: "2026-10-19T20:00:00.000Z"
+last_activity: 2026-10-19
+last_activity_desc: v10.0 closed (51-06 closure, 52/53 retired unexecuted, NO_CLEAN_FIX_PROOF §9 overturn); v11.0 roadmap opened
 progress:
-  total_phases: 4
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 5
-  percent: 50
-state_head: 006ea97f8279c3ec6c61da5f3275a1f1a9f8f908
-progress:
-  total_phases: 4
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 25
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # STATE: Project Execution State
 
-- **Active Milestone**: Milestone 10 (v10.0) — Crack the Panel: TCON Identification and the GOP-Init Hunt
-- **Active Phase**: 53 — Hardware Logic-Analyzer Probe (buy-gate validated; teardown + captures pending user purchase authorization)
-- **Status**: Phase 53 BUY-GATE VALIDATED (2026-10-18). KingstVIS MIPI-DSI LP decoder confirmed real and shipping (`libMIPI-DSI.so`, `MIPI_DSI_LP_Analyzer` with escape-mode/TA-exit/packet parsing + `GenerateSimulationData`), model-gated LA5016/LA5032 only. Awaiting user authorization to buy the LA5016 ($238).
-- **Blockers**:
-  * **[USER GATE]** Phase 53 purchase authorization — LA5016 ($238) + FPC breakout (~$5–15, order after teardown confirms pitch/pin count). U3Pro16 ($299) conditional, do not pre-buy.
-  * [PENDING DEPLOY — inherited from v7.0] 12 documented VERIFICATION overrides (11 `uat_gaps` + 1 `deferred_items` resolved in place) for hardware-in-the-loop, daemon, package-build and live-session criteria (Phases 32-42). Machine-checked equivalents are green; re-run each at deployment sign-off with `/gsd-verify-work <N>`. Detail in `.planning/milestones/v7.0-ROADMAP.md` and `.planning/v7.0-MILESTONE-AUDIT.md`.
-- **Next Immediate Action**: User authorizes the LA5016 purchase → teardown + empirical pin ID → captures A/B/C
+- **Active Milestone**: Milestone 11 (v11.0) — Ship the Fix: Every Supported Distro + One-Script Installer
+- **Active Phase**: 54 — One-Script Installer (`scripts/d330-full-setup.sh`)
+- **Status**: v10.0 CLOSED (2026-10-19). The milestone's "no clean fix" premise was overturned: the upstream GLK reset-order fixup (issue #13225, note 3698515), adapted in `patches/d330_dsi_glk_reset_order_fixup.patch` (sha F97F4E87), validated 10/10 lit S3 resumes + all boots on the reference D330 (ledger row 34; `docs/research/NO_CLEAN_FIX_PROOF.md` §9). Kernel `7.0.14-d330-fix` (CI run 39281203672) carries the fixup + CCS quirk; device audit confirmed every parity config installed.
+- **Blockers**: None.
+- **Next Immediate Action**: Plan Phase 54 (one-script installer) → Phase 55 (multi-distro release) → Phase 56 (device audit + tag v11.0)
 
 ## Project Reference
 
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
-**Core value:** full hardware parity + screen-freeze fix for the Lenovo D330-10IGL.
-**Current focus:** Phase 50 — TCON Identification — DCS ID-Read Instrument (Software-Only)
+**Core value:** full hardware parity + screen-resume fix for the Lenovo D330-10IGL.
+**Current focus:** Phase 54 — one-script installer automating the Kubuntu guide for every supported distro.
 
 ## Current Position
 
-Phase: 53 — Hardware Logic-Analyzer Probe (buy-gate validated; awaiting user purchase authorization)
-Plan: 53-01 (buy-gate) complete; teardown + captures pending
-Status: Awaiting user decision on LA5016 purchase
-Last activity: 2026-10-18 — Phase 53 opened, buy-gate validated
-
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 5
-- Average duration: —
-- Total execution time: — hours
-
-**Recent Trend:**
-
-- Last 5 plans: —
-- Trend: —
-
-*Updated after each plan completion*
+Phase: 54 — One-Script Installer
+Plan: not yet planned
+Status: v11.0 opened; roadmap written
+Last activity: 2026-10-19 — v10.0 closure + v11.0 opening
 
 ## Accumulated Context
 
@@ -69,20 +45,22 @@ Last activity: 2026-10-18 — Phase 53 opened, buy-gate validated
 
 Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecting current work:
 
-- [Roadmap v8.0]: Phase ordering is load-bearing — the provably-correct packaged seamless recovery and the banned-lever gate ship first (Phase 43); the costly Windows/GOP RE and root-cause differential (Phase 45) are gated behind the cheap upstream/mainline survey (Phase 44).
-- [Roadmap v8.0]: Milestone closes honestly on the packaged recovery if no clean resume fix is achievable (ROOT-04); any real fix must be shaped as an upstreamable i915 DMI quirk in `intel_quirks.c`.
+- [v10.0 close, 2026-10-19]: the real fix is VBT parse-time reset-sequence reordering (GLK fixup from #13225), NOT any host-MMIO lever — rows 30-33 stand, the generalization to "no clean fix" was wrong (NO_CLEAN_FIX_PROOF §9).
+- [v10.0 close, 2026-10-19]: Phase 52 (self-healing hotkey) and Phase 53 (logic analyzer) retired unexecuted — superseded by the fix; purchase declined verbatim in 53-BUY-GATE.md.
+- [v11.0 open, 2026-10-19]: release covers Ubuntu-family (`.deb` kernel from CI + installer) and Fedora/Arch (patch-into-distro-kernel path); installer never `rm`s, backs up boot files, supports `--dry-run`, prints manual fallback per step.
+- Upstream: issue #17401 filed (evidence + attachments), #13225 carries the fix + second-unit confirmation comment (user paste — Akismet blocks API comments from this account). GitLab labels impossible for community reporter role.
 
 ### Pending Todos
 
-None yet.
+- User pastes the two upstream comments (bodies already provided in chat, 2026-10-19) on #13225 and #17401 when convenient.
 
 ### Blockers/Concerns
 
-See the Blockers list above (inherited v7.0 PENDING DEPLOY items + Phase 43 safety-kit staging).
+See the Blockers list above.
 
 ## Deferred Items
 
-Items acknowledged/deferred at milestone close (v7.0), most recent first:
+Items acknowledged/deferred at milestone close, most recent first:
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
@@ -103,8 +81,8 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 
 ## Session Continuity
 
-Last session: 2026-10-18
-Stopped at: Phase 53 buy-gate validated; awaiting user purchase authorization
+Last session: 2026-10-19
+Stopped at: v10.0 closed; v11.0 opened with phases 54-56
 Resume file: None
 
 ## Archived Milestones
@@ -116,7 +94,8 @@ Resume file: None
 - [x] **Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0)** - Phases 21-23 Completed & Shipped
 - [x] **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)** - Phases 24-31 Completed & Shipped
 - [x] **Milestone 7: Pre-Deployment Audit Remediation (v7.0)** - Phases 32-42 Completed & Shipped (archived to `.gsd/milestones/v7.0-ROADMAP.md`)
+- [x] **Milestone 10: Crack the Panel (v10.0)** - Phases 50-53 Closed 2026-10-19 (fix = upstream GLK reset-order fixup, ledger row 34; 52/53 retired unexecuted)
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Continue v11.0 execution: Phase 54 (installer) → 55 (release) → 56 (audit + tag)
