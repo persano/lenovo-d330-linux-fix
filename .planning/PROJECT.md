@@ -20,20 +20,22 @@
 
 - **Milestone 8: Reverse-Engineer & Fix the D330 Resume Black Screen (v8.0, shipped 2026-10-13)**: GOP driver + two-VBT handoff decoded; resume-vs-reload differential (kernel display state byte-identical working-vs-broken — failure below the kernel model); 29-row binding disproven-lever ledger with machine gate; rebind "recovery" myth-busted (only a reboot restores the panel); 3 deployed fix candidates falsified; honest closure (NO_CLEAN_FIX_PROOF.md). Bug NOT fixed.
 - **Milestone 9: Actually Fix the D330 Resume Black Screen (v9.0, shipped 2026-10-16)**: DSI MMIO truth (X=Y working vs X=Z held-broken contrast, `dsi_mmio_diff.sh` + evidence guards); 3 DMI-gated candidates (fresh-state, panel power cycle, MIPIO reset) CI-built + deployed + falsified with machine evidence (ledger rows 30-32); reload-workaround premise corrected (never restored an image — recovery = reboot only); 65-artifact re-kit + upstream handoff. Fix proven unreachable from every kernel path tested.
+- **Milestone 10: Crack the Panel (v10.0, closed 2026-10-19)**: DCS ID-read instrument (TCON stays unknown; I2C sideband ruled out); keep-hot ladder E1/E3 falsified with machine evidence (ledger rows 30-33); purchase declined, Phases 52/53 retired unexecuted; then the upstream GLK reset-order fixup (issue #13225) adapted (sha F97F4E87) and validated **10/10 S3 resumes + all boots eyes-on** — ledger row 34, NO_CLEAN_FIX_PROOF §9 overturns the "no clean fix" verdict.
+- **Milestone 11: Ship the Fix (v11.0, shipped 2026-10-19)**: Release `v11.0` (14 assets — patched kernel debs, DKMS `.deb`/`.rpm`/`.pkg.tar.zst`, one-script installer `scripts/d330-full-setup.sh`, Ubuntu/ChromeOS/Android patch sets); GLK fixup + CCS quirk in the booted reference-device kernel; source-verified GLK patches generated against real `chromeos-6.6`/`chromeos-5.15`/AOSP `android15-6.6`/`android13-5.15` trees (`git apply --check` clean).
 
-## Current Milestone: v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt
+## Current Milestone: v12.0 Boot the Other OSes
 
-**Goal:** Identify the D330's panel TCON and the exact init the GOP performs at boot, then either replicate it in the kernel at resume (keep-panel-powered ladder) or prove it needs hardware instrumentation — with a hardware-probe phase spec'd (buy-gate included) and a black-resume safety net shipped regardless.
+**Goal:** Build the GLK-patched kernels for BlissOS and ChromeOS on GitHub Actions CI and prove they work on the real D330 — both OSes booted from USB (internal disk untouched), display + suspend/resume verified eyes-on.
 
 **Target features:**
-- DCS ID-read instrument (extend `i915_dsi_regs` with echo-2 DCS reads) → TCON identification software-only; block-55 closed as compression-params (negative result); §6 0x6b004 label correction.
-- Keep-panel-powered fix ladder E1→E2 (+E3 discriminator if falsified): skip panel-side teardown at suspend, warm-resume enable — DMI-gated 82H0, one candidate per CI iteration, X=Y/X=Z instrument chain.
-- d330-blackguard self-healing: hotkey → beeps → 10 s countdown → reboot; stand down the legacy display-resume hook; tests + rtcwake validation.
-- Hardware logic-analyzer probe: Kingst LA5016 buy-gate (KingstVIS MIPI-DSI LP demo validation first), teardown + FPC pin-ID, capture A (boot GOP LP DCS) vs B (kernel re-probe) + PMIC I2C bus 6 rails.
+- Phase 57: CI build of the patched BlissOS kernel (BlissRoms `kernel_common`, GLK + CCS patches applied, `bzImage` artifact).
+- Phase 58: BlissOS boot test on the D330 from USB — display lit, panel orientation correct, S3/s2idle resume eyes-on.
+- Phase 59: CI build of the patched ChromeOS kernel (`chromeos-6.6` via depot_tools/shallow checkout; runner-disk risk acknowledged, fallback = documented honest stop, never a fake artifact).
+- Phase 60: ChromeOS boot test on the D330 from USB — same verification matrix.
 
-**Research:** `.planning/research/v10.0-SUMMARY.md` + 4 full reports (tcon-hunt, keep-panel-powered, hardware-instrument, self-healing).
+**Research:** `.planning/research/` — none new; tree sources already fetched (2026-10-19) and patches source-verified in v11.0.
 
-## Project Status: Milestone 9 (v9.0) complete — honest closure (fix unreachable from kernel; recovery = reboot only); v10.0 hunt started (Phases 50-53)
+## Project Status: Milestone 12 (v12.0) started — requirements + roadmap definition; v11.0 shipped (fix live in release v11.0)
 
 ## Context
 - Repo is a shell + Python + packaging + DKMS-patch project; the live installer (`sudo ./scripts/install_dkms.sh`) is the primary deployment path and is consistent end-to-end. The `.deb`/`.rpm`/PKGBUILD packagers and the CI `.deb` build mirror the installer's suffix-free `/usr/local/bin` tool names so shipped+enabled systemd units execute correctly.
