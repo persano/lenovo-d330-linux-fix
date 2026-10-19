@@ -34,4 +34,15 @@ exhausted); BLIS and CHRM are new categories.
 
 ## Traceability
 
-(filled by the roadmapper — every REQ-ID maps to exactly one phase)
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| BLIS-01 | Phase 57 | Pending |
+| BLIS-02 | Phase 57 | Pending |
+| AUDIT-03 | Phase 57 | Pending |
+| BLIS-03 | Phase 58 | Pending |
+| BLIS-04 | Phase 58 | Pending |
+| CHRM-01 | Phase 59 | Pending |
+| CHRM-02 | Phase 59 | Pending |
+| CHRM-03 | Phase 60 | Pending |
+| CHRM-04 | Phase 60 | Pending |
+| REL-03 | Phase 61 | Pending |

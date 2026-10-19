@@ -13,6 +13,7 @@
 - ✅ **v9.0 Actually Fix the D330 Resume Black Screen** — Phases 47-49 (shipped 2026-10-16: DSI MMIO truth + 3 falsified DMI-gated fix candidates + honest closure; **fix proven unreachable from every kernel path tested** — recovery = reboot only; the hunt continues in v10.0)
 - ✅ **v10.0 Crack the Panel — TCON Identification and the GOP-Init Hunt** — Phases 50-53 (closed 2026-10-19: ladder falsified, then upstream GLK reset-order fixup (#13225) validated 10/10 eyes-on, ledger row 34; Phases 52/53 retired unexecuted)
 - ✅ **v11.0 Ship the Fix — Every Supported Distro + One-Script Installer** — Phases 54-56 (shipped 2026-10-19, https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0)
+- 🚧 **v12.0 Boot the Other OSes — BlissOS + ChromeOS from USB** — Phases 57-61 (planned)
 
 ## Phases
 
@@ -567,3 +568,160 @@ hardware-level DSI/DPHY register truth, falsified 3 more DMI-gated fix candidate
 machine-proved the mechanism lives below host MMIO on the panel TCON side — recovery =
 reboot only. v10.0 attacks the panel itself: identify its TCON software-only, never tear it
 down at suspend, ship the reboot safety net, and gate the cheap wire-level probe.
+
+---
+
+### 🚧 v12.0 Boot the Other OSes — BlissOS + ChromeOS from USB (Planned)
+
+**Milestone Goal:** v11.0 shipped the fix for Linux; v12.0 proves it on the other two
+target OSes. Build the GLK+CCS-patched kernels for BlissOS (BlissRoms `kernel_common`)
+and ChromeOS (`chromeos-6.6`) on GitHub Actions CI, then boot both on the reference D330
+from USB — internal disk untouched — with display lit, orientation correct, and
+suspend/resume verified eyes-on. SC1 bar: both OSes booted from USB with the patched
+kernels and a `v12.0` release carries both kernels + `SHA256SUMS` + step-by-step
+USB-writing instructions. An honest documented stop is an acceptable outcome for the
+ChromeOS build (runner disk/time), never a fake artifact.
+
+**Process rules (user decisions 2026-10-19 + standing constraints, binding):**
+- Builds run on GitHub Actions, dispatched via `gh workflow run` — NO long polling;
+  check runs only when the user asks.
+- Boot tests are eyes-on, user-triggered, one per session; USB-only — the internal
+  disk (Kubuntu/Windows layout) is never touched; never `rm` anything on the device;
+  pwsh-native ssh only.
+- CHRM-02: CI may fail on runner disk/time for ChromeOS — the failure is an acceptable
+  documented stop, never a truncated or fake artifact.
+- AUDIT-03: patch-apply verification (`git apply --check` against freshly fetched tree
+  sources) must run as the FIRST step of both build workflows, before any build step;
+  a patch that fails to apply turns the job red with no artifact published.
+- The ledger gate (`scripts/test_pitfalls_ledger.sh`) stays green (4/0) in every phase.
+- Commits via `gsd-tools query commit`.
+
+**Phase Ordering Rationale:** BlissOS runs end-to-end first (build → boot) because its
+tree (`kernel_common`) is already fetched and its workflow is the simpler of the two —
+any CI-infrastructure lessons feed the ChromeOS workflow. ChromeOS comes second with the
+same build-then-boot shape, its runner-disk risk confined to its own phase so a
+documented stop there cannot block the BlissOS results. The release phase runs last
+because REL-03 needs both kernels plus the eyes-on boot verdicts from Phases 58 and 60.
+
+**Phases:**
+
+- [ ] **Phase 57: BlissOS CI Kernel Build (`kernel_common` + GLK/CCS patches)** - GitHub Actions workflow dispatched via `gh workflow run`: patch-apply gate first, then BlissRoms `kernel_common` build, `bzImage` published as artifact (BLIS-01, BLIS-02, AUDIT-03)
+- [ ] **Phase 58: BlissOS USB Boot Verification (Eyes-On)** - Boot BlissOS on the reference D330 from USB with the patched kernel — panel lit, orientation correct, one suspend/resume cycle keeps the panel lit (BLIS-03, BLIS-04)
+- [ ] **Phase 59: ChromeOS CI Kernel Build (`chromeos-6.6`)** - GitHub Actions workflow: patch-apply gate first, shallow `chromeos-6.6` checkout via depot_tools, kernel artifact published; runner disk/time overrun = documented honest stop (CHRM-01, CHRM-02)
+- [ ] **Phase 60: ChromeOS USB Boot Verification (Eyes-On)** - Boot ChromeOS on the reference D330 from USB with the patched kernel — same verification matrix as Phase 58 (CHRM-03, CHRM-04)
+- [ ] **Phase 61: v12.0 Release + USB-Writing Instructions** - Tag `v12.0` GitHub release carrying both built kernels + `SHA256SUMS` + step-by-step USB-writing instructions per OS (REL-03)
+
+### Phase 57: BlissOS CI Kernel Build (`kernel_common` + GLK/CCS patches)
+
+**Goal**: Anyone can produce the patched BlissOS kernel from CI alone — dispatch the
+workflow, get a green job, download the `bzImage`; publishing an unpatched kernel is
+structurally impossible.
+
+**Depends on**: Nothing (first phase of Milestone v12.0; inputs: patches source-verified
+in v11.0, tree sources fetched 2026-10-19)
+
+**Requirements**: BLIS-01, BLIS-02, AUDIT-03
+
+**Success Criteria** (what must be TRUE):
+
+  1. `gh workflow run` dispatches the BlissOS build workflow and the green run publishes
+     a `bzImage` artifact downloadable from the Actions UI/API — no long polling; runs
+     are checked only when the user asks
+  2. The workflow's first step re-verifies both patches with `git apply --check` against
+     a freshly fetched BlissRoms `kernel_common`; a deliberately broken patch turns the
+     job red BEFORE any build step and no artifact is published (BLIS-02, AUDIT-03)
+  3. The ledger gate `scripts/test_pitfalls_ledger.sh` exits 4/0 green
+
+**Plans**: TBD
+
+### Phase 58: BlissOS USB Boot Verification (Eyes-On)
+
+**Goal**: The CI-built patched kernel boots BlissOS on the real D330 from USB with a
+working panel — the user's eyes are the verdict.
+
+**Depends on**: Phase 57 (the `bzImage` artifact is the kernel this phase boots)
+
+**Requirements**: BLIS-03, BLIS-04
+
+**Success Criteria** (what must be TRUE):
+
+  1. BlissOS boots on the reference D330 from a USB stick carrying the Phase 57
+     `bzImage` — panel lights up and orientation is correct (user eyes-on verdict)
+  2. At least one suspend/resume cycle on BlissOS keeps the panel lit (user eyes-on
+     verdict; user-triggered, one test per session)
+  3. The boot was USB-only: the internal disk (Kubuntu/Windows layout) is untouched;
+     nothing was `rm`'d on the device; all device access via pwsh-native ssh
+
+**Plans**: TBD
+
+### Phase 59: ChromeOS CI Kernel Build (`chromeos-6.6`)
+
+**Goal**: Same CI capability for ChromeOS — a dispatched workflow that verifies the
+patches, builds `chromeos-6.6`, and publishes the kernel artifact — or an honest,
+documented stop if the runner cannot hold the build.
+
+**Depends on**: Phase 57 (workflow shape + patch-gate pattern proven on BlissOS)
+
+**Requirements**: CHRM-01, CHRM-02
+
+**Success Criteria** (what must be TRUE):
+
+  1. `gh workflow run` dispatches the ChromeOS build workflow; the first step re-verifies
+     both patches with `git apply --check` against a freshly fetched shallow
+     `chromeos-6.6` checkout (depot_tools); a green run publishes the kernel artifact
+  2. If the build exceeds the runner's disk or time limits, the job fails red and the
+     overrun is recorded as a documented stop — no truncated or fake artifact is ever
+     published (CHRM-02)
+  3. The ledger gate stays 4/0 green
+
+**Plans**: TBD
+
+### Phase 60: ChromeOS USB Boot Verification (Eyes-On)
+
+**Goal**: ChromeOS with the patched kernel boots on the real D330 from USB with a
+working panel and surviving suspend/resume — same eyes-on bar as Phase 58.
+
+**Depends on**: Phase 59 (the kernel artifact is what this phase boots); Phase 58's
+session discipline (one test per session, user-serialized)
+
+**Requirements**: CHRM-03, CHRM-04
+
+**Success Criteria** (what must be TRUE):
+
+  1. ChromeOS boots on the reference D330 from a USB stick carrying the Phase 59
+     patched kernel — panel lights up (user eyes-on verdict)
+  2. Suspend/resume is verified eyes-on on ChromeOS (user-triggered, one test per
+     session)
+  3. The boot was USB-only: internal disk untouched, no `rm` on the device, pwsh-native
+     ssh only
+
+**Plans**: TBD
+
+### Phase 61: v12.0 Release + USB-Writing Instructions
+
+**Goal**: Anyone with a USB stick and this release can reproduce both boots — both
+kernels, checksums, and copy-pasteable per-OS USB-writing instructions in one place.
+
+**Depends on**: Phases 57, 58, 59, 60 (needs both built kernels and the eyes-on boot
+verdicts before tagging)
+
+**Requirements**: REL-03
+
+**Success Criteria** (what must be TRUE):
+
+  1. A `v12.0` GitHub release is tagged carrying the BlissOS `bzImage` and the ChromeOS
+     kernel artifact, plus a `SHA256SUMS` file whose checksums match the attached assets
+  2. The release carries step-by-step USB-writing instructions for each OS, and a
+     follow-through check confirms the released artifacts + instructions are sufficient
+     to write a bootable stick (commands copy-pasteable, checksums verify)
+  3. The ledger gate is green at the release tag
+
+**Plans**: TBD
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 57. BlissOS CI Kernel Build | 0/0 | Not started | - |
+| 58. BlissOS USB Boot Verification | 0/0 | Not started | - |
+| 59. ChromeOS CI Kernel Build | 0/0 | Not started | - |
+| 60. ChromeOS USB Boot Verification | 0/0 | Not started | - |
+| 61. v12.0 Release + USB-Writing Instructions | 0/0 | Not started | - |

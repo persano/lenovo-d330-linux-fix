@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-10-19T21:27:57.851Z"
 last_activity: 2026-10-19
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -15,26 +15,26 @@ progress:
 
 # STATE: Project Execution State
 
-- **Active Milestone**: NONE (between milestones). v11.0 shipped 2026-10-19 — see `.planning/milestones/v11.0-MILESTONE-AUDIT.md`.
+- **Active Milestone**: v12.0 Boot the Other OSes (Phases 57-61, roadmap complete). v11.0 shipped 2026-10-19 — see `.planning/milestones/v11.0-MILESTONE-AUDIT.md`.
 - **Active Phase**: none (milestone complete; v10.0 phases archived to `.planning/milestones/v10.0-phases/`)
 - **Status**: v11.0 SHIPPED (2026-10-19). Release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 — `linux-image-7.0.14-d330-fix` + headers (GLK reset-order fixup + CCS quirk, from CI run 39281203672), `scripts/d330-full-setup.sh` one-script installer, both kernel patches for Fedora/Arch builds. Reference device audited green: kernel fixup booted, dkms for both kernels, all modprobe/hwdb/udev/grub pieces present, 10/10 eyes-on rtcwake (ledger row 34).
 - **Blockers**: None.
   * v7.0 PENDING DEPLOY (12 UAT overrides): deployment target reached — v11.0 shipped to the reference device with the full stack installed and audited (2026-10-19, device_audit.sh + phase 56). Machine-checked equivalents re-verified green; remaining eyes-on UAT scenarios apply only to any FUTURE deployment sign-off. Detail: `.planning/milestones/v7.0-MILESTONE-AUDIT.md` (path corrected — earlier note pointed at `.planning/v7.0-MILESTONE-AUDIT.md`, which does not exist).
-- **Next Immediate Action**: none — next milestone via `/gsd-new-milestone` when the user wants one. (User-side leftovers, not workflow state: paste the two upstream comments on #13225/#17401; optional chromeos/android on-device build test.)
+- **Next Immediate Action**: `/gsd-plan-phase 57` — BlissOS CI kernel build (workflow, patch-apply gate, `bzImage` artifact). (User-side leftovers, not workflow state: paste the two upstream comments on #13225/#17401.)
 
 ## Project Reference
 
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-resume fix for the Lenovo D330-10IGL.
-**Current focus:** Phase 54 — one-script installer automating the Kubuntu guide for every supported distro.
+**Current focus:** v12.0 Boot the Other OSes — BlissOS + ChromeOS patched kernels built on GitHub Actions and booted from USB on the real D330.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (roadmap complete; next = `/gsd-plan-phase 57`)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-19 — Milestone v12.0 started
+Status: Roadmap written for v12.0 (Phases 57-61)
+Last activity: 2026-10-19 — Milestone v12.0 roadmap created
 
 ## Accumulated Context
 
@@ -98,4 +98,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Continue v11.0 execution: Phase 54 (installer) → 55 (release) → 56 (audit + tag)
+- Start v12.0 execution: `/gsd-plan-phase 57` (BlissOS CI kernel build) → 58 (BlissOS USB boot, eyes-on) → 59 (ChromeOS CI kernel build) → 60 (ChromeOS USB boot, eyes-on) → 61 (v12.0 release + USB-writing instructions)
