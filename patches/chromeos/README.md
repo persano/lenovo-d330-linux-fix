@@ -2,21 +2,23 @@
 
 Target: Lenovo IdeaPad D330-10IGL (Type 82H0 / Intel Gemini Lake Refresh UHD 600)
 
-> **Status note (2026-10-19, v11.0):** these patches predate the real
-> resume fix. They carry the CCS rotation quirk (fixes rotated-commit
-> `-EINVAL` black screen) plus the PPS hedge, but **NOT** the GLK
-> reset-order fixup that actually restores the panel after S3 resume
-> (empty VBT `MIPI_SEQ_DEASSERT_RESET`, reset pulse running after DSI
-> host up — upstream issue
+> **Status note (2026-10-19, v11.0):** the CCS patches below predate the
+> real resume fix — they fix rotated-commit `-EINVAL` black screen but NOT
+> the S3 resume panel death (empty VBT `MIPI_SEQ_DEASSERT_RESET`, reset
+> pulse running after DSI host up — upstream issue
 > [#13225](https://gitlab.freedesktop.org/drm/i915/kernel/-/issues/13225)).
-> On ChromeOS you will likely still see the lit-but-blank resume with
-> only these patches. To port: take
-> `patches/upstream/0001-drm-i915-bios-Fix-reset-sequence-order-on-GLK-VBTs-w.patch`,
-> adapt the GLK dispatch predicate to your branch's `i915` display struct
-> (on 6.6+: `display->platform.geminilake`; on 5.15: the `i915` pointer
-> version from the upstream note), and stack it after the CCS hunk.
-> Untested on real ChromeOS hardware — treat as a porting recipe, not a
-> verified artifact.
+> **Apply the GLK reset-order fix on top:**
+> - [`d330_chromeos_glk_reset_fix_6.6.patch`](d330_chromeos_glk_reset_fix_6.6.patch)
+> - [`d330_chromeos_glk_reset_fix_5.15.patch`](d330_chromeos_glk_reset_fix_5.15.patch)
+>
+> Both were generated against the real `chromeos-6.6` / `chromeos-5.15`
+> upstream tree sources (fetched from chromium.googlesource.com,
+> 2026-10-19) and verified with `git apply --check` — they apply clean.
+> `IS_GEMINILAKE(i915)` is used directly since these trees predate the
+> `intel_display` refactor. Source-verified only: **not built or
+> device-tested on ChromeOS hardware** — the code path is identical to the
+> one validated 10/10 on Linux 7.0.14, but a ChromeOS kernel build + boot
+> test on the D330 is still the user's to run.
 
 ---
 
@@ -24,6 +26,8 @@ Target: Lenovo IdeaPad D330-10IGL (Type 82H0 / Intel Gemini Lake Refresh UHD 600
 
 - [`d330_chromeos_5.15.patch`](d330_chromeos_5.15.patch): Targets ChromeOS kernel branch `chromeos-5.15` (uses `dev_priv`/`i915` struct pointers).
 - [`d330_chromeos_6.6.patch`](d330_chromeos_6.6.patch): Targets ChromeOS kernel branch `chromeos-6.6`+ (uses `intel_display` struct pointers).
+- [`d330_chromeos_glk_reset_fix_6.6.patch`](d330_chromeos_glk_reset_fix_6.6.patch): **The real resume fix** for `chromeos-6.6`+ (GLK reset-order fixup from upstream #13225; apply after the CCS patch).
+- [`d330_chromeos_glk_reset_fix_5.15.patch`](d330_chromeos_glk_reset_fix_5.15.patch): **The real resume fix** for `chromeos-5.15` (same fixup, adapted to the 5.15 i915 API).
 
 ---
 
