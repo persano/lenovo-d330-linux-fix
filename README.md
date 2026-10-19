@@ -32,12 +32,23 @@ scans out rotated 90/270 degrees. On-device tracing found two separate issues
    the display stays black. Not advertising CCS on `82H0`
    (`skl_universal_plane.c`) makes userspace fall back to a Y-tiled surface and
    the commit succeeds.
-2. **Open: the DSI panel can still come back lit but blank after resume.**
-   i915 runs the full DSI power-on sequence on resume and every host register
-   (DSI link, panel power, PLL, CDCLK, PHY) is byte-identical to a working
-   state, so no host-side register write fixes it. A full i915 re-init (PCI
-   unbind/bind) restores the panel and ships as the fallback
-   `scripts/d330-display-reload.sh`.
+2. **Fixed (the real resume killer): panel reset ran too late.** After the
+   CCS issue above was fixed, a lit-but-blank resume remained. On-device
+   tracing showed every host register byte-identical between working boot
+   and broken resume (`docs/research/DSI_RESUME_TRACE_ANALYSIS.md`) — the
+   failure was not in any host-visible state. The actual cause is VBT
+   parse-time sequence ordering: the D330's VBT has an empty
+   `MIPI_SEQ_DEASSERT_RESET`, so the panel reset pulse (GPIO 160) executes
+   from `MIPI_SEQ_INIT_OTP`, *after* the DSI host is already up, instead of
+   before link training. Upstream's `vlv_fixup_mipi_sequences()` repairs
+   exactly this shape for VLV + v1 VBTs, but never for the GLK v3 path.
+   The fixup (upstream issue
+   [#13225](https://gitlab.freedesktop.org/drm/i915/kernel/-/issues/13225),
+   adapted in `patches/d330_dsi_glk_reset_order_fixup.patch`, DMI-gated
+   `82H0`) extends it to GLK. Validated 10/10 S3 resumes + every boot lit
+   on the reference unit (evidence: `docs/research/RESUME_FIX_LEDGER.md`
+   row 34). This is the fix shipped in release
+   [v11.0](https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0).
 
 The older "500 ms TCON / `intel_pps.c` latch-up" theory is **disproven**: the
 panel is DSI (not eDP), the VBT already reports a 500 ms power cycle, and the
@@ -62,6 +73,7 @@ PPS path is not involved. See the superseded note in
 | **ChromeOS Patches** | [`patches/chromeos/`](patches/chromeos/) | Kernel patches for `chromeos-5.15` and `chromeos-6.6`+ branches. |
 | **Android-x86 / Bliss OS** | [`patches/android/`](patches/android/) | Kernel patches (5.15 & 6.6) and sensor HAL matrix configs for Android. |
 | **Distro Install Guide** | [`docs/DISTRO_INSTALL_GUIDE.md`](docs/DISTRO_INSTALL_GUIDE.md) | Guide for Ubuntu/Mint .deb rebuilds, Fedora RPMs, Arch PKGBUILD, and ISO modification. Step-by-step **Kubuntu 26.04 / Wayland** walkthrough in [`docs/KUBUNTU_INSTALL_STEPS.md`](docs/KUBUNTU_INSTALL_STEPS.md). |
+| **One-Script Installer (v11.0)** | [`scripts/d330-full-setup.sh`](scripts/d330-full-setup.sh) | Single entry point automating the whole setup: distro detection (apt/dnf/pacman), dependencies, full parity stack, patched-kernel install (`--kernel-deb`), self-verify. `--dry-run` supported; nothing is deleted; every boot file is backed up. |
 | **Automated Installer** | [`scripts/install_dkms.sh`](scripts/install_dkms.sh) | Zero-friction installation (`--install`, `--uninstall`, `--verify`, `--dry-run`, `--with-rnnoise`). |
 | **Diagnostic Test Suite** | [`scripts/`](scripts/) | Test harnesses for resume loop, touch calibration, dock switching, audio, and battery telemetry. |
 | **Differential RE Suite** | [`tools/`](tools/) | Static driver analyzer, Ghidra export script, and PPS timing model. |
