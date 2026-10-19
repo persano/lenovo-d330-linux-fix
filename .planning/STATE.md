@@ -16,8 +16,8 @@ progress:
 # STATE: Project Execution State
 
 - **Active Milestone**: v12.0 Boot the Other OSes (Phases 57-61, roadmap complete). v11.0 shipped 2026-10-19 — see `.planning/milestones/v11.0-MILESTONE-AUDIT.md`.
-- **Active Phase**: none (milestone complete; v10.0 phases archived to `.planning/milestones/v10.0-phases/`)
-- **Status**: v11.0 SHIPPED (2026-10-19). Release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 — `linux-image-7.0.14-d330-fix` + headers (GLK reset-order fixup + CCS quirk, from CI run 39281203672), `scripts/d330-full-setup.sh` one-script installer, both kernel patches for Fedora/Arch builds. Reference device audited green: kernel fixup booted, dkms for both kernels, all modprobe/hwdb/udev/grub pieces present, 10/10 eyes-on rtcwake (ledger row 34).
+- **Active Phase**: none yet — milestone bootstrap (roadmap approved, Phases 57-61 defined; first plan via `/gsd-plan-phase 57`)
+- **Status**: v12.0 PLANNING (2026-10-19). v11.0 shipped — release `v11.0` (GLK fixup kernel, one-script installer, distro packages), reference device validated 10/10 eyes-on, ledger row 34. v12.0: build GLK-patched BlissOS + ChromeOS kernels on GitHub Actions, boot both from USB on the D330, verify display + resume eyes-on.
 - **Blockers**: None.
   * v7.0 PENDING DEPLOY (12 UAT overrides): deployment target reached — v11.0 shipped to the reference device with the full stack installed and audited (2026-10-19, device_audit.sh + phase 56). Machine-checked equivalents re-verified green; remaining eyes-on UAT scenarios apply only to any FUTURE deployment sign-off. Detail: `.planning/milestones/v7.0-MILESTONE-AUDIT.md` (path corrected — earlier note pointed at `.planning/v7.0-MILESTONE-AUDIT.md`, which does not exist).
 - **Next Immediate Action**: `/gsd-plan-phase 57` — BlissOS CI kernel build (workflow, patch-apply gate, `bzImage` artifact). (User-side leftovers, not workflow state: paste the two upstream comments on #13225/#17401.)
