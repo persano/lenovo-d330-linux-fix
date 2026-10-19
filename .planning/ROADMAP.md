@@ -632,7 +632,10 @@ in v11.0, tree sources fetched 2026-10-19)
      job red BEFORE any build step and no artifact is published (BLIS-02, AUDIT-03)
   3. The ledger gate `scripts/test_pitfalls_ledger.sh` exits 4/0 green
 
-**Plans**: TBD
+**Plans**:
+
+- [ ] 57-01-PLAN.md — Local crimson pre-verification of both android patches (predictor for the CI gate) + README evidence record
+- [ ] 57-02-PLAN.md — build-blissos-kernel.yml workflow (patch gate first, x86_64_defconfig bzImage build, `blissos-kernel` artifact) + dispatch docs
 
 ### Phase 58: BlissOS USB Boot Verification (Eyes-On)
 
