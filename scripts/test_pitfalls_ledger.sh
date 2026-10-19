@@ -239,12 +239,20 @@ gate_scan() {
         # Between milestones (none active in STATE.md) there are no plans to
         # scan; docs/research coverage is then the full, legitimate scan.
         active="$(sed -n 's/^milestone:[[:space:]]*//p' .planning/STATE.md 2>/dev/null | head -1 | tr -d '[:space:]')"
+        # Milestone bootstrap: a milestone can be active with ZERO phase
+        # directories (roadmap approved, first plan not yet written). There
+        # are no PLAN/SUMMARY files that could exist — only then may the
+        # docs/research-only scan stand. Once any phase dir exists, an empty
+        # subset is a real failure (archived-active-plans hole).
+        phases_any="$(find .planning/phases -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d '[:space:]')"
         if [ "$GATE_FILES" -eq 0 ]; then
             echo "Ledger gate: FAIL - scan produced zero files (mechanism failure)"
             GATE_STATUS=1
-        elif [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ]; then
+        elif [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ] && [ "${phases_any:-0}" -gt 0 ]; then
             echo "Ledger gate: FAIL - plan/summary subset is empty (docs/research-only coverage never counts as a passing scan)"
             GATE_STATUS=1
+        elif [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ]; then
+            echo "Ledger gate: note - milestone bootstrap (active '$active', 0 phase dirs): docs/research-only scan accepted"
         fi
     fi
     return 0
@@ -356,13 +364,16 @@ case_pristine_tree_passes() {
         echo "    [detail] total scanned count is 0 (scan mechanism failure)"
         CASE_FAIL=1
     fi
-    # Mirror gate_scan normal's own rule: an empty plan/summary subset is a
-    # failure only while a milestone is active in STATE.md; between
-    # milestones (none active) docs/research coverage is the full scan.
-    local active
+    # Mirror gate_scan normal's rule exactly: an empty plan/summary subset
+    # fails only while a milestone is active AND phase dirs exist (a phase
+    # was started or active plans were archived away). Between milestones,
+    # and during milestone bootstrap (0 phase dirs, first plan not yet
+    # written), docs/research coverage is the full, legitimate scan.
+    local active phases_any
     active="$(sed -n 's/^milestone:[[:space:]]*//p' .planning/STATE.md 2>/dev/null | head -1 | tr -d '[:space:]')"
-    if [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ]; then
-        echo "    [detail] scanned plan/summary subset count is 0 while milestone '$active' is active (docs/research-only coverage never counts as a passing scan)"
+    phases_any="$(find .planning/phases -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d '[:space:]')"
+    if [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ] && [ "${phases_any:-0}" -gt 0 ]; then
+        echo "    [detail] scanned plan/summary subset count is 0 while milestone '$active' is active and phase dirs exist (docs/research-only coverage never counts as a passing scan)"
         CASE_FAIL=1
     fi
     if [ "$GATE_STATUS" -ne 0 ]; then
