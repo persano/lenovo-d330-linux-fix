@@ -88,3 +88,8 @@ early-return) with the suspend_commit_in_progress-gated keep-hot patch,
 stronger machine evidence. Count line 32 → 33. `test_pitfalls_ledger.sh`
 exits 0 (4/0). One per-string marker (`0x160018`) added to 51-02-SUMMARY.md
 for the pre-existing X=Y literal match against row 4.
+
+<!-- planner-discipline-allow: intel_dsi_post_disable -->
+<!-- planner-discipline-allow: 0x160018 -->
+<!-- planner-discipline-allow: MIPI_SEQ_INIT_OTP in intel_dsi_pre_enable -->
+<!-- historical disproof record: falsified lever mentions only, no fix proposal -->

@@ -67,3 +67,7 @@ for the rung record.
 No separate E1 row at this point — the rung is not falsified (markers
 fired). The falsification record lands with 51-05 (row 33), which records
 the keep-hot mechanism's failure to engage on the clean E1+E3 kernel.
+
+<!-- planner-discipline-allow: intel_dsi_post_disable -->
+<!-- planner-discipline-allow: 0x160018 -->
+<!-- historical disproof record: falsified lever mentions only, no fix proposal -->
