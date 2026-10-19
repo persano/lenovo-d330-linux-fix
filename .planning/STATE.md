@@ -1,9 +1,9 @@
 ---
 gsd_state_version: "1.0"
-milestone: v11.0
-milestone_name: Ship the Fix — Every Supported Distro + One-Script Installer
+milestone:
+milestone_name: (none — between milestones; v11.0 shipped 2026-10-19)
 current_phase: 0
-current_phase_name: (milestone shipped)
+current_phase_name: (none)
 status: complete
 stopped_at: v11.0 shipped — release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 (kernel debs + one-script installer + patches); device audit green
 last_updated: "2026-10-19T21:30:00.000Z"
@@ -19,11 +19,12 @@ progress:
 
 # STATE: Project Execution State
 
-- **Active Milestone**: Milestone 11 (v11.0) — Ship the Fix: Every Supported Distro + One-Script Installer — **SHIPPED 2026-10-19**
-- **Active Phase**: none (milestone complete)
+- **Active Milestone**: NONE (between milestones). v11.0 shipped 2026-10-19 — see `.planning/milestones/v11.0-MILESTONE-AUDIT.md`.
+- **Active Phase**: none (milestone complete; v10.0 phases archived to `.planning/milestones/v10.0-phases/`)
 - **Status**: v11.0 SHIPPED (2026-10-19). Release https://github.com/persano/lenovo-d330-linux-fix/releases/tag/v11.0 — `linux-image-7.0.14-d330-fix` + headers (GLK reset-order fixup + CCS quirk, from CI run 39281203672), `scripts/d330-full-setup.sh` one-script installer, both kernel patches for Fedora/Arch builds. Reference device audited green: kernel fixup booted, dkms for both kernels, all modprobe/hwdb/udev/grub pieces present, 10/10 eyes-on rtcwake (ledger row 34).
-- **Blockers**: None. Remaining user actions: paste the two upstream comments on #13225/#17401 (bodies in chat, 2026-10-19) when convenient.
-- **Next Immediate Action**: none — next milestone via /gsd-new-milestone when the user wants one
+- **Blockers**: None.
+  * v7.0 PENDING DEPLOY (12 UAT overrides): deployment target reached — v11.0 shipped to the reference device with the full stack installed and audited (2026-10-19, device_audit.sh + phase 56). Machine-checked equivalents re-verified green; remaining eyes-on UAT scenarios apply only to any FUTURE deployment sign-off. Detail: `.planning/milestones/v7.0-MILESTONE-AUDIT.md` (path corrected — earlier note pointed at `.planning/v7.0-MILESTONE-AUDIT.md`, which does not exist).
+- **Next Immediate Action**: none — next milestone via `/gsd-new-milestone` when the user wants one. (User-side leftovers, not workflow state: paste the two upstream comments on #13225/#17401; optional chromeos/android on-device build test.)
 
 ## Project Reference
 
@@ -82,7 +83,7 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 ## Session Continuity
 
 Last session: 2026-10-19
-Stopped at: v10.0 closed; v11.0 opened with phases 54-56
+Stopped at: cleanup pass executed — v10.0 phases archived, STATE between-milestones, repo tree clean, v11.0-MILESTONE-AUDIT.md written
 Resume file: None
 
 ## Archived Milestones
@@ -94,7 +95,10 @@ Resume file: None
 - [x] **Milestone 5: CI/CD & Remastered Live ISO Distribution (v5.0)** - Phases 21-23 Completed & Shipped
 - [x] **Milestone 6: System Resilience, Performance & Usability Polish (v6.0)** - Phases 24-31 Completed & Shipped
 - [x] **Milestone 7: Pre-Deployment Audit Remediation (v7.0)** - Phases 32-42 Completed & Shipped (archived to `.gsd/milestones/v7.0-ROADMAP.md`)
-- [x] **Milestone 10: Crack the Panel (v10.0)** - Phases 50-53 Closed 2026-10-19 (fix = upstream GLK reset-order fixup, ledger row 34; 52/53 retired unexecuted)
+- [x] **Milestone 8: RE + Root-Cause Differential (v8.0)** - Phases 43-46 Completed & Shipped (archived to `.planning/milestones/v8.0-ROADMAP.md`)
+- [x] **Milestone 9: Actually Fix the Resume Black Screen (v9.0)** - Phases 47-49 Completed & Shipped (archived to `.planning/milestones/v9.0-ROADMAP.md`)
+- [x] **Milestone 10: Crack the Panel (v10.0)** - Phases 50-53 Closed 2026-10-19 (fix = upstream GLK reset-order fixup, ledger row 34; 52/53 retired unexecuted; phases archived to `.planning/milestones/v10.0-phases/`; audit: `v10.0-MILESTONE-AUDIT.md`)
+- [x] **Milestone 11: Ship the Fix (v11.0)** - Phases 54-56 Shipped 2026-10-19 (release v11.0, one-script installer, chromeos/android patches; audit: `v11.0-MILESTONE-AUDIT.md`)
 
 ## Operator Next Steps
 

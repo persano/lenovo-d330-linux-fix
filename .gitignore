@@ -27,3 +27,8 @@ opencode.json
 .gsd/config.json
 .gsd/estimation-calibration.json
 .gsd/research/
+
+# GSD runtime sentinels (regenerated per session)
+.gsd/.gsd-allow-shrink
+.gsd/dispatch-isolation-sentinel.json
+.gsd/milestone.lock

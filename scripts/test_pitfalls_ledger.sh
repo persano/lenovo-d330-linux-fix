@@ -356,8 +356,13 @@ case_pristine_tree_passes() {
         echo "    [detail] total scanned count is 0 (scan mechanism failure)"
         CASE_FAIL=1
     fi
-    if [ "$GATE_SUBSET" -eq 0 ]; then
-        echo "    [detail] scanned plan/summary subset count is 0 (gate would pass vacuously on docs/research alone)"
+    # Mirror gate_scan normal's own rule: an empty plan/summary subset is a
+    # failure only while a milestone is active in STATE.md; between
+    # milestones (none active) docs/research coverage is the full scan.
+    local active
+    active="$(sed -n 's/^milestone:[[:space:]]*//p' .planning/STATE.md 2>/dev/null | head -1 | tr -d '[:space:]')"
+    if [ "$GATE_SUBSET" -eq 0 ] && [ -n "$active" ]; then
+        echo "    [detail] scanned plan/summary subset count is 0 while milestone '$active' is active (docs/research-only coverage never counts as a passing scan)"
         CASE_FAIL=1
     fi
     if [ "$GATE_STATUS" -ne 0 ]; then
