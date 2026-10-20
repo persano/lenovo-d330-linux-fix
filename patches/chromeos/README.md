@@ -20,6 +20,40 @@ Target: Lenovo IdeaPad D330-10IGL (Type 82H0 / Intel Gemini Lake Refresh UHD 600
 > one validated 10/10 on Linux 7.0.14, but a ChromeOS kernel build + boot
 > test on the D330 is still the user's to run.
 
+### Pre-verification against `chromeos-6.6` (Phase 59, 2026-10-20)
+
+Local pre-run of the exact CI gate, on a fresh shallow clone of
+`chromiumos/third_party/kernel`, branch `chromeos-6.6`, tip
+`a534360e4c71f8cfc8350614f73c7f64124c9a05`, kernel `6.6.147`
+(gate log: `.git/phase59-task1-gate.log`; pre-adaptation failure:
+`.git/phase59-task1-gate-initial.log`). Patch order CCS first, then GLK.
+
+- `d330_chromeos_glk_reset_fix_6.6.patch`: **`git apply --check` clean on
+  first run** — no changes needed.
+- `d330_chromeos_6.6.patch`: **initially failed** — the v11.0 status note
+  above claimed this file applied clean, but the fetched tip proved that
+  false: the patch was context-anchored to a newer, post-`intel_display`-
+  refactor tree (array `drm_dmi_panel_orientation_data[]`, named
+  `lenovo_ideapad_d330_*` structs, `struct intel_display *` hooks,
+  `intel_pps_init_delays()`), none of which exist on `chromeos-6.6`
+  (`orientation_data[]`, `drm_i915_private` hooks, `pps_init_delays()`),
+  and its trailing `git format-patch` signature plus a wrong hunk line
+  count made git report `corrupt patch at ...:45`. Adapted per file —
+  same added behavior, tree-matching context/API, verified by a full
+  re-run of `git apply --check` (both patches, exit 0) + real
+  CCS-then-GLK apply + grep anchors (`lenovo_ideapad_d330_10igl_800x1280`,
+  `dmi_match(DMI_PRODUCT_NAME, "82H0")`, `intel_fb_is_ccs_modifier`,
+  `quirk_lenovo_d330_pps`, GLK anchors in `intel_bios.c`):
+
+  | File | Adaptation |
+  |------|-----------|
+  | `drm_panel_orientation_quirks.c` | New struct + 82H0 entry re-anchored to `orientation_data[]`. The fetched tip already carries an upstream `Lenovo Ideapad D330-10IGL (HD)` entry with identical 800x1280 RIGHT_UP data; the adapted entry is kept immediately after it (identical match, unreachable but harmless) so the patch's scope and anchor are preserved. |
+  | `intel_pps.c` | Clamp re-anchored into `pps_init_delays()` (the pre-rename 6.6 name) after `#undef get_delay`; `display` → `dev_priv` (`dp_to_i915`), `intel_has_quirk(dev_priv, ...)`/`drm_info(&dev_priv->drm, ...)` per this tree's API. |
+  | `intel_quirks.c` | `quirk_lenovo_d330_pps()` re-anchored before `intel_dmi_quirks[]`, signature/log calls converted to `struct drm_i915_private *i915` form; DMI entry appended to the array (this tree's array ends `},\n};`). |
+  | `intel_quirks.h` | `QUIRK_INCREASE_PPS_CYCLE_DELAY` appended after `QUIRK_SKIP_LINK_CHECK` (enum order differs in this tree). |
+  | `skl_universal_plane.c` | Context matched as-is; only line offsets differed (handled by `git apply`). `#include <linux/dmi.h>` block re-anchored to this tree's include order. |
+  | (patch file) | Removed the trailing `git format-patch` signature (`-- \n2.43.0`) and fixed the corrupt hunk line count — neither is a hunk deletion; every functional hunk remains. |
+
 ---
 
 ## 1. Provided Patches
