@@ -96,6 +96,11 @@ jobs:
           scripts/config --disable DEBUG_INFO_BTF || true
           scripts/config --disable GDB_SCRIPTS || true
           scripts/config --disable LOCALVERSION_AUTO || true
+          # crimson's defconfig carries CONFIG_WERROR=y (android fork addition;
+          # BlissOS builds it with clang). With the runner's gcc, upstream
+          # code hits -Werror=implicit-fallthrough (arch/x86/kernel/cpu/intel.o,
+          # run 39363362080) — drop the blanket -Werror; warnings stay visible.
+          scripts/config --disable WERROR || true
           # Drop the distro signing-cert paths: nothing signs this bzImage.
           scripts/config --set-str SYSTEM_TRUSTED_KEYS "" || true
           scripts/config --set-str SYSTEM_REVOCATION_KEYS "" || true
