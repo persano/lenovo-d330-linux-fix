@@ -1,8 +1,9 @@
 ---
 phase: 57-blissos-ci-kernel-build-kernel-common-glk-ccs-patches
 verified: 2026-10-19T23:57:35Z
-status: human_needed
+status: passed
 score: 3/3 must-haves verified
+human_validation: PASSED 2026-10-20 — user chose "Validate now" and authorized the agent-run dispatch (deviation from the user-action convention, noted here). Dispatch history: run 39362222155 red at configure (dangling drivers/kernelsu symlink → submodule init, fix cee06d6); run 39363362080 red at build (crimson CONFIG_WERROR=y × gcc -Werror=implicit-fallthrough → scripts/config --disable WERROR, fix 3710c8a); run 39365529173 SUCCESS (2026-10-20T03:40Z). Artifact blissos-kernel (14,046,854 B) downloaded; bzImage/System.map/.config hashes match SHA256SUMS; CCS symbols quirk_lenovo_d330_pps + lenovo_ideapad_d330_10igl_800x1280 present in System.map (binary-level proof); GLK landed via CI gate grep in the same green run (glk_fixup_mipi_sequences is static, correctly absent from System.map). Optional CI negative test deferred: red-on-broken is machine-proven locally (.git/phase57-task1-gate-initial-fail.log) + structurally guaranteed (gate-first + set -e + upload-on-success-only).
 covered_files: [".github/workflows/build-blissos-kernel.yml",".planning/phases/57-blissos-ci-kernel-build-kernel-common-glk-ccs-patches/57-01-PLAN.md",".planning/phases/57-blissos-ci-kernel-build-kernel-common-glk-ccs-patches/57-01-SUMMARY.md",".planning/phases/57-blissos-ci-kernel-build-kernel-common-glk-ccs-patches/57-02-PLAN.md",".planning/phases/57-blissos-ci-kernel-build-kernel-common-glk-ccs-patches/57-02-SUMMARY.md","patches/android/README.md","patches/android/d330_android_glk_reset_fix_6.6.patch","patches/android/d330_android_x86_6.6.patch"]
 covered_digest: "v3:sha256:d16afec43771cd07f94863a26c2f0143cc1988b4b1ad76889b8a888e2c42b9ab"
 behavior_unverified: 0
@@ -20,7 +21,7 @@ human_verification:
 
 **Phase Goal:** Anyone can produce the patched BlissOS kernel from CI alone — dispatch the workflow, get a green job, download the `bzImage`; publishing an unpatched kernel is structurally impossible.
 **Verified:** 2026-10-19T23:57:35Z
-**Status:** human_needed
+**Status:** passed (human validation 2026-10-20 — see `human_validation` in frontmatter)
 **Re-verification:** No — initial verification (no prior 57-VERIFICATION.md)
 
 ## Goal Achievement
