@@ -16,20 +16,25 @@ delay and orientation quirks below are kept as a hedge; on-device tracing found
 the resume path already runs the full panel power sequence, so the PPS clamp is
 not the cause (see docs/research/DISPLAY_RESUME_CCS_MODIFIER.md).
 
+Re-adapted 2026-10-20 against chromeos-6.6 tip a534360e: the earlier revision
+was context-anchored to a post-refactor (intel_display) tree and did not apply
+to chromeos-6.6; per-file adaptations are recorded in
+patches/chromeos/README.md (Phase 59 pre-verification block).
+
 Signed-off-by: Antigravity Autonomous Agent <engineering@lenovo-d330-fix.local>
 ---
  drivers/gpu/drm/drm_panel_orientation_quirks.c     | 14 ++++++++++++++
- drivers/gpu/drm/i915/display/intel_pps.c           |  9 +++++++++
- drivers/gpu/drm/i915/display/intel_quirks.c        | 16 ++++++++++++++++
+ drivers/gpu/drm/i915/display/intel_pps.c           |  8 ++++++++
+ drivers/gpu/drm/i915/display/intel_quirks.c        | 19 +++++++++++++++++++
  drivers/gpu/drm/i915/display/intel_quirks.h        |  1 +
  drivers/gpu/drm/i915/display/skl_universal_plane.c | 13 +++++++++++++
- 5 files changed, 53 insertions(+)
+ 5 files changed, 55 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_panel_orientation_quirks.c b/drivers/gpu/drm/drm_panel_orientation_quirks.c
-index 8e45f91a2..9a61b8f01 100644
+index 036b095c9..7b20f7f44 100644
 --- a/drivers/gpu/drm/drm_panel_orientation_quirks.c
 +++ b/drivers/gpu/drm/drm_panel_orientation_quirks.c
-@@ -192,6 +192,11 @@ static const struct drm_dmi_panel_orientation_data lenovo_ideapad_d330_10igm_81
+@@ -159,6 +159,12 @@ static const struct drm_dmi_panel_orientation_data lcd1600x2560_rightside_up = {
  	.orientation = DRM_MODE_PANEL_ORIENTATION_RIGHT_UP,
  };
  
@@ -39,62 +44,63 @@ index 8e45f91a2..9a61b8f01 100644
 +	.orientation = DRM_MODE_PANEL_ORIENTATION_RIGHT_UP,
 +};
 +
- static const struct drm_dmi_panel_orientation_data lenovo_yoga_tab_3_plus_yt_x703f = {
- 	.width = 1600,
- 	.height = 2560,
-@@ -375,6 +380,15 @@ static const struct dmi_system_id drm_dmi_panel_orientation_data[] = {
- 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "LNVNB161216"),
+ static const struct dmi_system_id orientation_data[] = {
+ 	{	/* Acer One 10 (S1003) */
+ 		.matches = {
+@@ -414,6 +420,14 @@ static const struct dmi_system_id orientation_data[] = {
+ 		  DMI_EXACT_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGL"),
  		},
- 		.driver_data = (void *)&lenovo_ideapad_d330_10igm_81md,
-+	}, {
-+		/* Lenovo IdeaPad D330-10IGL (82H0) */
+ 		.driver_data = (void *)&lcd800x1280_rightside_up,
++	}, {	/* Lenovo IdeaPad D330-10IGL (82H0) - same panel; entry kept alongside
++	       * the upstream one above (identical match + orientation data).
++	       */
 +		.matches = {
-+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
-+			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGL"),
++		  DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++		  DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo ideapad D330-10IGL"),
 +		},
 +		.driver_data = (void *)&lenovo_ideapad_d330_10igl_800x1280,
- 	}, {
- 		/* Lenovo Yoga Book X90F / X90L */
+ 	}, {	/* Lenovo IdeaPad Duet 3 10IGL5 */
  		.matches = {
+ 		  DMI_EXACT_MATCH(DMI_SYS_VENDOR, "LENOVO"),
 diff --git a/drivers/gpu/drm/i915/display/intel_pps.c b/drivers/gpu/drm/i915/display/intel_pps.c
-index 4b0d61ef2..c11e32aa5 100644
+index a8fa3a209..f76f31fac 100644
 --- a/drivers/gpu/drm/i915/display/intel_pps.c
 +++ b/drivers/gpu/drm/i915/display/intel_pps.c
-@@ -1485,6 +1485,15 @@ static void intel_pps_init_delays(struct intel_dp *intel_dp)
- 	intel_dp->pps.panel_power_cycle_delay =
- 		max(intel_dp->pps.panel_power_cycle_delay, cur_delay.panel_power_cycle_delay);
+@@ -1438,6 +1438,14 @@ static void pps_init_delays(struct intel_dp *intel_dp)
+ 	intel_dp->pps.panel_power_cycle_delay = get_delay(t11_t12);
+ #undef get_delay
  
 +	/* Enforce safe minimum 600ms power-cycle delay for slow TCON */
-+	if (intel_has_quirk(display, QUIRK_INCREASE_PPS_CYCLE_DELAY)) {
++	if (intel_has_quirk(dev_priv, QUIRK_INCREASE_PPS_CYCLE_DELAY)) {
 +		if (intel_dp->pps.panel_power_cycle_delay < 6000) {
-+			drm_info(display->drm, "Clamping PPS power-cycle delay to 600ms\n");
++			drm_info(&dev_priv->drm, "Clamping PPS power-cycle delay to 600ms\n");
 +			intel_dp->pps.panel_power_cycle_delay = 6000;
 +		}
 +	}
 +
- 	drm_dbg_kms(display->drm,
+ 	drm_dbg_kms(&dev_priv->drm,
  		    "panel power up delay %d, power down delay %d, power cycle delay %d\n",
  		    intel_dp->pps.panel_power_up_delay,
 diff --git a/drivers/gpu/drm/i915/display/intel_quirks.c b/drivers/gpu/drm/i915/display/intel_quirks.c
-index 2e19d67aa..7bb9d413e 100644
+index 8fb27bf1a..40b2bbb76 100644
 --- a/drivers/gpu/drm/i915/display/intel_quirks.c
 +++ b/drivers/gpu/drm/i915/display/intel_quirks.c
-@@ -75,6 +75,12 @@ static void quirk_increase_t12_delay(struct intel_display *display)
- 	drm_info(display->drm, "Applying T12 delay quirk\n");
+@@ -96,6 +96,12 @@ static int intel_dmi_no_pps_backlight(const struct dmi_system_id *id)
+ 	return 1;
  }
  
-+static void quirk_lenovo_d330_pps(struct intel_display *display)
++static void quirk_lenovo_d330_pps(struct drm_i915_private *i915)
 +{
-+	intel_set_quirk(display, QUIRK_INCREASE_PPS_CYCLE_DELAY);
-+	drm_info(display->drm, "Applying Lenovo D330 PPS power-cycle delay quirk (>=600ms)\n");
++	intel_set_quirk(i915, QUIRK_INCREASE_PPS_CYCLE_DELAY);
++	drm_info(&i915->drm, "Applying Lenovo D330 PPS power-cycle delay quirk (>=600ms)\n");
 +}
 +
  static const struct intel_dmi_quirk intel_dmi_quirks[] = {
  	{
  		.dmi_id_list = &(const struct dmi_system_id[]) {
-@@ -98,6 +104,16 @@ static const struct intel_dmi_quirk intel_dmi_quirks[] = {
+@@ -142,6 +148,19 @@ static const struct intel_dmi_quirk intel_dmi_quirks[] = {
  		},
- 		.hook = quirk_increase_t12_delay,
+ 		.hook = quirk_no_pps_backlight_power_hook,
  	},
 +	{
 +		.dmi_id_list = &(const struct dmi_system_id[]) {
@@ -108,23 +114,24 @@ index 2e19d67aa..7bb9d413e 100644
 +			{ }
 +		},
 +		.hook = quirk_lenovo_d330_pps,
- 	},
- 	{ }
++	},
  };
+ 
+ static struct intel_quirk intel_quirks[] = {
 diff --git a/drivers/gpu/drm/i915/display/intel_quirks.h b/drivers/gpu/drm/i915/display/intel_quirks.h
-index b737d90e1..d5537ef81 100644
+index 0596e8fd0..7e1e6a3ab 100644
 --- a/drivers/gpu/drm/i915/display/intel_quirks.h
 +++ b/drivers/gpu/drm/i915/display/intel_quirks.h
-@@ -21,6 +21,7 @@ enum intel_quirk_id {
+@@ -18,6 +18,7 @@ enum intel_quirk_id {
  	QUIRK_LVDS_SSC_DISABLE,
- 	QUIRK_NO_PCH_PWM_ENABLE,
- 	QUIRK_INCREASE_T12_DELAY,
+ 	QUIRK_NO_PPS_BACKLIGHT_POWER_HOOK,
+ 	QUIRK_SKIP_LINK_CHECK,
 +	QUIRK_INCREASE_PPS_CYCLE_DELAY,
  };
  
- void intel_init_quirks(struct intel_display *display);
+ void intel_init_quirks(struct drm_i915_private *i915);
 diff --git a/drivers/gpu/drm/i915/display/skl_universal_plane.c b/drivers/gpu/drm/i915/display/skl_universal_plane.c
-index 6c8f0a1b2..4d9e2f3a4 100644
+index 686c5af07..b0d7380a8 100644
 --- a/drivers/gpu/drm/i915/display/skl_universal_plane.c
 +++ b/drivers/gpu/drm/i915/display/skl_universal_plane.c
 @@ -3,6 +3,8 @@
@@ -136,8 +143,7 @@ index 6c8f0a1b2..4d9e2f3a4 100644
  #include <drm/drm_atomic_helper.h>
  #include <drm/drm_blend.h>
  #include <drm/drm_damage_helper.h>
-@@ -2023,8 +2025,19 @@ static bool skl_plane_format_mod_supported(struct drm_plane *_plane,
- 					   u32 format, u64 modifier)
+@@ -2103,6 +2105,17 @@ static bool skl_plane_format_mod_supported(struct drm_plane *_plane,
  {
  	struct intel_plane *plane = to_intel_plane(_plane);
  
@@ -155,6 +161,3 @@ index 6c8f0a1b2..4d9e2f3a4 100644
  	if (!intel_fb_plane_supports_modifier(plane, modifier))
  		return false;
  
- 	switch (format) {
--- 
-2.43.0
