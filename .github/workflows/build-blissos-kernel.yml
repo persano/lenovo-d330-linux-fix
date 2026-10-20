@@ -57,6 +57,10 @@ jobs:
           git clone --depth 1 --branch "$REF" \
             https://github.com/android-generic/kernel_common.git \
             "$BUILD/kernel_common"
+          # drivers/kernelsu is a symlink to the KernelSU submodule; without it
+          # `make x86_64_defconfig` dies on drivers/Kconfig:248 "can't open
+          # file drivers/kernelsu/Kconfig" (first dispatch, run 39362222155).
+          git -C "$BUILD/kernel_common" submodule update --init --depth 1
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
           echo "SRC=$BUILD/kernel_common" >> "$GITHUB_ENV"
 
