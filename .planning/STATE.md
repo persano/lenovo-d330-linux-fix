@@ -2,30 +2,30 @@
 gsd_state_version: "1.0"
 milestone: v12.0
 milestone_name: Boot the Other OSes — BlissOS + ChromeOS from USB
-current_phase: 57
-current_phase_name: BlissOS CI Kernel Build
-status: executing
-stopped_at: cleanup pass executed — v10.0 phases archived, STATE between-milestones, repo tree clean, v11.0-MILESTONE-AUDIT.md written
-last_updated: "2026-10-19T23:00:51.734Z"
-last_activity: 2026-10-19
-last_activity_desc: Phase 57 execution started
-state_head: 0ca259478ee9b2a1092bfd173bd92b9d41466df2
+current_phase: 58
+current_phase_name: BlissOS USB Boot Verification (Eyes-On)
+status: planning
+stopped_at: Phase 57 complete, ready to plan Phase 58
+last_updated: "2026-10-20T04:08:35.706Z"
+last_activity: 2026-10-20
+last_activity_desc: Phase 57 complete, transitioned to Phase 58
+state_head: 57dfe7e5764ab8fb14b3a8e9731812f1c0f06de2
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 2
+  percent: 20
 ---
 
 # STATE: Project Execution State
 
 - **Active Milestone**: v12.0 Boot the Other OSes (Phases 57-61, roadmap complete). v11.0 shipped 2026-10-19 — see `.planning/milestones/v11.0-MILESTONE-AUDIT.md`.
-- **Active Phase**: none yet — milestone bootstrap (roadmap approved, Phases 57-61 defined; first plan via `/gsd-plan-phase 57`)
-- **Status**: v12.0 PLANNING (2026-10-19). v11.0 shipped — release `v11.0` (GLK fixup kernel, one-script installer, distro packages), reference device validated 10/10 eyes-on, ledger row 34. v12.0: build GLK-patched BlissOS + ChromeOS kernels on GitHub Actions, boot both from USB on the D330, verify display + resume eyes-on.
+- **Active Phase**: 58 (BlissOS USB Boot, eyes-on — waits for the user). CI track running tonight: Phase 59 (ChromeOS build) executing autonomously first since it depends only on 57 (deps satisfied).
+- **Status**: v12.0 EXECUTING (2026-10-20). Phase 57 DONE — `build-blissos-kernel.yml` live-validated (run 39365529173 green, artifact `blissos-kernel` bzImage+System.map+.config+SHA256SUMS, hashes 3/3 match, CCS symbols in System.map; 2 red runs published 0 artifacts = BLIS-02 live-proven; fixes: KernelSU submodule init + CONFIG_WERROR off). User asleep — autonomous run continues through CI-only work; eyes-on phases (58, 60) pause for the user.
 - **Blockers**: None.
   * v7.0 PENDING DEPLOY (12 UAT overrides): deployment target reached — v11.0 shipped to the reference device with the full stack installed and audited (2026-10-19, device_audit.sh + phase 56). Machine-checked equivalents re-verified green; remaining eyes-on UAT scenarios apply only to any FUTURE deployment sign-off. Detail: `.planning/milestones/v7.0-MILESTONE-AUDIT.md` (path corrected — earlier note pointed at `.planning/v7.0-MILESTONE-AUDIT.md`, which does not exist).
-- **Next Immediate Action**: `/gsd-plan-phase 57` — BlissOS CI kernel build (workflow, patch-apply gate, `bzImage` artifact). (User-side leftovers, not workflow state: paste the two upstream comments on #13225/#17401.)
+- **Next Immediate Action**: Autonomous CI track → Phase 59 (ChromeOS build, workflow_dispatch via `gh workflow run`, watch + auto-fix like 57). Morning: user runs Phase 58 (BlissOS USB boot, eyes-on) with the `blissos-kernel` artifact from run 39365529173. (User-side leftovers: paste the two upstream comments on #13225/#17401.)
 
 ## Project Reference
 
@@ -36,10 +36,10 @@ See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 ## Current Position
 
-Phase: 57 (BlissOS CI Kernel Build) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 57
-Last activity: 2026-10-19 — Phase 57 execution started
+Phase: 58 — BlissOS USB Boot Verification (Eyes-On)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-20 — Phase 57 complete, transitioned to Phase 58
 
 ## Accumulated Context
 
@@ -83,8 +83,8 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 
 ## Session Continuity
 
-Last session: 2026-10-19
-Stopped at: cleanup pass executed — v10.0 phases archived, STATE between-milestones, repo tree clean, v11.0-MILESTONE-AUDIT.md written
+Last session: 2026-10-20
+Stopped at: Phase 57 complete (CI live-validated); advancing to Phase 59 (ChromeOS build) autonomously; Phases 58/60 await the user's eyes-on device sessions
 Resume file: None
 
 ## Archived Milestones

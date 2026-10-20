@@ -55,6 +55,12 @@
 - **Phase 50**: The software DCS read path is dead on the D330 panel — `echo 2` ID reads returned `ret=4 avail=0 data=00 00 00` in 3 runs across both arms (X=Y ×2, X=Z ×1). No TCON identity from the kernel; the Phase 51 E3 DCS discriminator is falsified as designed, and wire-level identification (Phase 53) is the remaining path. Verdict: `docs/research/TCON_IDENTIFICATION.md`.
 - **Phase 50**: No panel-TCON I2C sideband exists (zero i2c-core transfers during the instrument run; wake trace only Goodix + one misc write); PMIC-by-name on bus 6 not confirmed (bus 6 = gmbus dpb). I2C claims are kernel-era-window-scoped — GOP pre-kernel activity needs Phase 53.
 
+### Key Decisions (Milestone 12)
+- **Phase 57**: The ROADMAP's "BlissRoms `kernel_common`" is stale (2023, max 6.3) — the live BlissOS x86 kernel tree is `android-generic/kernel_common`; Phase 57 builds from `hm/crimson` (6.6.129, tip 447ff151) matching the 6.6 patch pair. Recorded here per milestone-audit requirement.
+- **Phase 57**: `patches/android/d330_android_x86_6.6.patch` needed crimson adaptation (wrong hunk-header counts + pre-`intel_display`-refactor API); GLK patch applied clean. Adaptations documented per file/hunk in `patches/android/README.md` §2; no hunk deleted, no `--3way`/`-f`.
+- **Phase 57**: Two CI-only lessons baked into `build-blissos-kernel.yml`: (1) crimson's `drivers/kernelsu` is a submodule symlink — shallow clone must `git submodule update --init --depth 1` or configure dies; (2) crimson's defconfig sets `CONFIG_WERROR=y` — must `scripts/config --disable WERROR` for the runner's gcc (clang-vs-gcc warning deltas). Live-validated: run 39365529173 green, artifact `blissos-kernel` hashes 3/3 match, both red runs published 0 artifacts (BLIS-02 live-proven).
+- **Phase 57**: `phase.complete` enforces the verification digest — workflow fixes after a verifier run stale the report; the verifier must be re-run (not just the status field edited) before completion.
+
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
@@ -73,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-17 after Phase 50 complete*
+*Last updated: 2026-10-20 after Phase 57 complete*

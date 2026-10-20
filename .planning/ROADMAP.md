@@ -605,7 +605,7 @@ because REL-03 needs both kernels plus the eyes-on boot verdicts from Phases 58 
 
 **Phases:**
 
-- [ ] **Phase 57: BlissOS CI Kernel Build (`kernel_common` + GLK/CCS patches)** - GitHub Actions workflow dispatched via `gh workflow run`: patch-apply gate first, then BlissRoms `kernel_common` build, `bzImage` published as artifact (BLIS-01, BLIS-02, AUDIT-03)
+- [x] **Phase 57: BlissOS CI Kernel Build (`kernel_common` + GLK/CCS patches)** - GitHub Actions workflow dispatched via `gh workflow run`: patch-apply gate first, then BlissRoms `kernel_common` build, `bzImage` published as artifact (BLIS-01, BLIS-02, AUDIT-03) (completed 2026-10-20)
 - [ ] **Phase 58: BlissOS USB Boot Verification (Eyes-On)** - Boot BlissOS on the reference D330 from USB with the patched kernel — panel lit, orientation correct, one suspend/resume cycle keeps the panel lit (BLIS-03, BLIS-04)
 - [ ] **Phase 59: ChromeOS CI Kernel Build (`chromeos-6.6`)** - GitHub Actions workflow: patch-apply gate first, shallow `chromeos-6.6` checkout via depot_tools, kernel artifact published; runner disk/time overrun = documented honest stop (CHRM-01, CHRM-02)
 - [ ] **Phase 60: ChromeOS USB Boot Verification (Eyes-On)** - Boot ChromeOS on the reference D330 from USB with the patched kernel — same verification matrix as Phase 58 (CHRM-03, CHRM-04)
@@ -634,8 +634,8 @@ in v11.0, tree sources fetched 2026-10-19)
 
 **Plans**:
 
-- [ ] 57-01-PLAN.md — Local crimson pre-verification of both android patches (predictor for the CI gate) + README evidence record
-- [ ] 57-02-PLAN.md — build-blissos-kernel.yml workflow (patch gate first, x86_64_defconfig bzImage build, `blissos-kernel` artifact) + dispatch docs
+- [x] 57-01-PLAN.md — Local crimson pre-verification of both android patches (predictor for the CI gate) + README evidence record
+- [x] 57-02-PLAN.md — build-blissos-kernel.yml workflow (patch gate first, x86_64_defconfig bzImage build, `blissos-kernel` artifact) + dispatch docs
 
 ### Phase 58: BlissOS USB Boot Verification (Eyes-On)
 
@@ -723,7 +723,7 @@ verdicts before tagging)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 57. BlissOS CI Kernel Build | 0/0 | Not started | - |
+| 57. BlissOS CI Kernel Build | 2/2 | Complete    | 2026-10-20 |
 | 58. BlissOS USB Boot Verification | 0/0 | Not started | - |
 | 59. ChromeOS CI Kernel Build | 0/0 | Not started | - |
 | 60. ChromeOS USB Boot Verification | 0/0 | Not started | - |
