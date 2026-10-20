@@ -1,0 +1,122 @@
+name: Build BlissOS Kernel (kernel_common)
+
+# Manual dispatch only (locked decision 8): a kernel build is heavy and this
+# workflow exists so anyone can produce the patched BlissOS x86_64 kernel from
+# CI alone — dispatch, get a green job, download the `blissos-kernel` artifact.
+# Source tree: android-generic/kernel_common @ hm/crimson (locked decision 1 —
+# the live BlissOS x86 6.6 tree; supersedes the stale BlissRoms kernel_common,
+# see patches/android/README.md). Patch provenance and crimson pre-verification
+# (Phase 57 / plan 01) are recorded in patches/android/README.md.
+#
+# Publishing an unpatched kernel is structurally impossible: the patch gate is
+# the FIRST step after fetch (AUDIT-03, BLIS-02) and upload-artifact runs only
+# on prior success — a red gate means no artifact, never a truncated one
+# (CHRM-02 honest-stop).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch of android-generic/kernel_common to build (e.g. hm/crimson)'
+        required: true
+        default: 'hm/crimson'
+
+permissions:
+  contents: read
+
+jobs:
+  build-blissos-kernel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Free disk space
+        run: |
+          set -euxo pipefail
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/lib/jvm \
+            /usr/local/lib/node_modules
+          df -h /
+
+      - name: Install build toolchain
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libssl-dev libdw-dev bc flex bison rsync \
+            libelf-dev dwarves cpio zstd kmod ca-certificates
+
+      - name: Fetch kernel source
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euxo pipefail
+          BUILD="$RUNNER_TEMP/kbuild"
+          git clone --depth 1 --branch "$REF" \
+            https://github.com/android-generic/kernel_common.git \
+            "$BUILD/kernel_common"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          echo "SRC=$BUILD/kernel_common" >> "$GITHUB_ENV"
+
+      # Patch gate — AUDIT-03 rule: re-verify both android 6.6 patches FIRST,
+      # against the freshly fetched tree (pre-verified locally in plan 57-01
+      # at hm/crimson tip 447ff151, kernel 6.6.129). Both `--check`s before
+      # either apply; CCS then GLK, never --3way/-f; grep anchors prove the
+      # code landed. Under set -e any failure exits red BEFORE any build step.
+      - name: Patch gate — check, apply (CCS then GLK), prove they landed
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          git apply --check "$GITHUB_WORKSPACE/patches/android/d330_android_x86_6.6.patch"
+          git apply --check "$GITHUB_WORKSPACE/patches/android/d330_android_glk_reset_fix_6.6.patch"
+          git apply "$GITHUB_WORKSPACE/patches/android/d330_android_x86_6.6.patch"
+          git apply "$GITHUB_WORKSPACE/patches/android/d330_android_glk_reset_fix_6.6.patch"
+          # CCS anchors
+          grep -R 'lenovo_ideapad_d330_10igl_800x1280' drivers/gpu/drm/drm_panel_orientation_quirks.c
+          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          grep -R 'quirk_lenovo_d330_pps' drivers/gpu/drm/i915/display/intel_quirks.c
+          # GLK anchors
+          grep -R 'Running INIT_OTP (GPIO/delay only) as DEASSERT_RESET' drivers/gpu/drm/i915/display/intel_bios.c
+          grep -R 'glk_fixup_mipi_sequences' drivers/gpu/drm/i915/display/intel_bios.c
+
+      - name: Configure (x86_64_defconfig, no debug info)
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          make x86_64_defconfig
+          # Strip debug info and the git-version suffix: the runner has only
+          # ~14 GB of disk, and the result stays a normal bootable kernel.
+          scripts/config --enable DEBUG_INFO_NONE || true
+          scripts/config --disable DEBUG_INFO_BTF || true
+          scripts/config --disable GDB_SCRIPTS || true
+          scripts/config --disable LOCALVERSION_AUTO || true
+          # Drop the distro signing-cert paths: nothing signs this bzImage.
+          scripts/config --set-str SYSTEM_TRUSTED_KEYS "" || true
+          scripts/config --set-str SYSTEM_REVOCATION_KEYS "" || true
+          make olddefconfig
+
+      - name: Build kernel bzImage
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          make -j"$(nproc)" bzImage LOCALVERSION=-d330-bliss
+          mkdir -p "$BUILD/out"
+          cp arch/x86/boot/bzImage System.map .config "$BUILD/out/"
+          cd "$BUILD/out"
+          sha256sum bzImage System.map .config > SHA256SUMS
+
+      - name: Upload kernel artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: blissos-kernel
+          # .config is a dotfile; upload-artifact ≥v4.4 excludes hidden files
+          # by default, which would drop it from the artifact while SHA256SUMS
+          # still hashes it (breaking `sha256sum -c` post-download).
+          include-hidden-files: true
+          path: |
+            ${{ runner.temp }}/kbuild/out/bzImage
+            ${{ runner.temp }}/kbuild/out/System.map
+            ${{ runner.temp }}/kbuild/out/.config
+            ${{ runner.temp }}/kbuild/out/SHA256SUMS
