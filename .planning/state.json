@@ -1,17 +1,17 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v10.0 — Crack the Panel — TCON Identification and the GOP-Init Hunt",
+  "milestone": "v12.0 — Boot the Other OSes — BlissOS + ChromeOS from USB",
   "phases": [
     {
       "number": "50",
       "name": "TCON Identification — DCS ID-Read Instrument (Software-Only)",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "51",
       "name": "Keep-Panel-Powered Fix Ladder (E1 → E2, E3 if falsified)",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "52",
@@ -21,13 +21,13 @@
     {
       "number": "53",
       "name": "Hardware Logic-Analyzer Probe (Buy-Gate, Teardown, Capture A vs B)",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
     "command": "/gsd-progress --next",
     "label": "Advance to the next step",
-    "reason": "Phase 1 of 4 · 0% · executing"
+    "reason": "Phase 1 of 5 · 0% · executing"
   },
-  "updated_at": "2026-10-16T21:39:19.019Z"
+  "updated_at": "2026-10-19T23:00:51.795Z"
 }

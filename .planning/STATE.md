@@ -1,14 +1,19 @@
 ---
 gsd_state_version: "1.0"
 milestone: v12.0
-milestone_name: Boot the Other OSes
-status: planning
-last_updated: "2026-10-19T21:27:57.851Z"
+milestone_name: Boot the Other OSes — BlissOS + ChromeOS from USB
+current_phase: 57
+current_phase_name: BlissOS CI Kernel Build
+status: executing
+stopped_at: cleanup pass executed — v10.0 phases archived, STATE between-milestones, repo tree clean, v11.0-MILESTONE-AUDIT.md written
+last_updated: "2026-10-19T23:00:51.734Z"
 last_activity: 2026-10-19
+last_activity_desc: Phase 57 execution started
+state_head: 0ca259478ee9b2a1092bfd173bd92b9d41466df2
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 2
   completed_plans: 0
   percent: 0
 ---
@@ -27,14 +32,14 @@ progress:
 See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 
 **Core value:** full hardware parity + screen-resume fix for the Lenovo D330-10IGL.
-**Current focus:** v12.0 Boot the Other OSes — BlissOS + ChromeOS patched kernels built on GitHub Actions and booted from USB on the real D330.
+**Current focus:** Phase 57 — BlissOS CI Kernel Build
 
 ## Current Position
 
-Phase: Not started (roadmap complete; next = `/gsd-plan-phase 57`)
-Plan: —
-Status: Roadmap written for v12.0 (Phases 57-61)
-Last activity: 2026-10-19 — Milestone v12.0 roadmap created
+Phase: 57 (BlissOS CI Kernel Build) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 57
+Last activity: 2026-10-19 — Phase 57 execution started
 
 ## Accumulated Context
 
