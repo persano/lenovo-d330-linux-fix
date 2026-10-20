@@ -607,7 +607,7 @@ because REL-03 needs both kernels plus the eyes-on boot verdicts from Phases 58 
 
 - [x] **Phase 57: BlissOS CI Kernel Build (`kernel_common` + GLK/CCS patches)** - GitHub Actions workflow dispatched via `gh workflow run`: patch-apply gate first, then BlissRoms `kernel_common` build, `bzImage` published as artifact (BLIS-01, BLIS-02, AUDIT-03) (completed 2026-10-20)
 - [ ] **Phase 58: BlissOS USB Boot Verification (Eyes-On)** - Boot BlissOS on the reference D330 from USB with the patched kernel — panel lit, orientation correct, one suspend/resume cycle keeps the panel lit (BLIS-03, BLIS-04)
-- [ ] **Phase 59: ChromeOS CI Kernel Build (`chromeos-6.6`)** - GitHub Actions workflow: patch-apply gate first, shallow `chromeos-6.6` checkout via depot_tools, kernel artifact published; runner disk/time overrun = documented honest stop (CHRM-01, CHRM-02)
+- [x] **Phase 59: ChromeOS CI Kernel Build (`chromeos-6.6`)** - GitHub Actions workflow: patch-apply gate first, shallow `chromeos-6.6` checkout via depot_tools, kernel artifact published; runner disk/time overrun = documented honest stop (CHRM-01, CHRM-02) (completed 2026-10-20)
 - [ ] **Phase 60: ChromeOS USB Boot Verification (Eyes-On)** - Boot ChromeOS on the reference D330 from USB with the patched kernel — same verification matrix as Phase 58 (CHRM-03, CHRM-04)
 - [ ] **Phase 61: v12.0 Release + USB-Writing Instructions** - Tag `v12.0` GitHub release carrying both built kernels + `SHA256SUMS` + step-by-step USB-writing instructions per OS (REL-03)
 
@@ -679,8 +679,8 @@ documented stop if the runner cannot hold the build.
 
 **Plans**:
 
-- [ ] 59-01-PLAN.md — Local chromeos-6.6 pre-verification of both chromeos patches (predictor for the CI gate) + README evidence record
-- [ ] 59-02-PLAN.md — build-chromeos-kernel.yml workflow (patch gate first, x86_64_defconfig bzImage build, `chromeos-kernel` artifact) + dispatch docs
+- [x] 59-01-PLAN.md — Local chromeos-6.6 pre-verification of both chromeos patches (predictor for the CI gate) + README evidence record
+- [x] 59-02-PLAN.md — build-chromeos-kernel.yml workflow (patch gate first, x86_64_defconfig bzImage build, `chromeos-kernel` artifact) + dispatch docs
 
 ### Phase 60: ChromeOS USB Boot Verification (Eyes-On)
 
@@ -728,6 +728,6 @@ verdicts before tagging)
 |-------|----------------|--------|-----------|
 | 57. BlissOS CI Kernel Build | 2/2 | Complete    | 2026-10-20 |
 | 58. BlissOS USB Boot Verification | 0/0 | Not started | - |
-| 59. ChromeOS CI Kernel Build | 0/0 | Not started | - |
+| 59. ChromeOS CI Kernel Build | 2/2 | Complete    | 2026-10-20 |
 | 60. ChromeOS USB Boot Verification | 0/0 | Not started | - |
 | 61. v12.0 Release + USB-Writing Instructions | 0/0 | Not started | - |

@@ -5,27 +5,27 @@ milestone_name: Boot the Other OSes — BlissOS + ChromeOS from USB
 current_phase: 58
 current_phase_name: BlissOS USB Boot Verification (Eyes-On)
 status: planning
-stopped_at: Phase 57 complete, ready to plan Phase 58
-last_updated: "2026-10-20T04:08:35.706Z"
+stopped_at: Phase 59 complete, ready to plan Phase 58
+last_updated: "2026-10-20T05:41:37.433Z"
 last_activity: 2026-10-20
-last_activity_desc: Phase 57 complete, transitioned to Phase 58
-state_head: 57dfe7e5764ab8fb14b3a8e9731812f1c0f06de2
+last_activity_desc: Phase 59 complete, transitioned to Phase 58
+state_head: dac324e04227b2af97d69282abd32edc0f4f7ee2
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 20
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
+  percent: 40
 ---
 
 # STATE: Project Execution State
 
 - **Active Milestone**: v12.0 Boot the Other OSes (Phases 57-61, roadmap complete). v11.0 shipped 2026-10-19 — see `.planning/milestones/v11.0-MILESTONE-AUDIT.md`.
-- **Active Phase**: 58 (BlissOS USB Boot, eyes-on — waits for the user). CI track running tonight: Phase 59 (ChromeOS build) executing autonomously first since it depends only on 57 (deps satisfied).
-- **Status**: v12.0 EXECUTING (2026-10-20). Phase 57 DONE — `build-blissos-kernel.yml` live-validated (run 39365529173 green, artifact `blissos-kernel` bzImage+System.map+.config+SHA256SUMS, hashes 3/3 match, CCS symbols in System.map; 2 red runs published 0 artifacts = BLIS-02 live-proven; fixes: KernelSU submodule init + CONFIG_WERROR off). User asleep — autonomous run continues through CI-only work; eyes-on phases (58, 60) pause for the user.
+- **Active Phase**: 58 (BlissOS USB Boot, eyes-on — waits for the user). CI track DONE overnight: Phase 59 complete (ChromeOS build green first try).
+- **Status**: v12.0 EXECUTING (2026-10-20). Phase 57 DONE — run 39365529173 green, `blissos-kernel` artifact verified (fixes: KernelSU submodule init + CONFIG_WERROR off). Phase 59 DONE — run 39374039313 green first try, `chromeos-kernel` artifact verified (14,074,607 B, hashes 3/3, CCS symbols in System.map); the v11.0 CCS chromeos patch was found corrupt at pre-verify and re-adapted (record in patches/chromeos/README.md). Both artifacts ready in the Actions runs for the eyes-on phases. User asleep — autonomous CI work finished; phases 58/60 (eyes-on) and 60→61 wait for the user.
 - **Blockers**: None.
   * v7.0 PENDING DEPLOY (12 UAT overrides): deployment target reached — v11.0 shipped to the reference device with the full stack installed and audited (2026-10-19, device_audit.sh + phase 56). Machine-checked equivalents re-verified green; remaining eyes-on UAT scenarios apply only to any FUTURE deployment sign-off. Detail: `.planning/milestones/v7.0-MILESTONE-AUDIT.md` (path corrected — earlier note pointed at `.planning/v7.0-MILESTONE-AUDIT.md`, which does not exist).
-- **Next Immediate Action**: Autonomous CI track → Phase 59 (ChromeOS build, workflow_dispatch via `gh workflow run`, watch + auto-fix like 57). Morning: user runs Phase 58 (BlissOS USB boot, eyes-on) with the `blissos-kernel` artifact from run 39365529173. (User-side leftovers: paste the two upstream comments on #13225/#17401.)
+- **Next Immediate Action**: Morning: user runs Phase 58 (BlissOS USB boot, eyes-on) using artifact `blissos-kernel` from run 39365529173, then Phase 60 (ChromeOS USB boot) with `chromeos-kernel` from run 39374039313, then Phase 61 (v12.0 release). (User-side leftovers: paste the two upstream comments on #13225/#17401.)
 
 ## Project Reference
 
@@ -39,7 +39,7 @@ See `.planning/PROJECT.md` (updated 2026-10-12 for v8.0).
 Phase: 58 — BlissOS USB Boot Verification (Eyes-On)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-20 — Phase 57 complete, transitioned to Phase 58
+Last activity: 2026-10-20 — Phase 59 complete, transitioned to Phase 58
 
 ## Accumulated Context
 
@@ -84,7 +84,7 @@ Known verification overrides at v7.0 close: 12 newly acknowledged (11 `uat_gaps`
 ## Session Continuity
 
 Last session: 2026-10-20
-Stopped at: Phase 57 complete (CI live-validated); advancing to Phase 59 (ChromeOS build) autonomously; Phases 58/60 await the user's eyes-on device sessions
+Stopped at: Phases 57 + 59 complete (both CI builds green, artifacts verified); Phases 58/60 await the user's eyes-on device sessions; Phase 61 (release) after those
 Resume file: None
 
 ## Archived Milestones

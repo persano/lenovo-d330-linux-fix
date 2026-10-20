@@ -56,6 +56,9 @@
 - **Phase 50**: No panel-TCON I2C sideband exists (zero i2c-core transfers during the instrument run; wake trace only Goodix + one misc write); PMIC-by-name on bus 6 not confirmed (bus 6 = gmbus dpb). I2C claims are kernel-era-window-scoped — GOP pre-kernel activity needs Phase 53.
 
 ### Key Decisions (Milestone 12)
+- **Phase 59**: The v11.0 "verified clean" claim for `patches/chromeos/d330_chromeos_6.6.patch` was **false** — the patch was corrupt (bad hunk count) and anchored to a post-`intel_display`-refactor tree that `chromeos-6.6` is not. Caught by the plan's local pre-verify (red log `.git/phase59-task1-gate-initial.log`), re-adapted against real tip `a534360e` (kernel 6.6.147); per-file adaptation record in `patches/chromeos/README.md`. No hunk deleted, no force-apply.
+- **Phase 59**: Checkout is a shallow single-branch `git clone` of `chromiumos/third_party/kernel @ chromeos-6.6`, **not** the full depot_tools platform tree (ROADMAP's parenthetical said depot_tools) — satisfies the criterion's "freshly fetched shallow chromeos-6.6 checkout" without the runner-disk blowout. Flagged in workflow header + README for morning review.
+- **Phase 59**: Upload hardening applied to **both** CI workflows (review IN-01/IN-02): explicit `if: success()` + `if-no-files-found: error` — honest-stop (BLIS-02/CHRM-02) enforced structurally, not by convention.
 - **Phase 57**: The ROADMAP's "BlissRoms `kernel_common`" is stale (2023, max 6.3) — the live BlissOS x86 kernel tree is `android-generic/kernel_common`; Phase 57 builds from `hm/crimson` (6.6.129, tip 447ff151) matching the 6.6 patch pair. Recorded here per milestone-audit requirement.
 - **Phase 57**: `patches/android/d330_android_x86_6.6.patch` needed crimson adaptation (wrong hunk-header counts + pre-`intel_display`-refactor API); GLK patch applied clean. Adaptations documented per file/hunk in `patches/android/README.md` §2; no hunk deleted, no `--3way`/`-f`.
 - **Phase 57**: Two CI-only lessons baked into `build-blissos-kernel.yml`: (1) crimson's `drivers/kernelsu` is a submodule symlink — shallow clone must `git submodule update --init --depth 1` or configure dies; (2) crimson's defconfig sets `CONFIG_WERROR=y` — must `scripts/config --disable WERROR` for the runner's gcc (clang-vs-gcc warning deltas). Live-validated: run 39365529173 green, artifact `blissos-kernel` hashes 3/3 match, both red runs published 0 artifacts (BLIS-02 live-proven).
@@ -79,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-20 after Phase 57 complete*
+*Last updated: 2026-10-20 after Phases 57 + 59 complete*

@@ -14,8 +14,8 @@ exhausted); BLIS and CHRM are new categories.
 
 ### ChromeOS kernel + boot
 
-- [ ] **CHRM-01**: A GitHub Actions workflow builds the `chromeos-6.6` kernel with the same two patches and publishes the kernel artifact.
-- [ ] **CHRM-02**: If the ChromeOS build exceeds the runner's disk or time limits, the job fails with a documented stop — no truncated or fake artifacts, ever.
+- [x] **CHRM-01**: A GitHub Actions workflow builds the `chromeos-6.6` kernel with the same two patches and publishes the kernel artifact.
+- [x] **CHRM-02**: If the ChromeOS build exceeds the runner's disk or time limits, the job fails with a documented stop — no truncated or fake artifacts, ever.
 - [ ] **CHRM-03**: ChromeOS boots on the reference D330 from a USB stick with the patched kernel — panel lights up (user eyes-on verdict).
 - [ ] **CHRM-04**: Suspend/resume verified eyes-on on ChromeOS.
 
@@ -44,8 +44,8 @@ exhausted); BLIS and CHRM are new categories.
 | AUDIT-03 | Phase 57 | Complete |
 | BLIS-03 | Phase 58 | Pending |
 | BLIS-04 | Phase 58 | Pending |
-| CHRM-01 | Phase 59 | Pending |
-| CHRM-02 | Phase 59 | Pending |
+| CHRM-01 | Phase 59 | Complete |
+| CHRM-02 | Phase 59 | Complete |
 | CHRM-03 | Phase 60 | Pending |
 | CHRM-04 | Phase 60 | Pending |
 | REL-03 | Phase 61 | Pending |
