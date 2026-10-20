@@ -59,9 +59,40 @@ Local pre-run of the exact CI gate, on a fresh shallow clone of
 ## 1. Provided Patches
 
 - [`d330_chromeos_5.15.patch`](d330_chromeos_5.15.patch): Targets ChromeOS kernel branch `chromeos-5.15` (uses `dev_priv`/`i915` struct pointers).
-- [`d330_chromeos_6.6.patch`](d330_chromeos_6.6.patch): Targets ChromeOS kernel branch `chromeos-6.6`+ (uses `intel_display` struct pointers).
+- [`d330_chromeos_6.6.patch`](d330_chromeos_6.6.patch): Targets ChromeOS kernel branch `chromeos-6.6` (re-adapted 2026-10-20 to the real chromeos-6.6 tree API — uses `dev_priv`/`i915` struct pointers; see the pre-verification block above).
 - [`d330_chromeos_glk_reset_fix_6.6.patch`](d330_chromeos_glk_reset_fix_6.6.patch): **The real resume fix** for `chromeos-6.6`+ (GLK reset-order fixup from upstream #13225; apply after the CCS patch).
 - [`d330_chromeos_glk_reset_fix_5.15.patch`](d330_chromeos_glk_reset_fix_5.15.patch): **The real resume fix** for `chromeos-5.15` (same fixup, adapted to the 5.15 i915 API).
+
+### CI build (Phase 59)
+
+Workflow: [`.github/workflows/build-chromeos-kernel.yml`](../../.github/workflows/build-chromeos-kernel.yml)
+(manual dispatch only). Dispatch with:
+
+```bash
+gh workflow run build-chromeos-kernel.yml -f ref=chromeos-6.6
+```
+
+Any branch of `chromiumos/third_party/kernel` can be passed as `ref`; the
+workflow file must be on `main` first, so the Phase 59 commits are pushed
+before any dispatch. Runs are checked only when the user asks — no polling
+(standing process rule). Per tonight's overnight-autonomy directive the
+orchestrator executes the dispatch after push (Phase 57 precedent: watch,
+fix, re-dispatch, max 3 attempts); from morning on dispatch is a user action
+again.
+
+On success the job publishes one artifact, `chromeos-kernel`, containing
+`bzImage`, `System.map`, `.config`, and `SHA256SUMS` (hidden files included).
+The patch gate (both `git apply --check`, CCS then GLK, plus grep anchors)
+runs before any build step, so a patch/tree mismatch is red before the build
+starts and no artifact is published (AUDIT-03). Honest stop (CHRM-02): a
+failed build or a runner disk/time overrun yields a red job with zero
+artifacts — never a truncated or fake one.
+
+Documented deviation (locked decision 1): the workflow shallow-clones the
+kernel repo directly (`--depth 1 --branch $REF`) instead of a depot_tools
+full platform checkout — a depot_tools manifest would blow the runner disk,
+and the shallow checkout satisfies the "freshly fetched shallow chromeos-6.6
+checkout" criterion. Flagged for morning review.
 
 ---
 
