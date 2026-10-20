@@ -124,9 +124,13 @@ jobs:
           sha256sum bzImage System.map .config > SHA256SUMS
 
       - name: Upload kernel artifact
+        # CHRM-02 belt-and-braces: publish only after a fully green job, and
+        # treat any missing file as red instead of uploading a partial bundle.
+        if: success()
         uses: actions/upload-artifact@v7
         with:
           name: chromeos-kernel
+          if-no-files-found: error
           # .config is a dotfile; upload-artifact ≥v4.4 excludes hidden files
           # by default, which would drop it from the artifact while SHA256SUMS
           # still hashes it (breaking `sha256sum -c` post-download).
