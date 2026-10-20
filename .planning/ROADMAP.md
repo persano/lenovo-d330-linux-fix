@@ -677,7 +677,10 @@ documented stop if the runner cannot hold the build.
      published (CHRM-02)
   3. The ledger gate stays 4/0 green
 
-**Plans**: TBD
+**Plans**:
+
+- [ ] 59-01-PLAN.md — Local chromeos-6.6 pre-verification of both chromeos patches (predictor for the CI gate) + README evidence record
+- [ ] 59-02-PLAN.md — build-chromeos-kernel.yml workflow (patch gate first, x86_64_defconfig bzImage build, `chromeos-kernel` artifact) + dispatch docs
 
 ### Phase 60: ChromeOS USB Boot Verification (Eyes-On)
 
