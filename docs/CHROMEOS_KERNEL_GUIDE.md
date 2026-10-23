@@ -130,22 +130,39 @@ Phase 60 (eyes-on USB boot). Honest picture before you start:
 ## FydeOS variant
 
 FydeOS (the ChromeOS fork that also ships Android and Linux apps) is the
-Phase 60 boot-test target. It builds from the R132 release line of the same
-kernel repo, which is older than the rolling `chromeos-6.6` tip, so it gets
-its own CCS patch and its own workflow:
+Phase 60 boot-test target. It builds from the R150 release line of the same
+kernel repo at **6.12** — the branch of truth was read from the shipped
+FydeOS v23.0-SP1 image itself (banner
+`Linux version 6.12.54-fyde-01180-gb4e10020ba49-dirty` → commit `b4e10020`,
+the tip of `release-R150-16700.B-chromeos-6.12`), not from a manifest. It
+therefore has its own CCS patch, its own GLK patch, and its own workflow:
 
-- Branch: `release-R132-16093.B-chromeos-6.6` (kernel 6.6.56), pinned by
-  the openFyde manifest — see
-  [`patches/fydeos/README.md`](../patches/fydeos/README.md) for the evidence
-  and the per-file adaptation record (the shared CCS patch fails on this
-  tip at `intel_quirks.h`; the GLK fix applies unmodified).
+- Branch: `release-R150-16700.B-chromeos-6.12` (kernel 6.12.54) — image
+  evidence and the per-file adaptation record live in
+  [`patches/fydeos/README.md`](../patches/fydeos/README.md).
 - Build:
 
   ```
-  gh workflow run build-fydeos-kernel.yml -f ref=release-R132-16093.B-chromeos-6.6
+  gh workflow run build-fydeos-kernel.yml
   ```
 
-- Artifact: `fydeos-kernel` (same four files, `LOCALVERSION=-d330-fydeos`).
+  (the `ref` input already defaults to this branch).
+
+- Artifact: `fydeos-kernel` (`bzImage`, `System.map`, `.config`,
+  `SHA256SUMS`). The config is the tree's own chromeos x86_64 fragment set
+  (`chromeos/scripts/prepareconfig chromiumos-x86_64-generic`) with
+  `CONFIG_LOCALVERSION="-fyde-01180"` + `CONFIG_LOCALVERSION_AUTO=y`, which
+  reproduces the shipped kernel banner exactly at the pinned tip — required
+  so the image's `/lib/modules/<banner>` directory matches the built kernel
+  (a defconfig build would also lack `CONFIG_DM_VERITY=y` and
+  `CONFIG_DRM_I915=y`, i.e. it could not mount the verity root or light the
+  panel).
 
 Same guardrails as the other two workflows: patch gate first, red before
 any build, artifact only from a fully green run.
+
+Route B (Phase 60 image surgery): the image's KERN-A gets repacked with the
+image's own keys — the stock keyblock is byte-identical to
+`/usr/share/vboot/devkeys/recovery_kernel.keyblock`, and
+`recovery_kernel_data_key.vbprivk` signs the new body (offline round-trip
+verified). Facts and verification record: [`patches/fydeos/README.md`](../patches/fydeos/README.md).

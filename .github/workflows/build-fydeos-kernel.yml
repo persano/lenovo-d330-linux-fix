@@ -1,17 +1,26 @@
-name: Build FydeOS Kernel (R132 chromeos-6.6)
+name: Build FydeOS Kernel (R150 chromeos-6.12)
 
 # Manual dispatch only: FydeOS variant of the ChromeOS kernel build.
-# Source tree: chromiumos/third_party/kernel @ release-R132-16093.B-chromeos-6.6 —
-# the branch pinned by the openFyde manifest (openFyde/manifest:chromiumos.xml,
-# path src/third_party/kernel/v6.6), i.e. the kernel line FydeOS/openFyde R132
-# builds (amd64) are based on. Local pre-verification (2026-10-23): tip
-# 05ed601c, kernel 6.6.56. The D330 CCS patch for this older 6.6 tip is a
-# separate variant file (patches/fydeos/d330_fydeos_6.6.patch — the shared
-# chromeos patch is context-anchored to the 6.6.147 tip and fails here at
-# intel_quirks.h; initial red preserved at .git/fydeos-gate-initial-red.log,
-# adaptation record in patches/fydeos/README.md). The GLK reset-order fix
-# applies to this branch unmodified and is shared with the chromeos build.
+# Source tree: chromiumos/third_party/kernel @ release-R150-16700.B-chromeos-6.12
+# — the branch of truth read from the shipped image itself: FydeOS for PC slim
+# v23.0-SP1 (amd64-fydeos_slim, SHA-256 4679828fcc53...b2c8) boots
+# "Linux version 6.12.54-fyde-01180-gb4e10020ba49-dirty", and b4e10020 is this
+# branch's tip (local pre-verification 2026-10-23: kernel 6.12.54, both patches
+# check+apply on a pristine tip, LF and CRLF checkouts alike). This supersedes
+# the earlier openFyde-manifest-derived R132-6.6 branch choice; the superseded
+# R132 dispatch (run 40014541648) and the adaptation record live in
+# patches/fydeos/README.md.
 #
+# Patches: both 6.12 variants in patches/fydeos/ — CCS re-anchored for the
+# intel_display refactor (struct intel_display first params, display->drm),
+# GLK reset fix dispatched via IS_GEMINILAKE(i915).
+# Config: in-tree chromeos fragments via chromeos/scripts/prepareconfig
+# (DM_VERITY/BLK_DEV_DM/DRM_I915 =y — the boot-critical set a generic
+# defconfig lacks), with CONFIG_LOCALVERSION="-fyde-01180" +
+# CONFIG_LOCALVERSION_AUTO=y reproducing the shipped kernel banner
+# 6.12.54-fyde-01180-g<12-char-sha>-dirty (the -g<sha>-dirty suffix comes from
+# setlocalversion against this shallow clone with the gate's patches applied),
+# so the image's /lib/modules directory name matches the built kernel.
 # Publishing an unpatched kernel is structurally impossible: the patch gate is
 # the FIRST step after fetch (AUDIT-03) and upload-artifact runs only on
 # prior success — a red gate or a disk/time overrun means no artifact, never
@@ -20,9 +29,9 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Branch of chromiumos/third_party/kernel to build (FydeOS R132 line)'
+        description: 'Branch of chromiumos/third_party/kernel to build (FydeOS R150 / 6.12 line)'
         required: true
-        default: 'release-R132-16093.B-chromeos-6.6'
+        default: 'release-R150-16700.B-chromeos-6.12'
 
 permissions:
   contents: read
@@ -68,39 +77,52 @@ jobs:
           echo "SRC=$BUILD/kernel" >> "$GITHUB_ENV"
 
       # Patch gate — AUDIT-03 rule: re-verify both patches FIRST against the
-      # freshly fetched tree (pre-verified locally at tip 05ed601c, kernel
-      # 6.6.56). Both `--check`s before either apply; CCS then GLK, never
-      # --3way/-f; grep anchors prove the code landed. Under set -e any
-      # failure exits red BEFORE any build step.
+      # freshly fetched tree (pre-verified locally 2026-10-23 at pristine tip
+      # b4e10020, kernel 6.12.54). Both `--check`s before either apply; CCS
+      # then GLK, never --3way/-f; grep anchors prove the code landed. Under
+      # set -e any failure exits red BEFORE any build step.
       - name: Patch gate — check, apply (CCS then GLK), prove they landed
         run: |
           set -euxo pipefail
           cd "$SRC"
-          git apply --check "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_6.6.patch"
-          git apply --check "$GITHUB_WORKSPACE/patches/chromeos/d330_chromeos_glk_reset_fix_6.6.patch"
-          git apply "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_6.6.patch"
-          git apply "$GITHUB_WORKSPACE/patches/chromeos/d330_chromeos_glk_reset_fix_6.6.patch"
+          git apply --check "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_6.12.patch"
+          git apply --check "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_glk_reset_fix_6.12.patch"
+          git apply "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_6.12.patch"
+          git apply "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_glk_reset_fix_6.12.patch"
           # CCS anchors
           grep -R 'lenovo_ideapad_d330_10igl_800x1280' drivers/gpu/drm/drm_panel_orientation_quirks.c
           grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
           grep -R 'intel_fb_is_ccs_modifier' drivers/gpu/drm/i915/display/skl_universal_plane.c
           grep -R 'quirk_lenovo_d330_pps' drivers/gpu/drm/i915/display/intel_quirks.c
           grep -R 'QUIRK_INCREASE_PPS_CYCLE_DELAY' drivers/gpu/drm/i915/display/intel_quirks.h
+          grep -R 'Clamping PPS power-cycle delay to 600ms' drivers/gpu/drm/i915/display/intel_pps.c
           # GLK anchors
           grep -R 'Running INIT_OTP (GPIO/delay only) as DEASSERT_RESET' drivers/gpu/drm/i915/display/intel_bios.c
           grep -R 'glk_fixup_mipi_sequences' drivers/gpu/drm/i915/display/intel_bios.c
 
-      - name: Configure (x86_64_defconfig, no debug info)
+      # Config = the tree's own chromeos x86_64 fragments (prepareconfig =
+      # base.config + arch common + flavour, the documented chromiumos flow),
+      # not a generic defconfig: the fragments carry the chromeos boot set
+      # (CONFIG_DM_VERITY=y, CONFIG_DM_VERITY_CHROMEOS=y, CONFIG_BLK_DEV_DM=y,
+      # CONFIG_DRM_I915=y, CONFIG_DRM_I915_FORCE_PROBE="*") that x86_64_
+      # defconfig lacks — without them the verity-rooted FydeOS image cannot
+      # mount and there is no display. LOCALVERSION/-AUTO reproduce the shipped
+      # banner for vermagic parity with the image's modules.
+      - name: Configure (chromeos x86_64 fragments + banner parity)
         run: |
           set -euxo pipefail
           cd "$SRC"
-          make x86_64_defconfig
-          # Strip debug info and the git-version suffix: the runner has only
-          # ~14 GB of disk, and the result stays a normal bootable kernel.
+          export CHROMEOS_KERNEL_FAMILY=chromeos
+          bash chromeos/scripts/prepareconfig chromiumos-x86_64-generic
+          scripts/config --set-str LOCALVERSION "-fyde-01180"
+          scripts/config --enable LOCALVERSION_AUTO
+          # Strip debug info and the git-version override risks: the runner
+          # has only ~14 GB of disk, and the result stays a normal bootable
+          # kernel. LOCALVERSION must come from .config only — a make
+          # LOCALVERSION= argument would break the banner parity.
           scripts/config --enable DEBUG_INFO_NONE || true
           scripts/config --disable DEBUG_INFO_BTF || true
           scripts/config --disable GDB_SCRIPTS || true
-          scripts/config --disable LOCALVERSION_AUTO || true
           # Insurance, not observed breakage: drop any blanket -Werror.
           scripts/config --disable WERROR || true
           # Drop the distro signing-cert paths: nothing signs this bzImage.
@@ -112,7 +134,7 @@ jobs:
         run: |
           set -euxo pipefail
           cd "$SRC"
-          make -j"$(nproc)" bzImage LOCALVERSION=-d330-fydeos
+          make -j"$(nproc)" bzImage
           mkdir -p "$BUILD/out"
           cp arch/x86/boot/bzImage System.map .config "$BUILD/out/"
           cd "$BUILD/out"
