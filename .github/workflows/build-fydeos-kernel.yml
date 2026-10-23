@@ -1,0 +1,137 @@
+name: Build FydeOS Kernel (R132 chromeos-6.6)
+
+# Manual dispatch only: FydeOS variant of the ChromeOS kernel build.
+# Source tree: chromiumos/third_party/kernel @ release-R132-16093.B-chromeos-6.6 —
+# the branch pinned by the openFyde manifest (openFyde/manifest:chromiumos.xml,
+# path src/third_party/kernel/v6.6), i.e. the kernel line FydeOS/openFyde R132
+# builds (amd64) are based on. Local pre-verification (2026-10-23): tip
+# 05ed601c, kernel 6.6.56. The D330 CCS patch for this older 6.6 tip is a
+# separate variant file (patches/fydeos/d330_fydeos_6.6.patch — the shared
+# chromeos patch is context-anchored to the 6.6.147 tip and fails here at
+# intel_quirks.h; initial red preserved at .git/fydeos-gate-initial-red.log,
+# adaptation record in patches/fydeos/README.md). The GLK reset-order fix
+# applies to this branch unmodified and is shared with the chromeos build.
+#
+# Publishing an unpatched kernel is structurally impossible: the patch gate is
+# the FIRST step after fetch (AUDIT-03) and upload-artifact runs only on
+# prior success — a red gate or a disk/time overrun means no artifact, never
+# a truncated one (CHRM-02 honest-stop).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch of chromiumos/third_party/kernel to build (FydeOS R132 line)'
+        required: true
+        default: 'release-R132-16093.B-chromeos-6.6'
+
+permissions:
+  contents: read
+
+jobs:
+  build-fydeos-kernel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Free disk space
+        run: |
+          set -euxo pipefail
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/lib/jvm \
+            /usr/local/lib/node_modules
+          df -h /
+
+      - name: Install build toolchain
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libssl-dev libdw-dev bc flex bison rsync \
+            libelf-dev dwarves cpio zstd kmod ca-certificates
+
+      # No submodule step (Phase 57 lesson): the chromeos kernel repo is
+      # self-contained; every later step runs under `set -euxo pipefail`, so a
+      # missing Kconfig/derived file turns the job red as an honest stop.
+      - name: Fetch kernel source
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euxo pipefail
+          BUILD="$RUNNER_TEMP/kbuild"
+          git clone --depth 1 --branch "$REF" \
+            https://chromium.googlesource.com/chromiumos/third_party/kernel \
+            "$BUILD/kernel"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          echo "SRC=$BUILD/kernel" >> "$GITHUB_ENV"
+
+      # Patch gate — AUDIT-03 rule: re-verify both patches FIRST against the
+      # freshly fetched tree (pre-verified locally at tip 05ed601c, kernel
+      # 6.6.56). Both `--check`s before either apply; CCS then GLK, never
+      # --3way/-f; grep anchors prove the code landed. Under set -e any
+      # failure exits red BEFORE any build step.
+      - name: Patch gate — check, apply (CCS then GLK), prove they landed
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          git apply --check "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_6.6.patch"
+          git apply --check "$GITHUB_WORKSPACE/patches/chromeos/d330_chromeos_glk_reset_fix_6.6.patch"
+          git apply "$GITHUB_WORKSPACE/patches/fydeos/d330_fydeos_6.6.patch"
+          git apply "$GITHUB_WORKSPACE/patches/chromeos/d330_chromeos_glk_reset_fix_6.6.patch"
+          # CCS anchors
+          grep -R 'lenovo_ideapad_d330_10igl_800x1280' drivers/gpu/drm/drm_panel_orientation_quirks.c
+          grep -R 'dmi_match(DMI_PRODUCT_NAME, "82H0")' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          grep -R 'intel_fb_is_ccs_modifier' drivers/gpu/drm/i915/display/skl_universal_plane.c
+          grep -R 'quirk_lenovo_d330_pps' drivers/gpu/drm/i915/display/intel_quirks.c
+          grep -R 'QUIRK_INCREASE_PPS_CYCLE_DELAY' drivers/gpu/drm/i915/display/intel_quirks.h
+          # GLK anchors
+          grep -R 'Running INIT_OTP (GPIO/delay only) as DEASSERT_RESET' drivers/gpu/drm/i915/display/intel_bios.c
+          grep -R 'glk_fixup_mipi_sequences' drivers/gpu/drm/i915/display/intel_bios.c
+
+      - name: Configure (x86_64_defconfig, no debug info)
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          make x86_64_defconfig
+          # Strip debug info and the git-version suffix: the runner has only
+          # ~14 GB of disk, and the result stays a normal bootable kernel.
+          scripts/config --enable DEBUG_INFO_NONE || true
+          scripts/config --disable DEBUG_INFO_BTF || true
+          scripts/config --disable GDB_SCRIPTS || true
+          scripts/config --disable LOCALVERSION_AUTO || true
+          # Insurance, not observed breakage: drop any blanket -Werror.
+          scripts/config --disable WERROR || true
+          # Drop the distro signing-cert paths: nothing signs this bzImage.
+          scripts/config --set-str SYSTEM_TRUSTED_KEYS "" || true
+          scripts/config --set-str SYSTEM_REVOCATION_KEYS "" || true
+          make olddefconfig
+
+      - name: Build kernel bzImage
+        run: |
+          set -euxo pipefail
+          cd "$SRC"
+          make -j"$(nproc)" bzImage LOCALVERSION=-d330-fydeos
+          mkdir -p "$BUILD/out"
+          cp arch/x86/boot/bzImage System.map .config "$BUILD/out/"
+          cd "$BUILD/out"
+          sha256sum bzImage System.map .config > SHA256SUMS
+
+      - name: Upload kernel artifact
+        # CHRM-02 belt-and-braces: publish only after a fully green job, and
+        # treat any missing file as red instead of uploading a partial bundle.
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fydeos-kernel
+          if-no-files-found: error
+          # .config is a dotfile; upload-artifact ≥v4.4 excludes hidden files
+          # by default, which would drop it from the artifact while SHA256SUMS
+          # still hashes it (breaking `sha256sum -c` post-download).
+          include-hidden-files: true
+          path: |
+            ${{ runner.temp }}/kbuild/out/bzImage
+            ${{ runner.temp }}/kbuild/out/System.map
+            ${{ runner.temp }}/kbuild/out/.config
+            ${{ runner.temp }}/kbuild/out/SHA256SUMS

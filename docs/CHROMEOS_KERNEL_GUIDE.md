@@ -126,3 +126,26 @@ Phase 60 (eyes-on USB boot). Honest picture before you start:
    local `git apply --check` sequence above.
 3. Commit, push, dispatch, and record the why in
    [`patches/chromeos/README.md`](../patches/chromeos/README.md).
+
+## FydeOS variant
+
+FydeOS (the ChromeOS fork that also ships Android and Linux apps) is the
+Phase 60 boot-test target. It builds from the R132 release line of the same
+kernel repo, which is older than the rolling `chromeos-6.6` tip, so it gets
+its own CCS patch and its own workflow:
+
+- Branch: `release-R132-16093.B-chromeos-6.6` (kernel 6.6.56), pinned by
+  the openFyde manifest — see
+  [`patches/fydeos/README.md`](../patches/fydeos/README.md) for the evidence
+  and the per-file adaptation record (the shared CCS patch fails on this
+  tip at `intel_quirks.h`; the GLK fix applies unmodified).
+- Build:
+
+  ```
+  gh workflow run build-fydeos-kernel.yml -f ref=release-R132-16093.B-chromeos-6.6
+  ```
+
+- Artifact: `fydeos-kernel` (same four files, `LOCALVERSION=-d330-fydeos`).
+
+Same guardrails as the other two workflows: patch gate first, red before
+any build, artifact only from a fully green run.
