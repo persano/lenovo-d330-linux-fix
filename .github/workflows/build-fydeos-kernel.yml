@@ -32,6 +32,10 @@ on:
         description: 'Branch of chromiumos/third_party/kernel to build (FydeOS R150 / 6.12 line)'
         required: true
         default: 'release-R150-16700.B-chromeos-6.12'
+      patches:
+        description: 'Apply the D330 patch pair. false = pristine b4e10020 code with config only (resume-bisect A/B), published under a distinct artifact name'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -80,8 +84,12 @@ jobs:
       # freshly fetched tree (pre-verified locally 2026-10-23 at pristine tip
       # b4e10020, kernel 6.12.54). Both `--check`s before either apply; CCS
       # then GLK, never --3way/-f; grep anchors prove the code landed. Under
-      # set -e any failure exits red BEFORE any build step.
+      # set -e any failure exits red BEFORE any build step. Dispatch-explicit
+      # opt-out (inputs.patches=false, default true) builds pristine code for
+      # the resume bisect and is published as fydeos-kernel-nopatches — it can
+      # never be mistaken for release material.
       - name: Patch gate — check, apply (CCS then GLK), prove they landed
+        if: ${{ inputs.patches }}
         run: |
           set -euxo pipefail
           cd "$SRC"
@@ -114,8 +122,16 @@ jobs:
           cd "$SRC"
           export CHROMEOS_KERNEL_FAMILY=chromeos
           bash chromeos/scripts/prepareconfig chromiumos-x86_64-generic
-          scripts/config --set-str LOCALVERSION "-fyde-01180"
-          scripts/config --enable LOCALVERSION_AUTO
+          if [ "${{ inputs.patches }}" = "true" ]; then
+            scripts/config --set-str LOCALVERSION "-fyde-01180"
+            scripts/config --enable LOCALVERSION_AUTO
+          else
+            # Pristine tree: setlocalversion would append -g<sha> with no
+            # -dirty. Hardcode the full stock suffix instead so the banner and
+            # /lib/modules dirname stay byte-identical either way.
+            scripts/config --set-str LOCALVERSION "-fyde-01180-gb4e10020ba49-dirty"
+            scripts/config --disable LOCALVERSION_AUTO
+          fi
           # D330 panel-power path (Phase 60 black-screen triage): the stock
           # FydeOS kernel builds intel-skl-int3472 + its GPIO companion builtin
           # (verified against the shipped modules.builtin). The reference-board
@@ -157,7 +173,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v7
         with:
-          name: fydeos-kernel
+          name: ${{ inputs.patches && 'fydeos-kernel' || 'fydeos-kernel-nopatches' }}
           if-no-files-found: error
           # .config is a dotfile; upload-artifact ≥v4.4 excludes hidden files
           # by default, which would drop it from the artifact while SHA256SUMS
